@@ -36,7 +36,7 @@ public class Main : BasePlugin
     // Discordボタンを表示するか / Show Discord Button (Default: true)
     public static readonly bool ShowDiscordButton = true;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)
-    public static readonly string DiscordInviteUrl = "https://discord.gg/YCUY8b3jew";
+    public static readonly string DiscordInviteUrl = "";
     // ==========
     public const string OriginalForkId = "OriginalTOH"; // Don't Change The Value. / この値を変更しないでください。
     // == 認証設定 / Authentication Config ==

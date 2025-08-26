@@ -41,22 +41,11 @@ namespace TownOfHostY
                     new(-0.85f, -2.7f, 1f),
                     new(29, 160, 241, byte.MaxValue),
                     new(169, 215, 242, byte.MaxValue),
-                    () => Application.OpenURL("https://twitter.com/yumeno_AmongUs"),
+                    () => Application.OpenURL("https://twitter.com/"),
                     "Twitter/X",
                     new(1.85f, 0.5f));
             }
-            // WIKIWIKIボタンを生成
-            if (SimpleButton.IsNullOrDestroyed(wikiwikiButton))
-            {
-                wikiwikiButton = CreateButton(
-                    "WikiwikiButton",
-                    new(0.75f, -2.7f, 1f),
-                    new(255, 142, 168, byte.MaxValue),
-                    new(255, 226, 153, byte.MaxValue),
-                    () => Application.OpenURL("https://wikiwiki.jp/tohy_amongus"),
-                    "WIKIWIKI",
-                    new(1.85f, 0.5f));
-            }
+            
             // GitHubボタンを生成
             if (SimpleButton.IsNullOrDestroyed(gitHubButton))
             {
@@ -65,7 +54,7 @@ namespace TownOfHostY
                     new(2.35f, -2.7f, 1f),
                     new(153, 153, 153, byte.MaxValue),
                     new(209, 209, 209, byte.MaxValue),
-                    () => Application.OpenURL("https://github.com/Yumenopai/TownOfHost_Y"),
+                    () => Application.OpenURL("https://github.com/Tabasco1410/TownOfHost_Y-ForkedbyTabasco"),
                     "GitHub",
                     new(1.85f, 0.5f));
             }

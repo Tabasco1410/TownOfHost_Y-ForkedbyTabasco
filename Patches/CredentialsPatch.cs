@@ -54,7 +54,7 @@ namespace TownOfHostY
         class VersionShowerStartPatch
         {
             static string[] mainManuText = {
-                "Town Of Host_Yのプライベートフォークmodです",
+                "Town Of Host_Yのプライベートフォークmodです\nこのmodに関して、本家TOH・TOH_Yへ問い合わせないでください",
                /* "このコメントは21種類らしい\nなんか増えてる？",
                 "いつもありがとう！\nこれからも沢山遊んでね",
                 "【今日のおすすめ役職】\nアドミニスター",
