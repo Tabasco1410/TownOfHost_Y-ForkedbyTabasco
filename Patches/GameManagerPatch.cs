@@ -16,7 +16,7 @@ namespace TownOfHostY
                 {
                     flag = true;
                     writer.StartMessage((byte)index);
-                    var hasBody = logicComponent.Serialize(writer, initialState);
+                    bool hasBody = logicComponent.Serialize(writer); // initialState は不要
                     if (hasBody) writer.EndMessage();
                     else writer.CancelMessage();
                     logicComponent.ClearDirtyFlag();
@@ -27,18 +27,7 @@ namespace TownOfHostY
             return false;
         }
     }
-    [HarmonyPatch(typeof(LogicOptions), nameof(LogicOptions.Serialize))]
-    class LogicOptionsSerializePatch
-    {
-        public static bool Prefix(LogicOptions __instance, ref bool __result, MessageWriter writer, bool initialState)
-        {
-            // 初回以外はブロックし、CustomSyncSettingsでのみ同期する
-            if (!initialState)
-            {
-                __result = false;
-                return false;
-            }
-            else return true;
-        }
-    }
+    
+
+
 }

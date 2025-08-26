@@ -641,7 +641,16 @@ namespace TownOfHostY
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
             if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
                 DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
+            var startRpcMethod = typeof(AmongUsClient).GetMethod(
+    "StartRpc",
+    System.Reflection.BindingFlags.Instance |
+    System.Reflection.BindingFlags.NonPublic);
+
+            var messageWriter = startRpcMethod.Invoke(
+                AmongUsClient.Instance,
+                new object[] { __instance.NetId, (byte)RpcCalls.SendChat, SendOption.None }
+            ) as MessageWriter;
+
             messageWriter.Write(chatText);
             messageWriter.EndMessage();
             __result = true;

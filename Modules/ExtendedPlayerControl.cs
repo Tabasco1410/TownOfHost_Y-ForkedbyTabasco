@@ -186,7 +186,18 @@ static class ExtendedPlayerControl
         {
             player.StartCoroutine(player.CoSetRole(role, canOverrideRole));
         }
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(player.NetId, (byte)RpcCalls.SetRole, Hazel.SendOption.Reliable);
+        // StartRpc メソッドを非公開から取得
+        var startRpcMethod = typeof(AmongUsClient).GetMethod(
+            "StartRpc",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+        );
+
+        // Reflection で呼び出して MessageWriter を取得
+        var messageWriter = startRpcMethod.Invoke(
+            AmongUsClient.Instance,
+            new object[] { player.NetId, (byte)RpcCalls.SetRole, Hazel.SendOption.Reliable }
+        ) as Hazel.MessageWriter;
+
         messageWriter.Write((ushort)role);
         messageWriter.Write(true); //canOverrideRole
         messageWriter.EndMessage();

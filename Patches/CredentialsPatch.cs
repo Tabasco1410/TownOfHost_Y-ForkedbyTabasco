@@ -54,7 +54,8 @@ namespace TownOfHostY
         class VersionShowerStartPatch
         {
             static string[] mainManuText = {
-                "このコメントは21種類らしい\nなんか増えてる？",
+                "Town Of Host_Yのプライベートフォークmodです",
+               /* "このコメントは21種類らしい\nなんか増えてる？",
                 "いつもありがとう！\nこれからも沢山遊んでね",
                 "【今日のおすすめ役職】\nアドミニスター",
                 "【今日のおすすめ属性】\nリフュージング",
@@ -74,7 +75,7 @@ namespace TownOfHostY
                 "シンクロカラーモードという\nカオスなモードがありました",
                 "ジャッカルサイドキックが登場。\nご主人の想いを受け継ぎキルせよ。",
                 "ファントム(亡霊)・ノイズメーカー・トラッカー\n新しいバニラ役職も使えます。",
-                "ワンナイトモードを早く復活させたい。",
+                "ワンナイトモードを早く復活させたい。",*/
             };
 
             static TextMeshPro SpecialEventText;

@@ -26,13 +26,13 @@ public class Main : BasePlugin
 {
     // == プログラム設定 / Program Config ==
     // modの名前 / Mod Name (Default: Town Of Host)
-    public static readonly string ModName = "Town Of Host_Y";
+    public static readonly string ModName = "Town Of Host_Y ForkedbyTabasco";
     // modの色 / Mod Color (Default: #00bfff)
     public static readonly string ModColor = "#ffff00";
     // 公開ルームを許可する / Allow Public Room (Default: true)
     public static readonly bool AllowPublicRoom = true;
     // フォークID / ForkId (Default: OriginalTOH)
-    public static readonly string ForkId = "TOH_Y";
+    public static readonly string ForkId = "TOH_Y byT";
     // Discordボタンを表示するか / Show Discord Button (Default: true)
     public static readonly bool ShowDiscordButton = true;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)
@@ -52,15 +52,18 @@ public class Main : BasePlugin
     // ==========
     //Sorry for many Japanese comments.
     public const string PluginGuid = "com.yumenopai.townofhosty";
-    public const string PluginVersion = "519.27.1";
+    public const string PluginVersion = "1.0.0";
     // サポートされている最低のAmongUsバージョン
-    public static readonly string LowestSupportedVersion = "2025.3.25";
+    public static readonly string LowestSupportedVersion = "2025.4.20";
     // このバージョンのみで公開ルームを無効にする場合
     public static readonly bool IsPublicAvailableOnThisVersion = false;
     // プレリリースかどうか
-    public static bool IsPrerelease { get; } = false;
+    public static bool IsPrerelease { get; } = true;
     public const string PluginSubVersion = "β";
-    public const string PluginVersionName = "StreamerDebug";
+    public const string PluginVersionName = "Debugversion";
+
+    /// 配布するデバッグ版なのであればtrue。リリース時にはfalseにすること。
+    public static bool DebugVersion = false;
 
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
     public static Version version = Version.Parse(PluginVersion);

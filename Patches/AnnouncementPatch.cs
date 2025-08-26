@@ -142,13 +142,17 @@ public class ModNews
     public static void SetUpPanel(AnnouncementPanel __instance, [HarmonyArgument(0)] Announcement announcement)
     {
         if (announcement.Number < 100000) return;
+
         var obj = new GameObject("ModLabel");
-        obj.layer = -1;
-        obj.transform.SetParent(__instance.transform);
-        obj.transform.localPosition = new Vector3(-0.8f, 0.13f, 0.5f);
-        obj.transform.localScale = new Vector3(0.9f, 0.9f, 0.9f);
+        {
+            obj.layer = -1;
+            obj.transform.SetParent(__instance.transform);
+            obj.transform.localPosition = new Vector3(-0.8f, 0.13f, 0.5f);
+            obj.transform.localScale = Vector3.one * 0.9f;
+        }
+
         var renderer = obj.AddComponent<SpriteRenderer>();
-        renderer.sprite = Utils.LoadSprite($"TownOfHost_Y.Resources.ModNews.png", 400f);
+        renderer.sprite = Utils.LoadSprite("TownOfHost_Y.Resources.ModNews.png", 400f);
         renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
     }
 }
