@@ -1,6 +1,34 @@
-# Town Of Host_Y
 
-## TOH_Yへようこそ！
+# TownOfHost_Y — ForkedbyTabasco
+
+このプロジェクトは **Yumenopai 氏の TownOfHost_Y** をフォークしたものです。  
+元は **tukasa0001 氏の TownOfHost** をベースとしています。  
+
+## ライセンス
+
+このプロジェクトは **GNU General Public License v3.0 (GPL-3.0)** のもとで公開されています。  
+詳しくは [LICENSE](./LICENSE) をご確認ください。  
+
+© 2023–2025 Yumenopai  
+© 2025 Tabasco (このフォーク)
+
+## このフォークでの変更点
+- フォーク元で正常に動作しなかった不具合を修正  
+
+※現時点では新機能追加や仕様変更はありません。  
+
+## 免責事項
+このMODは **非公式** であり、Among Us の開発元である **Innersloth** とは一切関係ありません。  
+
+## 不具合報告について
+このフォークはまだ **正式リリースしていないため、不具合報告は受け付けていません。**  
+公開後に対応方針を検討します。  
+
+## クレジット
+- **TownOfHost_Y** by Yumenopai  
+- **TownOfHost** by tukasa0001  
+
+## TOH_Yのreadme
 ### よくある質問
 - 公開ルームは使えないの？
   - innersloth公式からホストMOD各種〈TOH_Y,本家TOH,TOH4E,TOH-K,TOHEシリーズ,SNR(SHR)など〉へのアナウンスに基づいて、TOH系列は**公開ルーム(野良)で使用出来ないように**MODで制限をかけています。
