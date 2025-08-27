@@ -82,7 +82,7 @@ public class ModNews
         return result;
     }
 
-    public const string ModNewsURL = "https://raw.githubusercontent.com/Yumenopai/TownOfHost_Y/main/modNews.json";
+    public const string ModNewsURL = "";
     static bool downloaded = false;
     /// <summary>
     /// 起動時などで予め取得しておく

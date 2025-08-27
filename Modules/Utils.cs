@@ -1487,32 +1487,63 @@ public static class Utils
         })));
     }
 
+   
+
+    // 共通のプレフィックス（アセンブリ名 + フォルダ名）
+    private const string ResourcePrefix = "TownOfHost_Y ForkedbyTabasco.Resources.";
+
+    /// <summary>
+    /// 埋め込みリソースからSpriteをロードする（フルパス指定）
+    /// </summary>
     public static Sprite LoadSprite(string path, float pixelsPerUnit = 1f)
     {
-        Sprite sprite = null;
         try
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
+            var asm = Assembly.GetExecutingAssembly();
+            var stream = asm.GetManifestResourceStream(path);
+
+            if (stream == null)
+            {
+                Logger.Error($"リソース \"{path}\" が見つかりません。利用可能: {string.Join(", ", asm.GetManifestResourceNames())}", "LoadImage");
+                return null;
+            }
+
             var texture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-            using MemoryStream ms = new();
-            stream.CopyTo(ms);
-            ImageConversion.LoadImage(texture, ms.ToArray());
-            sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), new(0.5f, 0.5f), pixelsPerUnit);
+            using (MemoryStream ms = new())
+            {
+                stream.CopyTo(ms);
+                ImageConversion.LoadImage(texture, ms.ToArray());
+            }
+
+            return Sprite.Create(texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                pixelsPerUnit);
         }
-        catch
+        catch (Exception ex)
         {
-            Logger.Error($"\"{path}\"の読み込みに失敗しました。", "LoadImage");
+            Logger.Error($"\"{path}\" の読み込みに失敗しました: {ex}", "LoadImage");
+            return null;
         }
-        return sprite;
     }
-    public static string ColorString(Color32 color, string str) => $"<color=#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
+
+    /// <summary>
+    /// ファイル名だけ指定してSpriteをロードする
+    /// </summary>
+    public static Sprite LoadSpriteSimple(string fileName, float pixelsPerUnit = 1f)
+    {
+        return LoadSprite(ResourcePrefix + fileName, pixelsPerUnit);
+    }
+
+
+    public static string ColorString(Color32 color, string str) => $"<color=#{color.r:x2}{color.g:x2}{color　ｂ.b:x2}{color.a:x2}>{str}</color>";
     /// <summary>
     /// Darkness:１の比率で黒色と元の色を混ぜる。マイナスだと白色と混ぜる。
     /// </summary>
     public static Color ShadeColor(this Color color, float Darkness = 0)
     {
         bool IsDarker = Darkness >= 0; //黒と混ぜる
-        if (!IsDarker) Darkness = -Darkness;
+        if (!IsDarker) Darkness = -Darkness;　ｂ
         float Weight = IsDarker ? 0 : Darkness; //黒/白の比率
         float R = (color.r + Weight) / (Darkness + 1);
         float G = (color.g + Weight) / (Darkness + 1);
