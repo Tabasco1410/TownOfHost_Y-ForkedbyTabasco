@@ -1536,14 +1536,14 @@ public static class Utils
     }
 
 
-    public static string ColorString(Color32 color, string str) => $"<color=#{color.r:x2}{color.g:x2}{color　ｂ.b:x2}{color.a:x2}>{str}</color>";
+    public static string ColorString(Color32 color, string str) => $"<color=#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
     /// <summary>
     /// Darkness:１の比率で黒色と元の色を混ぜる。マイナスだと白色と混ぜる。
     /// </summary>
     public static Color ShadeColor(this Color color, float Darkness = 0)
     {
         bool IsDarker = Darkness >= 0; //黒と混ぜる
-        if (!IsDarker) Darkness = -Darkness;　ｂ
+        if (!IsDarker) Darkness = -Darkness;
         float Weight = IsDarker ? 0 : Darkness; //黒/白の比率
         float R = (color.r + Weight) / (Darkness + 1);
         float G = (color.g + Weight) / (Darkness + 1);

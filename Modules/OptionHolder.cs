@@ -1014,25 +1014,33 @@ public static class Options
         { "%role%", Utils.ColorString(Utils.GetRoleColor(role), Utils.GetRoleName(role)) + "ㅤ" + Utils.GetAddonAbilityInfo(role) }
     };
 
-        // 辞書にキーが無ければ、BooleanOptionItem を使って新規追加
         var key = (PlayerRole, role);
+
         if (!AddOnRoleOptions.ContainsKey(key))
         {
             OptionItem newOption;
 
-            // parent が指定されていれば親をコピーして作成、なければ新規 BooleanOptionItem
             if (parent != null)
             {
-                // 親を流用する場合（参照コピー）
-                newOption = parent;
+                // 親がある場合 → StringOptionItem を作成して親に紐づけ
+                newOption = StringOptionItem.Create(
+                    Id,
+                    role.ToString(),
+                    new string[] { "OFF", "ON" },
+                    defaultValue ? 1 : 0,
+                    tab,
+                    true
+                );
+                newOption.SetParent(parent);
             }
             else
             {
-                // BooleanOptionItem を新規作成
-                newOption = BooleanOptionItem.Create(
+                // 親がない場合 → 単独で作成
+                newOption = StringOptionItem.Create(
                     Id,
                     role.ToString(),
-                    defaultValue,
+                    new string[] { "OFF", "ON" },
+                    defaultValue ? 1 : 0,
                     tab,
                     true
                 );
@@ -1040,6 +1048,8 @@ public static class Options
 
             AddOnRoleOptions[key] = newOption;
         }
+
+
 
         // ReplacementDictionary を安全に設定
         AddOnRoleOptions[key].ReplacementDictionary = replacementDic;
