@@ -29,7 +29,7 @@ public static class AddLight
             .SetValueFormat(OptionFormat.Multiplier);
         OptionAddImpostorVision = FloatOptionItem.Create(79211, "AddLightAddImpostorVision", new(0f, 5f, 0.1f), 0.5f, TabGroup.Addons, false)
             .SetValueFormat(OptionFormat.Multiplier);
-        OptionDisableLightOut = BooleanOptionItem.Create(79212, "AddLighterDisableLightOut", true, TabGroup.Addons, false);
+        OptionDisableLightOut = StringOptionItem.Create(79212, "AddLighterDisableLightOut", new string[] { "OFF", "ON" }, true, TabGroup.Addons, false);
     }
     [GameModuleInitializer]
     public static void Init()

@@ -1,3 +1,5 @@
+
+ //元のコード
 using System;
 using TownOfHostY.Roles.Core;
 
@@ -53,3 +55,4 @@ namespace TownOfHostY
         }
     }
 }
+

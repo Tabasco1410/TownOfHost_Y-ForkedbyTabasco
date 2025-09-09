@@ -90,20 +90,40 @@ public sealed class SillySheriff : RoleBase, IKiller, ISchrodingerCatOwner
     {
         KillCooldown = FloatOptionItem.Create(RoleInfo, 10, GeneralOption.KillCooldown, new(0f, 180f, 2.5f), 30f, false)
             .SetValueFormat(OptionFormat.Seconds);
+
         ShotLimitOpt = IntegerOptionItem.Create(RoleInfo, 12, OptionName.SheriffShotLimit, new(1, 15, 1), 15, false)
             .SetValueFormat(OptionFormat.Times);
-        IsInfoPoor = BooleanOptionItem.Create(RoleInfo, 16, OptionName.SheriffIsInfoPoor, false, false);
-        IsClumsy = BooleanOptionItem.Create(RoleInfo, 17, OptionName.SheriffIsClumsy, false, false);
+
+        IsInfoPoor = StringOptionItem.Create(RoleInfo.ConfigId + 16, OptionName.SheriffIsInfoPoor, new string[] { "OFF", "ON" }, 0, RoleInfo.Tab, false);
+
+        IsClumsy = StringOptionItem.Create(RoleInfo.ConfigId + 17, OptionName.SheriffIsClumsy, new string[] { "OFF", "ON" }, 0, RoleInfo.Tab, false);
+
         Probability = IntegerOptionItem.Create(RoleInfo, 20, OptionName.SillySheriffProbability, new(0, 100, 5), 0, false)
             .SetValueFormat(OptionFormat.Percent);
+
         OptionKillMotion = StringOptionItem.Create(RoleInfo, 21, OptionName.SillySheriffKillMotion, EnumHelper.GetAllNames<KillMotionOption>(), 0, false);
+
         OptionSuicideMotion = StringOptionItem.Create(RoleInfo, 22, OptionName.SillySheriffSuicideMotion, EnumHelper.GetAllNames<SuicideMotionOption>(), 0, false);
-        MisfireKillsTarget = BooleanOptionItem.Create(RoleInfo, 11, OptionName.SheriffMisfireKillsTarget, false, false);
-        CanKillAllAlive = BooleanOptionItem.Create(RoleInfo, 15, OptionName.SheriffCanKillAllAlive, true, false);
+
+        MisfireKillsTarget = StringOptionItem.Create(RoleInfo.ConfigId + 11, OptionName.SheriffMisfireKillsTarget, new string[] { "OFF", "ON" }, 0, RoleInfo.Tab, false);
+
+        CanKillAllAlive = StringOptionItem.Create(RoleInfo.ConfigId + 15, OptionName.SheriffCanKillAllAlive, new string[] { "OFF", "ON" }, 1, RoleInfo.Tab, false);
+
         SetUpKillTargetOption(CustomRoles.Madmate, 13);
-        CanKillNeutrals = StringOptionItem.Create(RoleInfo, 14, OptionName.SheriffCanKillNeutrals, KillOption, 0, false);
+
+        CanKillNeutrals = StringOptionItem.Create(
+     RoleInfo.ConfigId + 14,               // ID
+     OptionName.SheriffCanKillNeutrals,    // 名前
+     KillOption,                            // 選択肢配列
+     0,                                     // デフォルトインデックス
+     RoleInfo.Tab,                          // TabGroup を指定
+     false                                  // 表示フラグ（必要なら）
+ );
+
+
         SetUpNeutralOptions(30);
     }
+
     public static void SetUpNeutralOptions(int idOffset)
     {
         foreach (var neutral in CustomRolesHelper.AllStandardRoles.Where(x => x.IsNeutral()).ToArray())
@@ -112,37 +132,50 @@ public sealed class SillySheriff : RoleBase, IKiller, ISchrodingerCatOwner
             SetUpKillTargetOption(neutral, idOffset, true, CanKillNeutrals);
             idOffset++;
         }
+
         foreach (var catType in EnumHelper.GetAllValues<SchrodingerCat.TeamType>())
         {
-            if ((byte)catType < 50)
-            {
-                continue;
-            }
+            if ((byte)catType < 50) continue;
             SetUpSchrodingerCatKillTargetOption(catType, idOffset, true, CanKillNeutrals);
             idOffset++;
         }
     }
+
     public static void SetUpKillTargetOption(CustomRoles role, int idOffset, bool defaultValue = true, OptionItem parent = null)
     {
         var id = RoleInfo.ConfigId + idOffset;
-        if (parent == null) parent = RoleInfo.RoleOption;
+        parent ??= RoleInfo.RoleOption;
+
         var roleName = Utils.GetRoleName(role);
         Dictionary<string, string> replacementDic = new() { { "%role%", Utils.ColorString(Utils.GetRoleColor(role), roleName) } };
-        KillTargetOptions[role] = BooleanOptionItem.Create(id, OptionName.SheriffCanKill + "%role%", defaultValue, RoleInfo.Tab, false).SetParent(parent);
+
+        KillTargetOptions[role] = StringOptionItem.Create(
+     id,
+     OptionName.SheriffCanKill + "%role%",
+     new string[] { "OFF", "ON" },  // Boolean を文字列に置き換え
+     defaultValue ? 1 : 0,          // デフォルト値をインデックスに変換
+     RoleInfo.Tab,
+     false
+ ).SetParent(parent);
+
         KillTargetOptions[role].ReplacementDictionary = replacementDic;
     }
+
     public static void SetUpSchrodingerCatKillTargetOption(SchrodingerCat.TeamType catType, int idOffset, bool defaultValue = true, OptionItem parent = null)
     {
         var id = RoleInfo.ConfigId + idOffset;
         parent ??= RoleInfo.RoleOption;
-        // (%team%陣営)
+
         var inTeam = GetString("In%team%", new Dictionary<string, string>() { ["%team%"] = GetRoleString(catType.ToString()) });
-        // シュレディンガーの猫(%team%陣営)
         var catInTeam = Utils.ColorString(SchrodingerCat.GetCatColor(catType), Utils.GetRoleName(CustomRoles.SchrodingerCat) + inTeam);
+
         Dictionary<string, string> replacementDic = new() { ["%role%"] = catInTeam };
-        SchrodingerCatKillTargetOptions[catType] = BooleanOptionItem.Create(id, OptionName.SheriffCanKill + "%role%", defaultValue, RoleInfo.Tab, false).SetParent(parent);
+
+        SchrodingerCatKillTargetOptions[catType] = BooleanOptionItem.Create(id, OptionName.SheriffCanKill + "%role%", defaultValue, RoleInfo.Tab, false)
+            .SetParent(parent);
         SchrodingerCatKillTargetOptions[catType].ReplacementDictionary = replacementDic;
     }
+
     public override void Add()
     {
         var playerId = Player.PlayerId;

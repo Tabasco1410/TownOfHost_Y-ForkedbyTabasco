@@ -74,12 +74,14 @@ public sealed class Hunter : RoleBase, IKiller, ISchrodingerCatOwner
             .SetValueFormat(OptionFormat.Seconds);
         ShotLimitOpt = IntegerOptionItem.Create(RoleInfo, 11, OptionName.SheriffShotLimit, new(1, 15, 1), 15, false)
             .SetValueFormat(OptionFormat.Times);
-        CanKillAllAlive = BooleanOptionItem.Create(RoleInfo, 12, OptionName.SheriffCanKillAllAlive, true, false);
-        IsInfoPoor = BooleanOptionItem.Create(RoleInfo, 15, OptionName.SheriffIsInfoPoor, false, false);
-        IsClumsy = BooleanOptionItem.Create(RoleInfo, 16, OptionName.SheriffIsClumsy, false, false);
-        KnowTargetIsImpostor = BooleanOptionItem.Create(RoleInfo, 13, OptionName.HunterKnowTargetIsImpostor, true, false);
-        OpKnowTargetMadIsImpostor = BooleanOptionItem.Create(RoleInfo, 14, OptionName.HunterKnowTargetMadIsImpostor, true, false, KnowTargetIsImpostor);
+        CanKillAllAlive = StringOptionItem.Create(RoleInfo.ConfigId + 12, OptionName.SheriffCanKillAllAlive, new string[] { "OFF", "ON" }, 1, RoleInfo.Tab, false);
+        IsInfoPoor = StringOptionItem.Create(RoleInfo.ConfigId + 15, OptionName.SheriffIsInfoPoor, new string[] { "OFF", "ON" }, 0, RoleInfo.Tab, false);
+        IsClumsy = StringOptionItem.Create(RoleInfo.ConfigId + 16, OptionName.SheriffIsClumsy, new string[] { "OFF", "ON" }, 0, RoleInfo.Tab, false);
+        KnowTargetIsImpostor = StringOptionItem.Create(RoleInfo.ConfigId + 13, OptionName.HunterKnowTargetIsImpostor, new string[] { "OFF", "ON" }, 1, RoleInfo.Tab, false);
+        OpKnowTargetMadIsImpostor = StringOptionItem.Create(RoleInfo.ConfigId + 14, OptionName.HunterKnowTargetMadIsImpostor, new string[] { "OFF", "ON" }, 1, RoleInfo.Tab, false)
+            .SetParent(KnowTargetIsImpostor);
     }
+
     public override void Add()
     {
         var playerId = Player.PlayerId;

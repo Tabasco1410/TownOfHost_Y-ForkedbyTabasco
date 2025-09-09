@@ -11,7 +11,7 @@ namespace TownOfHostY
     {
         private static SimpleButton discordButton;
         private static SimpleButton twitterButton;
-        private static SimpleButton wikiwikiButton;
+        
         private static SimpleButton gitHubButton;
         public static SimpleButton UpdateButton { get; private set; }
 
@@ -169,7 +169,7 @@ namespace TownOfHostY
                 ModWarningText.transform.localPosition = new Vector3(1.4f, 0.25f, 0f);
                 ModWarningText.transform.localScale = new Vector3(1.9f, 1.9f, 2f);
                 var renderer = ModWarningText.AddComponent<SpriteRenderer>();
-                renderer.sprite = Utils.LoadSprite($"TownOfHost_Y.Resources.warning_online.png", 400f);
+                renderer.sprite = Utils.LoadSprite($"TownOfHost_Y ForkedbyTabasco.Resources.warning_online.png", 400f);
             }
         }
     }

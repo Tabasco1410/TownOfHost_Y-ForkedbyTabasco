@@ -17,7 +17,7 @@ public static class Lovers
     public static void SetupCustomOption()
     {
         SetupRoleOptions(Id, TabGroup.Addons, CustomRoles.Lovers, (1, 1, 1));
-        LoversAddWin = BooleanOptionItem.Create(Id + 10, "LoversAddWin", false, TabGroup.Addons, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lovers]);
+        LoversAddWin = StringOptionItem.Create(Id + 10, "LoversAddWin", new string[] { "OFF", "ON" }, false, TabGroup.Addons, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lovers]);
     }
     [GameModuleInitializer]
     public static void Init()

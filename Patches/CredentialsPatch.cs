@@ -194,7 +194,7 @@ namespace TownOfHostY
                 logoTransform.parent = rightpanel;
                 logoTransform.localPosition = new(0f, 0.18f, 1f);
                 //logoTransform.localScale *= 1f;
-                TohLogo.sprite = Utils.LoadSprite("TownOfHost_Y.Resources.TownOfHostY-Logo.png", 300f);
+                TohLogo.sprite = Utils.LoadSprite("TownOfHost_Y ForkedbyTabasco.Resources.TownOfHostY-Logo.png", 300f);
             }
         }
         [HarmonyPatch(typeof(ModManager), nameof(ModManager.LateUpdate))]
