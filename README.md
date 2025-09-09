@@ -32,7 +32,7 @@
 
 
 ## クレジット：TOH_Y開発者
-- [ゆめの/Yumenopai様](https://github.com/Yumenopai) ([X/Twitter雑多垢](https://twitter.com/Yumepai_houchi), [Youtube](https://www.youtube.com/@Yumenopai))
+- [ゆめの/Yumenopai様](https://github.com/Yumenopai) ([X/Twitter](https://twitter.com/Yumepai_houchi), [Youtube](https://www.youtube.com/@Yumenopai))
 - [くろにゃんこ様](https://github.com/schwKatz) ([X/Twitter](https://twitter.com/KatzeSw), [Youtube](https://www.youtube.com/@SwKatz))
 - [希氷様](https://github.com/Kihi1120) ([X/Twitter](https://twitter.com/AmongUs000A), [Youtube]( https://www.youtube.com/@lion1120_ ))
 
