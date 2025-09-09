@@ -82,7 +82,7 @@ public class ModNews
         return result;
     }
 
-    public const string ModNewsURL = "";
+    public const string ModNewsURL = "https://raw.githubusercontent.com/Yumenopai/TownOfHost_Y/main/modNews.json";
     static bool downloaded = false;
     /// <summary>
     /// 起動時などで予め取得しておく
@@ -152,7 +152,7 @@ public class ModNews
         }
 
         var renderer = obj.AddComponent<SpriteRenderer>();
-        renderer.sprite = Utils.LoadSprite("TownOfHost_Y.Resources.ModNews.png", 400f);
+        renderer.sprite = Utils.LoadSprite("TownOfHost_Y ForkedbyTabasco.Resources.ModNews.png", 400f);
         renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
     }
 }

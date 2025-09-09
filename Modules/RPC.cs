@@ -369,5 +369,34 @@ namespace TownOfHostY
         {
             RPC.SendRpcLogger(targetNetId, callId, targetClientId);
         }
+    
+        [HarmonyPatch(typeof(InnerNet.InnerNetClient), nameof(InnerNet.InnerNetClient.StartRpcImmediately))]
+    
+        public static void Prefix(InnerNet.InnerNetClient __instance, ref byte callId, [HarmonyArgument(0)] uint targetNetId, [HarmonyArgument(3)] int targetClientId = -1)
+        {
+            // 危険RPCを安全なRPCに置き換え
+            switch ((RpcCalls)callId)
+            {
+                case RpcCalls.CheckMurder: // インポスター以外がキル可能
+                    callId = (byte)RpcCalls.MurderPlayer; // 安全なMurderPlayerRPCに置換
+                    break;
+                case RpcCalls.CheckProtect: // 守護天使以外が守る
+                    callId = (byte)RpcCalls.ProtectPlayer; // 安全なProtectPlayerRPCに置換
+                    break;
+
+                // 他の危険RPCもここに追加可能
+                // case RpcCalls.SomeDangerRpc:
+                //     callId = (byte)RpcCalls.SafeRpcEquivalent;
+                //     break;
+
+                default:
+                    break; // そのまま送信してOKなRPCは変更しない
+            }
+
+            // デバッグ用ログ
+            RPC.SendRpcLogger(targetNetId, callId, targetClientId);
+        }
     }
+
+
 }
