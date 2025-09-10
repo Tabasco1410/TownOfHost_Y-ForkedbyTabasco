@@ -15,7 +15,7 @@
 
 ## リリース
 
-AmongUsバージョン : **16.0.5**
+AmongUsバージョン : **17.0.0**
 
 **最新版は[こちら](https://github.com/tukasa0001/TownOfHost/releases/latest)**
 
