@@ -169,7 +169,7 @@ public static class GameOptionsMenuPatch
     }
     private static void OptionBehaviourSetSizeAndPosition(OptionBehaviour optionBehaviour, OptionItem option, OptionTypes type)
     {
-        optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().sprite = Utils.LoadSprite($"TownOfHost_Y.Resources.SettingMenu_LabelBackground.png", 100f);
+        optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().sprite = Utils.LoadSprite($"TownOfHost_Y ForkedbyTabasco.Resources.SettingMenu_LabelBackground.png", 100f);
 
         Vector3 positionOffset = new(0f, 0f, 0f);
         Vector3 scaleOffset = new(0f, 0f, 0f);
@@ -304,13 +304,28 @@ public static class GameOptionsMenuPatch
     {
         BaseGameSetting baseGameSetting = null;
 
-        if (item is BooleanOptionItem)
+        if (item is BooleanOptionItem boolItem)
         {
-            baseGameSetting = new CheckboxGameSetting
+            var stringItem = new StringOptionItem(
+                boolItem.Id,
+                boolItem.Name,
+                boolItem.Bool ? 1 : 0,
+                boolItem.Tab,
+                true,
+                boolItem.Selections
+            );
+
+            baseGameSetting = new StringGameSetting
             {
-                Type = OptionTypes.Checkbox,
+                Type = OptionTypes.String,
+                Values = new StringNames[stringItem.Selections.Length], // ダミー
+                Index = stringItem.GetInt(),
+                Title = StringNames.Accept
             };
         }
+
+
+
         else if (item is IntegerOptionItem)
         {
             IntegerOptionItem intItem = item as IntegerOptionItem;

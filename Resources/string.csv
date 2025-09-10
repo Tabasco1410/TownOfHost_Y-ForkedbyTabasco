@@ -1731,5 +1731,5 @@ CCYellowCatInfo,You have become the YellowCat,黄陣営に所属した,你成为
 "SCM_NothingMeetingNameColor","Remove The Color Of The Name To Myself During Meeting(Excluding Impostors)","会議時、自身への名前の色を消す(インポスターを除く)",
 "SCM_RestoredDeadPlayer","Dead Players Restore","死亡したプレイヤーは姿を戻す"
 
-"OFF","OFF","OFF","OFF","OFF","OFF","OFF"
+"OFF","","","","","",""
 "ON","ON","ON","ON","ON","ON","ON"

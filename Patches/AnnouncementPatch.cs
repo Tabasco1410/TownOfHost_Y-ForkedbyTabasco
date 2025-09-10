@@ -152,7 +152,7 @@ public class ModNews
         }
 
         var renderer = obj.AddComponent<SpriteRenderer>();
-        renderer.sprite = Utils.LoadSprite("TownOfHost_Y.Resources.ModNews.png", 400f);
+        renderer.sprite = Utils.LoadSprite("TownOfHost_Y ForkedbyTabasco.Resources.ModNews.png", 400f);
         renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
     }
 }
