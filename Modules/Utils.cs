@@ -1487,52 +1487,23 @@ public static class Utils
         })));
     }
 
-   
-
-    // 共通のプレフィックス（アセンブリ名 + フォルダ名）
-    private const string ResourcePrefix = "TownOfHost_Y ForkedbyTabasco.Resources.";
-
-    /// <summary>
-    /// 埋め込みリソースからSpriteをロードする（フルパス指定）
-    /// </summary>
     public static Sprite LoadSprite(string path, float pixelsPerUnit = 1f)
     {
+        Sprite sprite = null;
         try
         {
-            var asm = Assembly.GetExecutingAssembly();
-            var stream = asm.GetManifestResourceStream(path);
-
-            if (stream == null)
-            {
-                Logger.Error($"リソース \"{path}\" が見つかりません。利用可能: {string.Join(", ", asm.GetManifestResourceNames())}", "LoadImage");
-                return null;
-            }
-
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
             var texture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-            using (MemoryStream ms = new())
-            {
-                stream.CopyTo(ms);
-                ImageConversion.LoadImage(texture, ms.ToArray());
-            }
-
-            return Sprite.Create(texture,
-                new Rect(0, 0, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f),
-                pixelsPerUnit);
+            using MemoryStream ms = new();
+            stream.CopyTo(ms);
+            ImageConversion.LoadImage(texture, ms.ToArray());
+            sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), new(0.5f, 0.5f), pixelsPerUnit);
         }
-        catch (Exception ex)
+        catch
         {
-            Logger.Error($"\"{path}\" の読み込みに失敗しました: {ex}", "LoadImage");
-            return null;
+            Logger.Error($"\"{path}\"の読み込みに失敗しました。", "LoadImage");
         }
-    }
-
-    /// <summary>
-    /// ファイル名だけ指定してSpriteをロードする
-    /// </summary>
-    public static Sprite LoadSpriteSimple(string fileName, float pixelsPerUnit = 1f)
-    {
-        return LoadSprite(ResourcePrefix + fileName, pixelsPerUnit);
+        return sprite;
     }
 
 

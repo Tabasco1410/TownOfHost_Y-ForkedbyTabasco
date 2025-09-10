@@ -11,7 +11,7 @@ namespace TownOfHostY
     {
         private static SimpleButton discordButton;
         private static SimpleButton twitterButton;
-        private static SimpleButton wikiwikiButton;
+        
         private static SimpleButton gitHubButton;
         public static SimpleButton UpdateButton { get; private set; }
 

@@ -26,7 +26,7 @@ class DisplayComingOut
 
     public static void SetupCustomOption(int id)
     {
-        Enable = BooleanOptionItem.Create(id + 0, "DisplayComingOutEnable", false, TabGroup.ModMainSettings, true)
+        Enable = StringOptionItem.Create(id + 0, "DisplayComingOutEnable", new string[] { "OFF", "ON" }, false, TabGroup.ModMainSettings, true)
             .SetColor(Palette.CrewmateBlue);
 
         SetupTypeComingOut(id);
@@ -39,7 +39,7 @@ class DisplayComingOut
             if (type is CustomRoleTypes.Unit) continue;
 
             Dictionary<string, string> replacementDic = new() { { "%type%", Translator.GetString($"CustomRoleTypes.{type}") } };
-            EachTypes[type] = BooleanOptionItem.Create(idOffset, "displayComingOut%type%", false, TabGroup.ModMainSettings, true).SetParent(Enable);
+            EachTypes[type] = StringOptionItem.Create(idOffset, "displayComingOut%type%", new string[] { "OFF", "ON" }, false, TabGroup.ModMainSettings, true).SetParent(Enable);
             EachTypes[type].ReplacementDictionary = replacementDic;
 
             SetupRoleComingOut(type, baseId);
