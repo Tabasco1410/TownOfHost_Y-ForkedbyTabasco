@@ -49,10 +49,12 @@ namespace TownOfHost
                 CustomRoles.Scientist or
                 CustomRoles.Tracker or
                 CustomRoles.Noisemaker or
+                CustomRoles.Detective or
                 CustomRoles.GuardianAngel or
                 CustomRoles.Impostor or
                 CustomRoles.Shapeshifter or
-                CustomRoles.Phantom;
+                CustomRoles.Phantom or
+                CustomRoles.Viper;
         }
 
         public static CustomRoleTypes GetCustomRoleTypes(this CustomRoles role)
@@ -79,8 +81,10 @@ namespace TownOfHost
                     CustomRoles.Scientist => roleOpt.GetNumPerGame(RoleTypes.Scientist),
                     CustomRoles.Tracker => roleOpt.GetNumPerGame(RoleTypes.Tracker),
                     CustomRoles.Noisemaker => roleOpt.GetNumPerGame(RoleTypes.Noisemaker),
+                    CustomRoles.Detective => roleOpt.GetNumPerGame(RoleTypes.Detective),
                     CustomRoles.Shapeshifter => roleOpt.GetNumPerGame(RoleTypes.Shapeshifter),
                     CustomRoles.Phantom => roleOpt.GetNumPerGame(RoleTypes.Phantom),
+                    CustomRoles.Viper => roleOpt.GetNumPerGame(RoleTypes.Viper),
                     CustomRoles.GuardianAngel => roleOpt.GetNumPerGame(RoleTypes.GuardianAngel),
                     CustomRoles.Crewmate => roleOpt.GetNumPerGame(RoleTypes.Crewmate),
                     _ => 0
@@ -102,8 +106,10 @@ namespace TownOfHost
                     CustomRoles.Scientist => roleOpt.GetChancePerGame(RoleTypes.Scientist),
                     CustomRoles.Noisemaker => roleOpt.GetChancePerGame(RoleTypes.Noisemaker),
                     CustomRoles.Tracker => roleOpt.GetChancePerGame(RoleTypes.Tracker),
+                    CustomRoles.Detective => roleOpt.GetChancePerGame(RoleTypes.Detective),
                     CustomRoles.Shapeshifter => roleOpt.GetChancePerGame(RoleTypes.Shapeshifter),
                     CustomRoles.Phantom => roleOpt.GetChancePerGame(RoleTypes.Phantom),
+                    CustomRoles.Viper => roleOpt.GetChancePerGame(RoleTypes.Viper),
                     CustomRoles.GuardianAngel => roleOpt.GetChancePerGame(RoleTypes.GuardianAngel),
                     CustomRoles.Crewmate => roleOpt.GetChancePerGame(RoleTypes.Crewmate),
                     _ => 0
