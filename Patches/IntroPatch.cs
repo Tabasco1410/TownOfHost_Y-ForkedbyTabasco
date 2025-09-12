@@ -121,21 +121,33 @@ class BeginCrewmatePatch
                 case CustomRoleTypes.Neutral:
                     __instance.TeamTitle.text = GetString("Neutral");
                     __instance.TeamTitle.color = Color.gray;
-                    //__instance.TeamTitle.text = Utils.GetRoleName(role);
-                    //__instance.TeamTitle.color = Utils.GetRoleColor(role);
                     __instance.ImpostorText.gameObject.SetActive(true);
                     __instance.ImpostorText.text = GetString("NeutralInfo");
                     __instance.BackgroundBar.material.color = Color.gray;
-                    //if (!Options.CurrentGameMode.IsOneNightMode())
-                        StartFadeIntro(__instance, Color.gray, Utils.GetRoleColor(role));
+                    StartFadeIntro(__instance, Color.gray, Utils.GetRoleColor(role));
                     break;
 
                 case CustomRoleTypes.Madmate:
-                    //if (!Options.CurrentGameMode.IsOneNightMode())
-                        StartFadeIntro(__instance, Palette.CrewmateBlue, Palette.ImpostorRed);
-                    PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.Where((role) => role.Role == RoleTypes.Impostor).FirstOrDefault().IntroSound;
+                    StartFadeIntro(__instance, Palette.CrewmateBlue, Palette.ImpostorRed);
+
+                    // for で Impostor の RoleBehaviour を探す
+                    RoleBehaviour impostorRole = null;
+                    foreach (var r in RoleManager.Instance.AllRoles)
+                    {
+                        if (r.Role == RoleTypes.Impostor)
+                        {
+                            impostorRole = r;
+                            break;
+                        }
+                    }
+
+                    if (impostorRole != null)
+                    {
+                        PlayerControl.LocalPlayer.Data.Role.IntroSound = impostorRole.IntroSound;
+                    }
                     break;
             }
+
             switch (role)
             {
                 case CustomRoles.Jackal:
@@ -233,7 +245,19 @@ class BeginCrewmatePatch
                 __instance.BackgroundBar.material.color = Color.red;
 
                 __instance.RoleBlurbText.text = GetString("CCLeaderIntro2");
-                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.Where((role) => role.Role == RoleTypes.Impostor).FirstOrDefault().IntroSound;
+
+                // Impostor の RoleBehaviour を探す
+                RoleBehaviour impostorRole = null;
+                foreach (var r in RoleManager.Instance.AllRoles)
+                {
+                    if (r.Role == RoleTypes.Impostor)
+                    {
+                        impostorRole = r;
+                        break;
+                    }
+                }
+                if (impostorRole != null)
+                    PlayerControl.LocalPlayer.Data.Role.IntroSound = impostorRole.IntroSound;
             }
             else
             {
@@ -244,9 +268,22 @@ class BeginCrewmatePatch
                 __instance.BackgroundBar.material.color = Color.white;
 
                 __instance.RoleBlurbText.text = GetString("CCNoCatIntro2");
-                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.Where((role) => role.Role == RoleTypes.Crewmate).FirstOrDefault().IntroSound;
+
+                // Crewmate の RoleBehaviour を探す
+                RoleBehaviour crewmateRole = null;
+                foreach (var r in RoleManager.Instance.AllRoles)
+                {
+                    if (r.Role == RoleTypes.Crewmate)
+                    {
+                        crewmateRole = r;
+                        break;
+                    }
+                }
+                if (crewmateRole != null)
+                    PlayerControl.LocalPlayer.Data.Role.IntroSound = crewmateRole.IntroSound;
             }
         }
+
         //else if (Options.IsONMode)
         //{
         //    if (role.IsONImpostor())

@@ -431,23 +431,70 @@ public static class PhantomRoleUseAbilityPatch
 {
     public static bool Prefix(PhantomRole __instance)
     {
-        if (__instance.Player.AmOwner && !__instance.Player.Data.IsDead && __instance.Player.moveable && !Minigame.Instance && !__instance.IsCoolingDown && !__instance.fading)
+        // プレイヤーがアクティブで使用可能か確認
+        if (__instance.Player.AmOwner &&
+            !__instance.Player.Data.IsDead &&
+            __instance.Player.moveable &&
+            !Minigame.Instance &&
+            !__instance.IsCoolingDown &&
+            !__instance.fading)
         {
-            System.Func<RoleEffectAnimation, bool> roleEffectAnimation = x => x.effectType == RoleEffectAnimation.EffectType.Vanish_Charge;
-            if (!__instance.Player.currentRoleAnimations.Find(roleEffectAnimation) && !__instance.Player.walkingToVent && !__instance.Player.inMovingPlat)
+            // 現在の役職アニメーションがVanishingチャージでないことを確認
+            bool hasVanishChargeAnimation = false;
+            foreach (var anim in __instance.Player.currentRoleAnimations)
+            {
+                if (anim.effectType == RoleEffectAnimation.EffectType.Vanish_Charge)
+                {
+                    hasVanishChargeAnimation = true;
+                    break;
+                }
+            }
+
+            if (!hasVanishChargeAnimation && !__instance.Player.walkingToVent && !__instance.Player.inMovingPlat)
             {
                 if (__instance.isInvisible)
                 {
                     __instance.MakePlayerVisible(true, true);
                     return false;
                 }
-                DestroyableSingleton<HudManager>.Instance.AbilityButton.SetSecondImage(__instance.Ability);
-                DestroyableSingleton<HudManager>.Instance.AbilityButton.OverrideText(DestroyableSingleton<TranslationController>.Instance.GetString(StringNames.PhantomAbilityUndo, new Il2CppReferenceArray<Il2CppSystem.Object>(0)));
-                __instance.Player.CmdCheckVanish(GameManager.Instance.LogicOptions.GetPhantomDuration());
-                return false;
+
+                var hud = DestroyableSingleton<HudManager>.Instance;
+                hud.AbilityButton.SetSecondImage(__instance.Ability);
+                hud.AbilityButton.OverrideText(DestroyableSingleton<TranslationController>
+                    .Instance.GetString(StringNames.PhantomAbilityUndo, new Il2CppReferenceArray<Il2CppSystem.Object>(0)));
+
+                // PhantomDuration を直接取得
+                float phantomDuration = GetPhantomDuration();
+                __instance.Player.CmdCheckVanish(phantomDuration);
+
+                return false; // 元のメソッドは実行しない
             }
         }
-        return false;
+
+        return false; // 条件に関わらず元メソッドは実行しない
+    }
+
+    // LogicOptions から PhantomDuration を取得する自前メソッド
+    private static float GetPhantomDuration()
+    {
+        var options = GameManager.Instance.LogicOptions;
+
+        // LogicOptions に直接フィールドがある場合
+        // 例: options._phantomDuration
+        // もし存在しない場合は固定値を返す
+        float duration = 5f; // デフォルト5秒
+        try
+        {
+            var field = options.GetType().GetField("_phantomDuration", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (field != null)
+                duration = (float)field.GetValue(options);
+        }
+        catch
+        {
+            // 例外無視してデフォルト値を使用
+        }
+
+        return duration;
     }
 }
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.ReportDeadBody))]

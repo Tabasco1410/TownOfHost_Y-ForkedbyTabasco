@@ -53,7 +53,7 @@ namespace TownOfHostY
             if (!InitFinished) return;
             if (VoiceType.Count == 0) return;
 
-            VoiceReaderMode = StringOptionItem.Create(Id, "VoiceReaderMode", new string[] { "OFF", "ON" }, false, TabGroup.ModMainSettings, true)
+            VoiceReaderMode = BooleanOptionItem.Create(Id, "VoiceReaderMode", false, TabGroup.ModMainSettings, true)
                 .SetColor(Palette.CrewmateBlue)
                 .SetGameMode(CustomGameMode.All);
             VoiceReaderHost = StringOptionItem.Create(Id + 11, "VoiceReaderHost", VoiceName.Values.ToArray(), 0, TabGroup.ModMainSettings, true).SetParent(VoiceReaderMode)

@@ -1,73 +1,86 @@
-    using System;
-    using TownOfHostY.Roles.Core;
+using System;
+using TownOfHostY.Roles.Core;
+using UnityEngine; // ScriptableObject 用
 
-    namespace TownOfHostY
+namespace TownOfHostY
+{
+    public class BooleanOptionItem : OptionItem
     {
-        public class BooleanOptionItem : OptionItem
+        public bool Bool => GetValue() == 1;
+
+        public const string TEXT_true = "ColoredOn";
+        public const string TEXT_false = "ColoredOff";
+
+        // Boolean 専用の設定クラス
+        public class BooleanGameSetting : ScriptableObject
         {
-
-            // 必須情報
-            public IntegerValueRule Rule;
-            public string[] Selections = new[] { "OFF", "ON" };
-
-            // コンストラクタ
-            public BooleanOptionItem(int id, string name, bool defaultValue, TabGroup tab, bool isSingleValue)
-                : base(id, name, defaultValue ? 1 : 0, tab, isSingleValue)
+            public bool Value
             {
-                Rule = (0, 1, 1); // OFF(0) / ON(1)
+                get => value;
+                set
+                {
+                    this.value = value;
+                    OnValueChanged?.Invoke(value);
+                }
             }
+            private bool value;
 
-            // Create メソッド (ID + 名前)
-            public static BooleanOptionItem Create(int id, string name, bool defaultValue, TabGroup tab, bool isSingleValue)
-            {
-                return new BooleanOptionItem(id, name, defaultValue, tab, isSingleValue);
-            }
+            public Action<bool> OnValueChanged;
+        }
 
-            // Create メソッド (Enum 名前)
-            public static BooleanOptionItem Create(int id, Enum name, bool defaultValue, TabGroup tab, bool isSingleValue)
-            {
-                return new BooleanOptionItem(id, name.ToString(), defaultValue, tab, isSingleValue);
-            }
+        // 内部の BooleanGameSetting インスタンス
+        public BooleanGameSetting Setting { get; private set; }
 
-            // Create メソッド (RoleInfo)
-            public static BooleanOptionItem Create(SimpleRoleInfo roleInfo, int idOffset, Enum name, bool defaultValue, bool isSingleValue, OptionItem parent = null)
-            {
-                var opt = new BooleanOptionItem(
-                    roleInfo.ConfigId + idOffset, name.ToString(), defaultValue, roleInfo.Tab, isSingleValue
-                );
-                opt.SetParent(parent ?? roleInfo.RoleOption);
-                return opt;
-            }
+        // コンストラクタ
+        public BooleanOptionItem(int id, string name, bool defaultValue, TabGroup tab, bool isSingleValue)
+            : base(id, name, defaultValue ? 1 : 0, tab, isSingleValue)
+        {
+            Setting = ScriptableObject.CreateInstance<BooleanGameSetting>();
+            Setting.Value = defaultValue;
 
-            // --- Getter ---
-            public override int GetInt() => Rule.GetValueByIndex(CurrentValue);
-            public override float GetFloat() => Rule.GetValueByIndex(CurrentValue);
+            // OptionItem と Setting を同期
+            Setting.OnValueChanged += newValue => SetValue(newValue ? 1 : 0);
+        }
 
-            public override string GetString()
-            {
-                int index = Rule.GetValueByIndex(CurrentValue);
-                if (index < 0 || index >= Selections.Length) index = 0;
-                return Translator.GetString(Selections[index]);
-            }
+        public static BooleanOptionItem Create(
+            int id, string name, bool defaultValue, TabGroup tab, bool isSingleValue
+        )
+        {
+            return new BooleanOptionItem(id, name, defaultValue, tab, isSingleValue);
+        }
 
-            public bool Bool => GetValue() == 1;
+        public static BooleanOptionItem Create(
+            int id, Enum name, bool defaultValue, TabGroup tab, bool isSingleValue
+        )
+        {
+            return new BooleanOptionItem(id, name.ToString(), defaultValue, tab, isSingleValue);
+        }
 
-            public override int GetValue()
-            {
-                return Rule.RepeatIndex(base.GetValue());
-            }
+        public static BooleanOptionItem Create(
+            SimpleRoleInfo roleInfo, int idOffset, Enum name, bool defaultValue, bool isSingleValue, OptionItem parent = null
+        )
+        {
+            var opt = new BooleanOptionItem(
+                roleInfo.ConfigId + idOffset, name.ToString(), defaultValue, roleInfo.Tab, isSingleValue
+            );
+            opt.SetParent(parent ?? roleInfo.RoleOption);
+            return opt;
+        }
 
-            // --- Setter ---
-            public override void SetValue(int value, bool doSync = true)
-            {
-                base.SetValue(Rule.RepeatIndex(value), doSync);
-            }
+        // Getter
+        public override string GetString()
+        {
+            return Translator.GetString(GetBool() ? TEXT_true : TEXT_false);
+        }
 
-            // --- ユーティリティ ---
-            public BooleanOptionItem Toggle(bool doSync = true)
-            {
-                SetValue(1 - GetValue(), doSync);
-                return this;
-            }
+        // Setter
+        public override void SetValue(int value, bool doSync = true)
+        {
+            base.SetValue(value % 2 == 0 ? 0 : 1, doSync);
+
+            // ScriptableObject 側も同期
+            if (Setting != null)
+                Setting.Value = (value != 0);
         }
     }
+}

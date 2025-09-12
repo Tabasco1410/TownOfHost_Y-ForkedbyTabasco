@@ -319,28 +319,41 @@ class SelectRolesPatch
 
         if (roleTypesList != null)
         {
-            IEnumerable<RoleBehaviour> source = from role in DestroyableSingleton<RoleManager>.Instance.AllRoles
-                                                where role.TeamType == team && !RoleManager.IsGhostRole(role.Role)
-                                                select role;
+            // LINQ を使わず、TeamType と GhostRole 判定でフィルタリング
+            List<RoleBehaviour> source = new();
+            foreach (var role in DestroyableSingleton<RoleManager>.Instance.AllRoles)
+            {
+                if (role.TeamType == team && !RoleManager.IsGhostRole(role.Role))
+                {
+                    source.Add(role);
+                }
+            }
+
             foreach (var roleBehaviour in source)
             {
                 if (!roleTypesList.TryGetValue(roleBehaviour.Role, out int count)) continue;
+
                 Logger.Info($"NomalAssign team: {team}, role: {roleBehaviour.Role}, count: {count}", "AssignRolesForTeam");
+
                 for (int i = 0; i < count; i++)
                 {
                     list.Add(roleBehaviour.Role);
                 }
             }
+
             AssignRolesFromList(players, teamMax, list, ref num);
         }
 
+        // 足りない分はデフォルト役職を追加
         while (list.Count < players.Count && list.Count + num < teamMax)
         {
             list.Add(defaultRole);
         }
+
         Logger.Info($"DefaultAssign team: {team}, role: {defaultRole}, count: {list.Count}", "AssignRolesForTeam");
         AssignRolesFromList(players, teamMax, list, ref num);
     }
+
     private static void AssignRolesFromList(List<NetworkedPlayerInfo> players, int teamMax, List<RoleTypes> roleList, ref int rolesAssigned)
     {
         while (roleList.Count > 0 && players.Count > 0 && rolesAssigned < teamMax)
