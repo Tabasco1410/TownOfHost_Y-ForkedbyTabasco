@@ -351,7 +351,7 @@ namespace TownOfHostY
             }
         }
     }
-    // 修正版（IL2CPP 版向け）
+    
     [HarmonyPatch(typeof(InnerNet.InnerNetClient), nameof(InnerNet.InnerNetClient.StartRpcImmediately))]
     class StartRpcImmediatelyLoggerPatch // 名前を変える
     {
@@ -365,36 +365,31 @@ namespace TownOfHostY
     [HarmonyPatch(typeof(InnerNet.InnerNetClient), nameof(InnerNet.InnerNetClient.StartRpcImmediately))]
     class StartRpcImmediatelyPatch
     {
-        public static void Prefix(InnerNet.InnerNetClient __instance, [HarmonyArgument(0)] uint targetNetId, [HarmonyArgument(1)] byte callId, [HarmonyArgument(3)] int targetClientId = -1)
+        public static void Prefix(
+            InnerNet.InnerNetClient __instance,
+            ref byte callId,
+            [HarmonyArgument(1)] uint targetNetId,
+            [HarmonyArgument(3)] int targetClientId = -1)
         {
-            RPC.SendRpcLogger(targetNetId, callId, targetClientId);
-        }
-    
-        [HarmonyPatch(typeof(InnerNet.InnerNetClient), nameof(InnerNet.InnerNetClient.StartRpcImmediately))]
-    
-        public static void Prefix(InnerNet.InnerNetClient __instance, ref byte callId, [HarmonyArgument(0)] uint targetNetId, [HarmonyArgument(3)] int targetClientId = -1)
-        {
+            Logger.Info("StartRpcImmediatelyPatch Prefix called", "Debug");
+
             // 危険RPCを安全なRPCに置き換え
             switch ((RpcCalls)callId)
             {
-                case RpcCalls.CheckMurder: // インポスター以外がキル可能
-                    callId = (byte)RpcCalls.MurderPlayer; // 安全なMurderPlayerRPCに置換
+                case RpcCalls.CheckMurder:
+                    callId = (byte)RpcCalls.MurderPlayer;
                     break;
-                case RpcCalls.CheckProtect: // 守護天使以外が守る
-                    callId = (byte)RpcCalls.ProtectPlayer; // 安全なProtectPlayerRPCに置換
+                case RpcCalls.CheckProtect:
+                    callId = (byte)RpcCalls.ProtectPlayer;
                     break;
-
-                // 他の危険RPCもここに追加可能
-                // case RpcCalls.SomeDangerRpc:
-                //     callId = (byte)RpcCalls.SafeRpcEquivalent;
-                //     break;
-
-                default:
-                    break; // そのまま送信してOKなRPCは変更しない
             }
 
-            // デバッグ用ログ
-            RPC.SendRpcLogger(targetNetId, callId, targetClientId);
+            // ログ出力
+            string rpcName = RPC.GetRpcName(callId);
+            string target = targetClientId < 0 ? "All" : AmongUsClient.Instance.GetClient(targetClientId)?.PlayerName ?? targetClientId.ToString();
+            string from = Main.AllPlayerControls.FirstOrDefault(c => c.NetId == targetNetId)?.Data?.PlayerName ?? targetNetId.ToString();
+
+            Logger.Info($"送信RPC From:{from} Target:{target} CallID:{callId}({rpcName})", "SendRPC");
         }
     }
 
