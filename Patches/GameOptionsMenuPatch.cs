@@ -342,30 +342,39 @@ public static class GameOptionsMenuPatch
 
         else if (item is IntegerOptionItem intItem)
         {
-            baseGameSetting = new IntGameSetting
-            {
-                Type = OptionTypes.Int,
-                Value = intItem.GetInt(),
-                Increment = intItem.Rule.Step,
-                ValidRange = new IntRange(intItem.Rule.MinValue, intItem.Rule.MaxValue),
-                ZeroIsInfinity = false,
-                SuffixType = NumberSuffixes.Multiplier,
-                FormatString = string.Empty,
-            };
+            var intSetting = ScriptableObject.CreateInstance<IntGameSetting>();
+            intSetting.Type = OptionTypes.Int;
+            intSetting.Value = intItem.GetInt();
+            intSetting.Increment = intItem.Rule.Step;
+            intSetting.ValidRange = new IntRange(intItem.Rule.MinValue, intItem.Rule.MaxValue);
+            intSetting.ZeroIsInfinity = false;
+            intSetting.SuffixType = NumberSuffixes.Multiplier;
+            intSetting.FormatString = string.Empty;
+
+            // 初期同期
+            intItem.SetValue(intSetting.Value);
+
+            baseGameSetting = intSetting;
         }
         else if (item is FloatOptionItem floatItem)
         {
-            baseGameSetting = new FloatGameSetting
-            {
-                Type = OptionTypes.Float,
-                Value = floatItem.GetFloat(),
-                Increment = floatItem.Rule.Step,
-                ValidRange = new FloatRange(floatItem.Rule.MinValue, floatItem.Rule.MaxValue),
-                ZeroIsInfinity = false,
-                SuffixType = NumberSuffixes.Multiplier,
-                FormatString = string.Empty,
-            };
+            // FloatOptionItem の場合
+            var floatSetting = ScriptableObject.CreateInstance<FloatGameSetting>();
+            floatSetting.Type = OptionTypes.Float;
+            floatSetting.Value = floatItem.GetFloat();
+            floatSetting.Increment = floatItem.Rule.Step;
+            floatSetting.ValidRange = new FloatRange(floatItem.Rule.MinValue, floatItem.Rule.MaxValue);
+            floatSetting.ZeroIsInfinity = false;
+            floatSetting.SuffixType = NumberSuffixes.Multiplier;
+            floatSetting.FormatString = string.Empty;
+
+            // 初期同期（float → index に変換して SetValue）
+            floatItem.SetValue(floatItem.Rule.GetNearestIndex(floatSetting.Value));
+
+            baseGameSetting = floatSetting;
+
         }
+
         else if (item is StringOptionItem stringItem)
         {
             baseGameSetting = new StringGameSetting
@@ -405,13 +414,34 @@ public static class GameOptionsMenuPatch
         [HarmonyPatch(nameof(NumberOption.Initialize)), HarmonyPrefix]
         private static bool InitializePrefix(NumberOption __instance)
         {
+            // バニラゲーム設定の拡張
+            switch (__instance.Title)
+            {
+                case StringNames.GameShortTasks:
+                case StringNames.GameLongTasks:
+                case StringNames.GameCommonTasks:
+                    __instance.ValidRange = new FloatRange(0, 99);
+                    break;
+                case StringNames.GameKillCooldown:
+                    __instance.ValidRange = new FloatRange(0, 180);
+                    break;
+                case StringNames.GameNumImpostors:
+                    if (DebugModeManager.IsDebugMode)
+                    {
+                        __instance.ValidRange.min = 0;
+                    }
+                    break;
+            }
+
             if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
             {
                 var item = OptionItem.AllOptions[index];
                 __instance.TitleText.text = item.GetName();
 
+                // 初期値反映
                 if (item is BooleanOptionItem boolItem)
                 {
+                    __instance.ValidRange = new FloatRange(0, 1); // Boolean 用に固定
                     __instance.Value = boolItem.GetValue() != 0 ? 1 : 0;
                 }
                 else if (item is IntegerOptionItem intItem)
@@ -424,14 +454,14 @@ public static class GameOptionsMenuPatch
                 }
 
                 __instance.UpdateValue();
-                __instance.OnValueChanged.Invoke(__instance); // 初期値反映
+                __instance.OnValueChanged?.Invoke(__instance);
                 return false;
             }
 
             return true;
         }
 
-        // UpdateValue (内部設定)
+        // UpdateValue
         [HarmonyPatch(nameof(NumberOption.UpdateValue)), HarmonyPrefix]
         private static bool UpdateValuePrefix(NumberOption __instance)
         {
@@ -440,11 +470,17 @@ public static class GameOptionsMenuPatch
                 var item = OptionItem.AllOptions[index];
 
                 if (item is BooleanOptionItem boolItem)
-                    boolItem.SetValue(__instance.GetInt() != 0 ? 1 : 0); // 0/1
+                {
+                    boolItem.SetValue(__instance.GetInt() != 0 ? 1 : 0);
+                }
                 else if (item is IntegerOptionItem intItem)
+                {
                     intItem.SetValue(intItem.Rule.GetNearestIndex(__instance.GetInt()));
+                }
                 else if (item is FloatOptionItem floatItem)
+                {
                     floatItem.SetValue(floatItem.Rule.GetNearestIndex(__instance.GetFloat()));
+                }
 
                 return false;
             }
@@ -457,26 +493,29 @@ public static class GameOptionsMenuPatch
         private static bool IncreasePrefix(NumberOption __instance)
         {
             if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
-
             var item = OptionItem.AllOptions[index];
 
             if (item is BooleanOptionItem)
             {
-                __instance.Value = 1 - __instance.Value; // Boolean トグル
+                // Boolean はトグル
+                __instance.Value = 1 - __instance.Value;
             }
             else
             {
+                // Integer/Float は古い方式
                 float increment = __instance.Increment;
                 if (Input.GetKey(KeyCode.LeftShift))
                     increment *= 5;
 
                 __instance.Value += increment;
                 if (__instance.Value > __instance.ValidRange.max)
+                {
                     __instance.Value = __instance.ValidRange.min;
+                }
             }
 
             __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
+            __instance.OnValueChanged?.Invoke(__instance);
             return false;
         }
 
@@ -485,26 +524,29 @@ public static class GameOptionsMenuPatch
         private static bool DecreasePrefix(NumberOption __instance)
         {
             if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
-
             var item = OptionItem.AllOptions[index];
 
             if (item is BooleanOptionItem)
             {
-                __instance.Value = 1 - __instance.Value; // Boolean トグル
+                // Boolean はトグル
+                __instance.Value = 1 - __instance.Value;
             }
             else
             {
+                // Integer/Float は古い方式
                 float increment = __instance.Increment;
                 if (Input.GetKey(KeyCode.LeftShift))
                     increment *= 5;
 
                 __instance.Value -= increment;
                 if (__instance.Value < __instance.ValidRange.min)
+                {
                     __instance.Value = __instance.ValidRange.max;
+                }
             }
 
             __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
+            __instance.OnValueChanged?.Invoke(__instance);
             return false;
         }
 
@@ -519,9 +561,10 @@ public static class GameOptionsMenuPatch
                 {
                     __instance.oldValue = __instance.Value;
 
-                    // UI 表示は必ず item.GetString() を使用
-                    // Boolean は ON/OFF、% や倍率も崩さない
-                    __instance.ValueText.text = item != null ? item.GetString() : __instance.Value.ToString(__instance.FormatString);
+                    // UI 表示は必ず item.GetString()
+                    __instance.ValueText.text = item != null
+                        ? item.GetString()
+                        : __instance.Value.ToString(__instance.FormatString);
                 }
 
                 return false;

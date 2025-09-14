@@ -28,11 +28,11 @@ public class Main : BasePlugin
     // modの名前 / Mod Name (Default: Town Of Host)
     public static readonly string ModName = "Town Of Host_Y ForkedbyTabasco";
     // modの色 / Mod Color (Default: #00bfff)
-    public static readonly string ModColor = "#ffff00";
+    public static readonly string ModColor = "#ee7800";
     // 公開ルームを許可する / Allow Public Room (Default: true)
     public static readonly bool AllowPublicRoom = true;
     // フォークID / ForkId (Default: OriginalTOH)
-    public static readonly string ForkId = "TOH_Y byT";
+    public static readonly string ForkId = "TOH_Y byTabasco";
     // Discordボタンを表示するか / Show Discord Button (Default: true)
     public static readonly bool ShowDiscordButton = false;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)

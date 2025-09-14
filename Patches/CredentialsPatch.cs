@@ -171,8 +171,7 @@ namespace TownOfHostY
                 else if (CultureInfo.CurrentCulture.Name == "ja-JP")
                 {
                     var num = IRandom.Instance.Next(mainManuText.Length);
-                    SpecialEventText.text = $"★TOH_Yへようこそ！★\n<size=55%>{mainManuText[num]}</size>";
-                    SpecialEventText.color = Color.yellow;
+                    SpecialEventText.text = $"TOH_Y ForkedbyTabasco\n<size=55%>{mainManuText[num]}</size>";                    
                 }
             }
         }
