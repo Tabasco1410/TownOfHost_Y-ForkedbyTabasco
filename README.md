@@ -1,5 +1,7 @@
 
 # TownOfHost_Y — ForkedbyTabasco
+## [Discord](http://discord.com/invite/DhjSAwAreU)
+連絡はサーバーまたはDMへ
 
 このプロジェクトは **Yumenopai 氏の TownOfHost_Y** をフォークしたものです。  
 元は **tukasa0001 氏の TownOfHost** をベースとしています。  
