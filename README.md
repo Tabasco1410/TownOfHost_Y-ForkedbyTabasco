@@ -33,9 +33,9 @@
 
 
 ## クレジット：TOH_Y開発者
-- [ゆめの/Yumenopai様](https://github.com/Yumenopai) ([X/Twitter](https://twitter.com/Yumepai_houchi), [Youtube](https://www.youtube.com/@Yumenopai))
-- [くろにゃんこ様](https://github.com/schwKatz) ([X/Twitter](https://twitter.com/KatzeSw), [Youtube](https://www.youtube.com/@SwKatz))
-- [希氷様](https://github.com/Kihi1120) ([X/Twitter](https://twitter.com/AmongUs000A), [Youtube]( https://www.youtube.com/@lion1120_ ))
+- ゆめの/Yumenopai様
+- くろにゃんこ様
+- 希氷様
 
 ## 移植・参考クレジット(TOH_Yより引用)
 - [本家TOH](https://github.com/tukasa0001/TownOfHost)・[TOH_H](https://github.com/Hyz-sui/TownOfHost-H)
