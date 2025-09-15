@@ -82,7 +82,7 @@ public class ModNews
         return result;
     }
 
-    public const string ModNewsURL = "https://raw.githubusercontent.com/Tabasco1410/TownOfHost_Y-ForkedbyTabasco/refs/heads/main/modNews.json";
+    public const string ModNewsURL = "https://raw.githubusercontent.com/Tabasco1410/TownOfHost_Y-ForkedbyTabasco/main/modNews.json";
     static bool downloaded = false;
     /// <summary>
     /// 起動時などで予め取得しておく
