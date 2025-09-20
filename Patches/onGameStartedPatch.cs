@@ -473,7 +473,7 @@ namespace TownOfHost
                     //ホスト視点は即確定
                     player.StartCoroutine(player.CoSetRole(role, false));
 
-                    var impostorRole = role is RoleTypes.Impostor or RoleTypes.Shapeshifter or RoleTypes.Phantom;
+                    var impostorRole = role is RoleTypes.Impostor or RoleTypes.Shapeshifter or RoleTypes.Phantom or RoleTypes.Viper;
                     if (impostorRole && DesyncImpostorList.Count != 0)
                     {
                         foreach (var seer in Main.AllPlayerControls)
