@@ -370,6 +370,7 @@ public enum CustomRoles
     Impostor,
     Shapeshifter,
     Phantom,
+    Viper,
     //Impostor
     BountyHunter,
     FireWorks,
@@ -400,6 +401,7 @@ public enum CustomRoles
     Scientist,
     Tracker,
     Noisemaker,
+    Detective,
     //Crewmate
     Bait,
     Lighter,

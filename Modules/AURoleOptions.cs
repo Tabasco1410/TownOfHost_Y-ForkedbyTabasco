@@ -71,5 +71,15 @@ namespace TownOfHost
             get => Opt.GetBool(BoolOptionNames.NoisemakerImpostorAlert);
             set => Opt.SetBool(BoolOptionNames.NoisemakerImpostorAlert, value);
         }
+        public static float DetectiveSuspectLimit
+        {
+            get => Opt.GetFloat(FloatOptionNames.DetectiveSuspectLimit);
+            set => Opt.SetFloat(FloatOptionNames.DetectiveSuspectLimit, value);
+        }
+        public static float ViperDissolveTime
+        {
+            get => Opt.GetFloat(FloatOptionNames.ViperDissolveTime);
+            set => Opt.SetFloat(FloatOptionNames.ViperDissolveTime, value);
+        }
     }
 }
