@@ -1,5 +1,7 @@
 
 # TownOfHost_Y — ForkedbyTabasco
+## [Discord](http://discord.com/invite/DhjSAwAreU)
+連絡はサーバーまたはDMへ
 
 このプロジェクトは **Yumenopai 氏の TownOfHost_Y** をフォークしたものです。  
 元は **tukasa0001 氏の TownOfHost** をベースとしています。  
@@ -21,8 +23,7 @@
 このMODは **非公式** であり、Among Us の開発元である **Innersloth** とは一切関係ありません。  
 
 ## 不具合報告について
-このフォークはまだ **正式リリースしていないため、不具合報告は受け付けていません。**  
-公開後に対応方針を検討します。  
+製作中のため現在検討中です。
 
 ## クレジット
 - **TownOfHost_Y** by Yumenopai  
@@ -32,9 +33,9 @@
 
 
 ## クレジット：TOH_Y開発者
-- [ゆめの/Yumenopai様](https://github.com/Yumenopai) ([X/Twitter雑多垢](https://twitter.com/Yumepai_houchi), [Youtube](https://www.youtube.com/@Yumenopai))
-- [くろにゃんこ様](https://github.com/schwKatz) ([X/Twitter](https://twitter.com/KatzeSw), [Youtube](https://www.youtube.com/@SwKatz))
-- [希氷様](https://github.com/Kihi1120) ([X/Twitter](https://twitter.com/AmongUs000A), [Youtube]( https://www.youtube.com/@lion1120_ ))
+- ゆめの/Yumenopai様
+- くろにゃんこ様
+- 希氷様
 
 ## 移植・参考クレジット(TOH_Yより引用)
 - [本家TOH](https://github.com/tukasa0001/TownOfHost)・[TOH_H](https://github.com/Hyz-sui/TownOfHost-H)
