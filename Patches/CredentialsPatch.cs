@@ -54,7 +54,8 @@ namespace TownOfHostY
         class VersionShowerStartPatch
         {
             static string[] mainManuText = {
-                "Town Of Host_Yのフォークmodです\nこのmodに関して、本家TOH・TOH_Yへ問い合わせないでください",
+                "Town Of Host_YのフォークModです\nこのModに関して、本家TOH・TOH_Yへ問い合わせないでください",
+                "新しいバニラの役職、探偵・バイパーはもうちょっと待ってね！\n次のバージョンで実装するよ！"
                /* "このコメントは21種類らしい\nなんか増えてる？",
                 "いつもありがとう！\nこれからも沢山遊んでね",
                 "【今日のおすすめ役職】\nアドミニスター",
@@ -83,12 +84,14 @@ namespace TownOfHostY
             {
                 TMPTemplate.SetBase(__instance.text);
                 Main.credentialsText = $"<color={Main.ModColor}>{Main.ModName}</color> v{Main.PluginVersion}";
+                Main.credentialsText +=$"\r\n<color={Main.BaseModColor}>{Main.BaseModName}</color>: v{Main.BaseModVersion}";
+
                 if (Main.IsPrerelease)
                 {
                     Main.credentialsText += $"{Main.PluginSubVersion}\r\n<#F39C12>{Main.PluginVersionName}</color>";
                 }
 #if DEBUG
-                Main.credentialsText += $"\r\n<color={Main.ModColor}>{ThisAssembly.Git.Branch}({ThisAssembly.Git.Commit})</color>";
+                Main.credentialsText += $"\r\n{ThisAssembly.Git.Branch}({ThisAssembly.Git.Commit})";
 #endif
                 var credentials = TMPTemplate.Create(
                     "TOHCredentialsText",

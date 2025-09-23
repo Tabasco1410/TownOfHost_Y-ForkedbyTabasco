@@ -114,6 +114,8 @@ class BeginCrewmatePatch
         {
             PlayerControl.LocalPlayer.Data.Role.IntroSound = introSound;
         }
+        int numImpostors = Main.NormalOptions.NumImpostors;
+
         if (!Options.ChangeIntro.GetBool())
         {
             switch (role.GetCustomRoleTypes())
@@ -130,7 +132,7 @@ class BeginCrewmatePatch
                 case CustomRoleTypes.Madmate:
                     StartFadeIntro(__instance, Palette.CrewmateBlue, Palette.ImpostorRed);
 
-                    // for で Impostor の RoleBehaviour を探す
+                    // Impostor の RoleBehaviour を探す
                     RoleBehaviour impostorRole = null;
                     foreach (var r in RoleManager.Instance.AllRoles)
                     {
@@ -140,11 +142,8 @@ class BeginCrewmatePatch
                             break;
                         }
                     }
-
                     if (impostorRole != null)
-                    {
                         PlayerControl.LocalPlayer.Data.Role.IntroSound = impostorRole.IntroSound;
-                    }
                     break;
             }
 
@@ -158,6 +157,7 @@ class BeginCrewmatePatch
                     __instance.ImpostorText.text = GetString("TeamJackal");
                     __instance.BackgroundBar.material.color = Utils.GetRoleColor(CustomRoles.Jackal);
                     break;
+
                 case CustomRoles.FoxSpirit:
                 case CustomRoles.Immoralist:
                     __instance.TeamTitle.text = Utils.GetRoleName(CustomRoles.FoxSpirit);
@@ -166,15 +166,14 @@ class BeginCrewmatePatch
                     __instance.ImpostorText.text = GetString("TeamFoxSpirit");
                     __instance.BackgroundBar.material.color = Utils.GetRoleColor(CustomRoles.FoxSpirit);
                     break;
-                
+
                 case CustomRoles.MadSheriff:
                 case CustomRoles.MadConnecter:
                 case CustomRoles.jO:
                     __instance.ImpostorText.gameObject.SetActive(true);
-                    var numImpostors = Main.NormalOptions.NumImpostors;
                     __instance.ImpostorText.text = numImpostors == 1
                         ? DestroyableSingleton<TranslationController>.Instance.GetString(StringNames.NumImpostorsS)
-                        : __instance.ImpostorText.text = string.Format(DestroyableSingleton<TranslationController>.Instance.GetString(StringNames.NumImpostorsP), numImpostors);
+                        : string.Format(DestroyableSingleton<TranslationController>.Instance.GetString(StringNames.NumImpostorsP), numImpostors);
                     __instance.ImpostorText.text = __instance.ImpostorText.text.Replace("[FF1919FF]", "<color=#FF1919FF>").Replace("[]", "</color>");
                     break;
             }
@@ -206,6 +205,7 @@ class BeginCrewmatePatch
                     break;
             }
         }
+
         switch (role)
         {
             case CustomRoles.StrayWolf:
@@ -220,11 +220,10 @@ class BeginCrewmatePatch
             case CustomRoles.SillySheriff:
                 __instance.BackgroundBar.material.color = Palette.CrewmateBlue;
                 __instance.ImpostorText.gameObject.SetActive(true);
-                var numImpostors = Main.NormalOptions.NumImpostors;
-                var text = numImpostors == 1
+                __instance.ImpostorText.text = numImpostors == 1
                     ? GetString(StringNames.NumImpostorsS)
                     : string.Format(GetString(StringNames.NumImpostorsP), numImpostors);
-                __instance.ImpostorText.text = text.Replace("[FF1919FF]", "<color=#FF1919FF>").Replace("[]", "</color>");
+                __instance.ImpostorText.text = __instance.ImpostorText.text.Replace("[FF1919FF]", "<color=#FF1919FF>").Replace("[]", "</color>");
                 break;
 
             case CustomRoles.GM:
@@ -234,6 +233,7 @@ class BeginCrewmatePatch
                 __instance.ImpostorText.gameObject.SetActive(false);
                 break;
         }
+
         if (Options.IsCCMode)
         {
             if (role.IsCCLeaderRoles())
@@ -243,10 +243,8 @@ class BeginCrewmatePatch
                 __instance.ImpostorText.gameObject.SetActive(true);
                 __instance.ImpostorText.text = GetString("CCLeaderIntro2");
                 __instance.BackgroundBar.material.color = Color.red;
-
                 __instance.RoleBlurbText.text = GetString("CCLeaderIntro2");
 
-                // Impostor の RoleBehaviour を探す
                 RoleBehaviour impostorRole = null;
                 foreach (var r in RoleManager.Instance.AllRoles)
                 {
@@ -266,10 +264,8 @@ class BeginCrewmatePatch
                 __instance.ImpostorText.gameObject.SetActive(true);
                 __instance.ImpostorText.text = GetString("CCNoCatIntro2");
                 __instance.BackgroundBar.material.color = Color.white;
-
                 __instance.RoleBlurbText.text = GetString("CCNoCatIntro2");
 
-                // Crewmate の RoleBehaviour を探す
                 RoleBehaviour crewmateRole = null;
                 foreach (var r in RoleManager.Instance.AllRoles)
                 {
@@ -283,6 +279,7 @@ class BeginCrewmatePatch
                     PlayerControl.LocalPlayer.Data.Role.IntroSound = crewmateRole.IntroSound;
             }
         }
+
 
         //else if (Options.IsONMode)
         //{

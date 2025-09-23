@@ -17,10 +17,11 @@ using TownOfHostY.Roles.Core;
 [assembly: AssemblyInformationalVersionAttribute(TownOfHostY.Main.PluginVersion)]
 namespace TownOfHostY;
 
-[BepInPlugin(PluginGuid, "Town Of Host_Y", PluginVersion)]
+[BepInPlugin(PluginGuid, "Town Of Host_Y ForkedbyTabasco", PluginVersion)]
 [BepInIncompatibility("jp.ykundesu.supernewroles")]
 [BepInIncompatibility("com.emptybottle.townofhost")]
 [BepInIncompatibility("com.AsumuAkaguma.townofhostfore")]
+[BepInIncompatibility("com.yumenopai.townofhosty")]
 [BepInProcess("Among Us.exe")]
 public class Main : BasePlugin
 {
@@ -34,9 +35,9 @@ public class Main : BasePlugin
     // フォークID / ForkId (Default: OriginalTOH)
     public static readonly string ForkId = "TOH_Y byTabasco";
     // Discordボタンを表示するか / Show Discord Button (Default: true)
-    public static readonly bool ShowDiscordButton = false;
+    public static readonly bool ShowDiscordButton = true;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)
-    public static readonly string DiscordInviteUrl = "";
+    public static readonly string DiscordInviteUrl = "https://discord.gg/T348mSSAvN";
     // ==========
     public const string OriginalForkId = "OriginalTOH"; // Don't Change The Value. / この値を変更しないでください。
     // == 認証設定 / Authentication Config ==
@@ -51,14 +52,20 @@ public class Main : BasePlugin
 
     // ==========
     //Sorry for many Japanese comments.
-    public const string PluginGuid = "com.yumenopai.townofhosty";
+    public const string PluginGuid = "com.Tabasco.townofhosty_ForkedbyTabasco";
     public const string PluginVersion = "1.0.1";
+
+    //Fork元のTOH_Y
+    public const string BaseModName = "TOH_Y";
+    public const string BaseModVersion = "519.27.1";
+    public const string BaseModColor = "#ffff00";
+
     // サポートされている最低のAmongUsバージョン
     public static readonly string LowestSupportedVersion = "2025.4.20";
     // このバージョンのみで公開ルームを無効にする場合
     public static readonly bool IsPublicAvailableOnThisVersion = false;
     // プレリリースかどうか
-    public static bool IsPrerelease { get; } = true;
+    public static bool IsPrerelease { get; } = false;
     public const string PluginSubVersion = "β";
     public const string PluginVersionName = "Debugversion";
 

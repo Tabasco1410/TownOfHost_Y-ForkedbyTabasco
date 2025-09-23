@@ -564,6 +564,11 @@ static class ExtendedPlayerControl
     {
         var rangePlayersIL = RoleBehaviour.GetTempPlayerList();
         List<PlayerControl> rangePlayers = new();
+
+        // nullチェック追加
+        if (player?.Data?.Role == null)
+            return rangePlayers;
+
         player.Data.Role.GetPlayersInAbilityRangeSorted(rangePlayersIL, ignoreColliders);
         foreach (var pc in rangePlayersIL)
         {

@@ -307,14 +307,13 @@ public static class GameOptionsMenuPatch
 
     private static BaseGameSetting GetSetting(OptionItem item)
     {
-        Logger.Info($"GetSetting開始: OptionItem={item.GetName()}", "OptionItemBinding");
+       
         BaseGameSetting baseGameSetting = null;
 
         if (item is BooleanOptionItem boolItem)
         {
             var intSetting = ScriptableObject.CreateInstance<IntGameSetting>();
-            Logger.Info($"IntGameSetting インスタンス生成: type={intSetting?.GetType().FullName ?? "null"}", "OptionItemBinding");
-
+            
             intSetting.Type = OptionTypes.Int;
             intSetting.Value = boolItem.Bool ? 1 : 0;
             intSetting.Increment = 1;
@@ -322,8 +321,7 @@ public static class GameOptionsMenuPatch
             intSetting.FormatString = "";
 
             boolItem.SetValue(intSetting.Value);
-            Logger.Info($"BooleanOptionItem 初期同期: name={boolItem.GetName()}, value={intSetting.Value}", "OptionItemBinding");
-
+            
             baseGameSetting = intSetting;
         }
         else if (item is IntegerOptionItem intItem)
@@ -338,8 +336,7 @@ public static class GameOptionsMenuPatch
             intSetting.FormatString = string.Empty;
 
             intItem.SetValue(intSetting.Value);
-            Logger.Info($"IntegerOptionItem 初期同期: name={intItem.GetName()}, value={intSetting.Value}", "OptionItemBinding");
-
+            
             baseGameSetting = intSetting;
         }
         else if (item is FloatOptionItem floatItem)
@@ -354,8 +351,7 @@ public static class GameOptionsMenuPatch
             floatSetting.FormatString = string.Empty;
 
             floatItem.SetValue(floatItem.Rule.GetNearestIndex(floatSetting.Value));
-            Logger.Info($"FloatOptionItem 初期同期: name={floatItem.GetName()}, value={floatSetting.Value}", "OptionItemBinding");
-
+            
             baseGameSetting = floatSetting;
         }
         else if (item is StringOptionItem stringItem)
@@ -366,8 +362,7 @@ public static class GameOptionsMenuPatch
                 Values = new StringNames[stringItem.Selections.Length],
                 Index = stringItem.GetInt(),
             };
-            Logger.Info($"StringOptionItem 設定作成: name={stringItem.GetName()}, index={stringItem.GetInt()}", "OptionItemBinding");
-        }
+              }
         else if (item is PresetOptionItem presetItem)
         {
             baseGameSetting = new StringGameSetting
@@ -376,7 +371,7 @@ public static class GameOptionsMenuPatch
                 Values = new StringNames[OptionItem.NumPresets],
                 Index = presetItem.GetInt(),
             };
-            Logger.Info($"PresetOptionItem 設定作成: name={presetItem.GetName()}, index={presetItem.GetInt()}", "OptionItemBinding");
+
         }
 
         if (baseGameSetting != null)
@@ -384,7 +379,7 @@ public static class GameOptionsMenuPatch
             baseGameSetting.Title = StringNames.Accept;
         }
 
-        Logger.Info($"GetSetting完了: OptionItem={item.GetName()}", "OptionItemBinding");
+       
         return baseGameSetting;
     }
 
@@ -396,8 +391,7 @@ public static class GameOptionsMenuPatch
         [HarmonyPatch(nameof(NumberOption.Initialize)), HarmonyPrefix]
         private static bool InitializePrefix(NumberOption __instance)
         {
-            Logger.Info($"NumberOption.Initialize開始: Title={__instance.Title}", "NumberOptionPatch");
-
+           
             switch (__instance.Title)
             {
                 case StringNames.GameShortTasks:
@@ -418,8 +412,7 @@ public static class GameOptionsMenuPatch
             {
                 var item = OptionItem.AllOptions[index];
                 __instance.TitleText.text = item.GetName();
-                Logger.Info($"NumberOption 初期値同期チェック: OptionItem={item.GetName()}, 現在Value={__instance.Value}", "NumberOptionPatch");
-
+                
                 // UIのValueがまだ初期状態ならOptionItemの値でセットする
                 if (__instance.Value == default)
                 {
@@ -440,8 +433,7 @@ public static class GameOptionsMenuPatch
 
                 __instance.UpdateValue();
                 __instance.OnValueChanged?.Invoke(__instance);
-                Logger.Info($"NumberOption.Initialize完了: OptionItem={item.GetName()}, Value={__instance.Value}", "NumberOptionPatch");
-                return false;
+               return false;
             }
 
 
@@ -454,8 +446,7 @@ public static class GameOptionsMenuPatch
             if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
             {
                 var item = OptionItem.AllOptions[index];
-                Logger.Info($"NumberOption.UpdateValue開始: OptionItem={item.GetName()}", "NumberOptionPatch");
-
+                
                 if (item is BooleanOptionItem boolItem)
                 {
                     boolItem.SetValue(__instance.GetInt() != 0 ? 1 : 0);
@@ -469,7 +460,6 @@ public static class GameOptionsMenuPatch
                     floatItem.SetValue(floatItem.Rule.GetNearestIndex(__instance.GetFloat()));
                 }
 
-                Logger.Info($"NumberOption.UpdateValue完了: OptionItem={item.GetName()}, Value={__instance.Value}", "NumberOptionPatch");
                 return false;
             }
 
@@ -482,8 +472,7 @@ public static class GameOptionsMenuPatch
             if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
             var item = OptionItem.AllOptions[index];
 
-            Logger.Info($"NumberOption.Increase開始: OptionItem={item.GetName()}, OldValue={__instance.Value}", "NumberOptionPatch");
-
+           
             if (item is BooleanOptionItem)
                 __instance.Value = 1 - __instance.Value;
             else
@@ -499,8 +488,7 @@ public static class GameOptionsMenuPatch
 
             __instance.UpdateValue();
             __instance.OnValueChanged?.Invoke(__instance);
-            Logger.Info($"NumberOption.Increase完了: OptionItem={item.GetName()}, NewValue={__instance.Value}", "NumberOptionPatch");
-            return false;
+             return false;
         }
 
         [HarmonyPatch(nameof(NumberOption.Decrease)), HarmonyPrefix]
@@ -509,8 +497,7 @@ public static class GameOptionsMenuPatch
             if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
             var item = OptionItem.AllOptions[index];
 
-            Logger.Info($"NumberOption.Decrease開始: OptionItem={item.GetName()}, OldValue={__instance.Value}", "NumberOptionPatch");
-
+            
             if (item is BooleanOptionItem)
                 __instance.Value = 1 - __instance.Value;
             else
@@ -526,7 +513,6 @@ public static class GameOptionsMenuPatch
 
             __instance.UpdateValue();
             __instance.OnValueChanged?.Invoke(__instance);
-            Logger.Info($"NumberOption.Decrease完了: OptionItem={item.GetName()}, NewValue={__instance.Value}", "NumberOptionPatch");
             return false;
         }
 
@@ -540,7 +526,7 @@ public static class GameOptionsMenuPatch
                 {
                     __instance.oldValue = __instance.Value;
                     __instance.ValueText.text = item != null ? item.GetString() : __instance.Value.ToString(__instance.FormatString);
-                    Logger.Info($"NumberOption.FixedUpdate: OptionItem={item?.GetName() ?? "null"}, Value={__instance.Value}", "NumberOptionPatch");
+
                 }
 
                 return false;

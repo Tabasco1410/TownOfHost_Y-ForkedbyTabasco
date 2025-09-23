@@ -12,18 +12,24 @@ namespace TownOfHostY.Modules
             {
                 if (_logicOptions == null || !GameManager.Instance.LogicComponents.Contains(_logicOptions))
                 {
+                    _logicOptions = null;
                     foreach (var glc in GameManager.Instance.LogicComponents)
+                    {
                         if (glc.TryCast<LogicOptions>(out var lo))
+                        {
                             _logicOptions = lo;
+                            break;
+                        }
+                    }
                 }
-                return _logicOptions != null && _logicOptions.IsDirty;
+                return _logicOptions?.IsDirty ?? false; // nullならfalse
             }
             protected set
             {
-                if (_logicOptions != null)
-                    _logicOptions.ClearDirtyFlag();
+                _logicOptions?.ClearDirtyFlag(); // nullなら何もしない
             }
         }
+
         private LogicOptions _logicOptions;
 
         public override IGameOptions BuildGameOptions()
