@@ -44,51 +44,75 @@ class CoBeginPatch
 {
     public static void Prefix()
     {
-        var logger = Logger.Handler("Info");
-        logger.Info("------------名前表示------------");
-        foreach (var pc in Main.AllPlayerControls)
+        try
         {
-            logger.Info($"{(pc.AmOwner ? "[*]" : ""),-3}{pc.PlayerId,-2}:{pc.name.PadRightV2(20)}:{pc.cosmetics.nameText.text}({Palette.ColorNames[pc.Data.DefaultOutfit.ColorId].ToString().Replace("Color", "")})");
-            pc.cosmetics.nameText.text = pc.name;
-        }
-        logger.Info("----------役職割り当て----------");
-        foreach (var pc in Main.AllPlayerControls)
-        {
-            logger.Info($"{(pc.AmOwner ? "[*]" : ""),-3}{pc.PlayerId,-2}:{pc?.Data?.PlayerName?.PadRightV2(20)}:{pc.GetAllRoleName().RemoveHtmlTags()}");
-        }
-        logger.Info("--------------環境--------------");
-        foreach (var pc in Main.AllPlayerControls)
-        {
+            var logger = Logger.Handler("Info");
+            logger.Info("------------名前表示------------");
+            foreach (var pc in Main.AllPlayerControls)
+            {
+                logger.Info($"{(pc.AmOwner ? "[*]" : ""),-3}{pc.PlayerId,-2}:{pc.name.PadRightV2(20)}:{pc.cosmetics.nameText.text}({Palette.ColorNames[pc.Data.DefaultOutfit.ColorId].ToString().Replace("Color", "")})");
+                pc.cosmetics.nameText.text = pc.name;
+            }
+            logger.Info("----------役職割り当て----------");
+            foreach (var pc in Main.AllPlayerControls)
+            {
+                logger.Info($"{(pc.AmOwner ? "[*]" : ""),-3}{pc.PlayerId,-2}:{pc?.Data?.PlayerName?.PadRightV2(20)}:{pc.GetAllRoleName().RemoveHtmlTags()}");
+            }
+            logger.Info("--------------環境--------------");
+            foreach (var pc in Main.AllPlayerControls)
+            {
+                try
+                {
+                    var text = pc.AmOwner ? "[*]" : "   ";
+                    text += $"{pc.PlayerId,-2}:{pc.Data?.PlayerName?.PadRightV2(20)}:{pc.GetClient()?.PlatformData?.Platform.ToString()?.Replace("Standalone", ""),-11}";
+                    if (Main.playerVersion.TryGetValue(pc.PlayerId, out PlayerVersion pv))
+                        text += $":Mod({pv.forkId}/{pv.version}:{pv.tag})";
+                    else text += ":Vanilla";
+                    logger.Info(text);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Exception(ex, "Platform");
+                }
+            }
+            logger.Info("------------基本設定------------");
+            var tmp = GameOptionsManager.Instance.CurrentGameOptions.ToHudString(GameData.Instance ? GameData.Instance.PlayerCount : 10).Split("\r\n").Skip(1);
+            foreach (var t in tmp) logger.Info(t);
+            logger.Info("------------詳細設定------------");
+            foreach (var o in OptionItem.AllOptions)
+                if (!o.IsHiddenOn(Options.CurrentGameMode) && (o.Parent == null ? !o.GetString().Equals("0%") : o.Parent.GetBool()))
+                    logger.Info($"{(o.Parent == null ? o.Name.PadRightV2(40) : $"┗ {o.Name}".PadRightV2(41))}:{o.GetString().RemoveHtmlTags()}");
+            logger.Info("-------------その他-------------");
+            logger.Info($"プレイヤー数: {Main.AllPlayerControls.Count()}人");
+
+            // タスク初期化
+            Main.AllPlayerControls.Do(x => PlayerState.GetByPlayerId(x.PlayerId).InitTask(x));
+
+            if (GameData.Instance != null)
+            {
+                GameData.Instance.RecomputeTaskCounts();
+                TaskState.InitialTotalTasks = GameData.Instance.TotalTasks;
+            }
+
+            // NotifyRoles 呼び出し（try-catch で保護）
             try
             {
-                var text = pc.AmOwner ? "[*]" : "   ";
-                text += $"{pc.PlayerId,-2}:{pc.Data?.PlayerName?.PadRightV2(20)}:{pc.GetClient()?.PlatformData?.Platform.ToString()?.Replace("Standalone", ""),-11}";
-                if (Main.playerVersion.TryGetValue(pc.PlayerId, out PlayerVersion pv))
-                    text += $":Mod({pv.forkId}/{pv.version}:{pv.tag})";
-                else text += ":Vanilla";
-                logger.Info(text);
+                Utils.NotifyRoles();
             }
             catch (Exception ex)
             {
-                Logger.Exception(ex, "Platform");
+                Logger.Error($"NotifyRoles で例外が発生しました: {ex.Message}", "CoBeginPatch");
+                Logger.Exception(ex, "CoBeginPatch");
             }
+
+            GameStates.InGame = true;
         }
-        logger.Info("------------基本設定------------");
-        var tmp = GameOptionsManager.Instance.CurrentGameOptions.ToHudString(GameData.Instance ? GameData.Instance.PlayerCount : 10).Split("\r\n").Skip(1);
-        foreach (var t in tmp) logger.Info(t);
-        logger.Info("------------詳細設定------------");
-        foreach (var o in OptionItem.AllOptions)
-            if (!o.IsHiddenOn(Options.CurrentGameMode) && (o.Parent == null ? !o.GetString().Equals("0%") : o.Parent.GetBool()))
-                logger.Info($"{(o.Parent == null ? o.Name.PadRightV2(40) : $"┗ {o.Name}".PadRightV2(41))}:{o.GetString().RemoveHtmlTags()}");
-        logger.Info("-------------その他-------------");
-        logger.Info($"プレイヤー数: {Main.AllPlayerControls.Count()}人");
-        Main.AllPlayerControls.Do(x => PlayerState.GetByPlayerId(x.PlayerId).InitTask(x));
-        GameData.Instance.RecomputeTaskCounts();
-        TaskState.InitialTotalTasks = GameData.Instance.TotalTasks;
-
-        Utils.NotifyRoles();
-
-        GameStates.InGame = true;
+        catch (Exception ex)
+        {
+            Logger.Error($"CoBeginPatch.Prefix で予期しない例外が発生しました: {ex.Message}", "CoBeginPatch");
+            Logger.Exception(ex, "CoBeginPatch");
+            GameStates.InGame = true; // 最低限ゲーム開始状態にする
+        }
     }
 }
 [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.BeginCrewmate))]

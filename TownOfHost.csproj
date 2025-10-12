@@ -13,7 +13,7 @@
 		<AssemblyName>TownOfHost_Y ForkedbyTabasco</AssemblyName>
 		<RootNamespace>TownOfHost_Y ForkedbyTabasco</RootNamespace>
 		
-		<AmongUs>D:\Application\Steam\steamapps\common\TownOfHost_Y</AmongUs>
+		<AmongUs>D:\Among Us\ModsFolder\TownOfHost_Y</AmongUs>
 
 		<SteamTemp>D:\Among Us\TownOfHost_Y\TownOfHost_Y-ForkedbyTabasco_Steam</SteamTemp>
 		<EpicTemp>D:\Among Us\TownOfHost_Y\TownOfHost_Y-ForkedbyTabasco_Epic</EpicTemp>

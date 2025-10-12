@@ -14,123 +14,167 @@ using static TownOfHostY.Translator;
 
 namespace TownOfHostY;
 
+
+
 [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CoStartGame))]
 class ChangeRoleSettings
 {
     public static void Postfix(AmongUsClient __instance)
     {
-        //注:この時点では役職は設定されていません。
-        Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
-        Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
-        Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
-        Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
-        Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
-        Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
-        Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
-
-        if (Options.IsCCMode) Main.NormalOptions.NumImpostors = 1;
-        //if (Options.IsONMode) Main.NormalOptions.NumEmergencyMeetings = 0;
-
-        Main.AllPlayerKillCooldown = new Dictionary<byte, float>();
-        Main.AllPlayerSpeed = new Dictionary<byte, float>();
-
-        Main.SKMadmateNowCount = 0;
-
-        Main.AfterMeetingDeathPlayers = new();
-        Main.clientIdList = new();
-
-        Main.CheckShapeshift = new();
-        Main.ShapeshiftTarget = new();
-
-        Main.ShowRoleInfoAtMeeting = new();
-
-        ReportDeadBodyPatch.CannotReportList = new();
-        ReportDeadBodyPatch.CannotReportByDeadBodyList = new();
-        ReportDeadBodyPatch.DontReportMarkList = new();
-        MeetingHudPatch.RevengeTargetPlayer = new();
-        Options.UsedButtonCount = 0;
-        Main.RealOptionsData = new OptionBackupData(GameOptionsManager.Instance.CurrentGameOptions);
-
-        Main.introDestroyed = false;
-
-        RandomSpawn.CustomNetworkTransformPatch.FirstTP = new();
-
-        Main.DefaultCrewmateVision = Main.RealOptionsData.GetFloat(FloatOptionNames.CrewLightMod);
-        Main.DefaultImpostorVision = Main.RealOptionsData.GetFloat(FloatOptionNames.ImpostorLightMod);
-
-        Main.LastNotifyNames = new();
-
-        Main.PlayerColors = new();
-        //名前の記録
-        Main.AllPlayerNames = new();
-
-        var invalidColor = Main.AllPlayerControls.Where(p => p.Data.DefaultOutfit.ColorId < 0 || Palette.PlayerColors.Length <= p.Data.DefaultOutfit.ColorId);
-        if (invalidColor.Any())
+        try
         {
-            var msg = Translator.GetString("Error.InvalidColor");
-            Logger.SendInGame(msg);
-            msg += "\n" + string.Join(",", invalidColor.Select(p => $"{p.name}({p.Data.DefaultOutfit.ColorId})"));
-            Utils.SendMessage(msg);
-            Logger.Error(msg, "CoStartGame");
-        }
-
-        GameModuleInitializerAttribute.InitializeAll();
-
-        foreach (var target in Main.AllPlayerControls)
-        {
-            foreach (var seer in Main.AllPlayerControls)
+            // === 初期化チェック ===
+            if (GameOptionsManager.Instance == null)
             {
-                var pair = (target.PlayerId, seer.PlayerId);
-                Main.LastNotifyNames[pair] = target.name;
+                Logger.Error("CRITICAL: GameOptionsManager.Instance が null です", "ChangeRoleSettings");
+                AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame);
+                return;
             }
-        }
-        foreach (var pc in Main.AllPlayerControls)
-        {
-            var colorId = pc.Data.DefaultOutfit.ColorId;
-            if (AmongUsClient.Instance.AmHost)
+
+            if (GameOptionsManager.Instance.CurrentGameOptions == null)
             {
-                if (Options.GetNameChangeModes() == NameChange.Color)
+                Logger.Error("CRITICAL: CurrentGameOptions が null です", "ChangeRoleSettings");
+                AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame);
+                return;
+            }
+
+            Logger.Info($"GameOptions 初期化確認: OK", "ChangeRoleSettings");
+            Logger.Info($"NormalOptions: {GameOptionsManager.Instance.currentNormalGameOptions != null}", "ChangeRoleSettings");
+
+            // === ゲーム設定 ===
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+
+            if (Options.IsCCMode) Main.NormalOptions.NumImpostors = 1;
+
+            // === データ初期化 ===
+            Main.AllPlayerKillCooldown = new Dictionary<byte, float>();
+            Main.AllPlayerSpeed = new Dictionary<byte, float>();
+
+            Main.SKMadmateNowCount = 0;
+
+            Main.AfterMeetingDeathPlayers = new();
+            Main.clientIdList = new();
+
+            Main.CheckShapeshift = new();
+            Main.ShapeshiftTarget = new();
+
+            Main.ShowRoleInfoAtMeeting = new();
+
+            ReportDeadBodyPatch.CannotReportList = new();
+            ReportDeadBodyPatch.CannotReportByDeadBodyList = new();
+            ReportDeadBodyPatch.DontReportMarkList = new();
+            MeetingHudPatch.RevengeTargetPlayer = new();
+            Options.UsedButtonCount = 0;
+
+            // === RealOptionsData 初期化 ===
+            Main.RealOptionsData = new OptionBackupData(GameOptionsManager.Instance.CurrentGameOptions);
+
+            if (Main.RealOptionsData == null)
+            {
+                Logger.Error("CRITICAL: RealOptionsData の初期化に失敗しました", "ChangeRoleSettings");
+                AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame);
+                return;
+            }
+
+            Logger.Info($"RealOptionsData 初期化: OK", "ChangeRoleSettings");
+            Logger.Info($"RealOptionsData.NumLongTasks: {Main.RealOptionsData.GetInt(Int32OptionNames.NumLongTasks)}", "ChangeRoleSettings");
+            Logger.Info($"RealOptionsData.NumShortTasks: {Main.RealOptionsData.GetInt(Int32OptionNames.NumShortTasks)}", "ChangeRoleSettings");
+
+            Main.introDestroyed = false;
+
+            RandomSpawn.CustomNetworkTransformPatch.FirstTP = new();
+
+            Main.DefaultCrewmateVision = Main.RealOptionsData.GetFloat(FloatOptionNames.CrewLightMod);
+            Main.DefaultImpostorVision = Main.RealOptionsData.GetFloat(FloatOptionNames.ImpostorLightMod);
+
+            Main.LastNotifyNames = new();
+
+            Main.PlayerColors = new();
+            Main.AllPlayerNames = new();
+
+            var invalidColor = Main.AllPlayerControls.Where(p => p.Data.DefaultOutfit.ColorId < 0 || Palette.PlayerColors.Length <= p.Data.DefaultOutfit.ColorId);
+            if (invalidColor.Any())
+            {
+                var msg = Translator.GetString("Error.InvalidColor");
+                Logger.SendInGame(msg);
+                msg += "\n" + string.Join(",", invalidColor.Select(p => $"{p.name}({p.Data.DefaultOutfit.ColorId})"));
+                Utils.SendMessage(msg);
+                Logger.Error(msg, "CoStartGame");
+            }
+
+            GameModuleInitializerAttribute.InitializeAll();
+
+            foreach (var target in Main.AllPlayerControls)
+            {
+                foreach (var seer in Main.AllPlayerControls)
                 {
-                    if (pc.Is(CustomRoles.Rainbow)) pc.RpcSetName(GetString("RainbowColor"));
-                    else pc.RpcSetName(Palette.GetColorName(colorId));
+                    var pair = (target.PlayerId, seer.PlayerId);
+                    Main.LastNotifyNames[pair] = target.name;
                 }
             }
-            PlayerState.Create(pc.PlayerId);
-            Main.AllPlayerNames[pc.PlayerId] = pc?.Data?.PlayerName;
-            Main.PlayerColors[pc.PlayerId] = Palette.PlayerColors[colorId];
-            Main.AllPlayerSpeed[pc.PlayerId] = Main.RealOptionsData.GetFloat(FloatOptionNames.PlayerSpeedMod); //移動速度をデフォルトの移動速度に変更
-            ReportDeadBodyPatch.WaitReport[pc.PlayerId] = new();
-            pc.cosmetics.nameText.text = pc.name;
 
-            RandomSpawn.CustomNetworkTransformPatch.FirstTP.Add(pc.PlayerId, true);
-            var outfit = pc.Data.DefaultOutfit;
-            Camouflage.PlayerSkins[pc.PlayerId] = new NetworkedPlayerInfo.PlayerOutfit().Set(outfit.PlayerName, outfit.ColorId, outfit.HatId, outfit.SkinId, outfit.VisorId, outfit.PetId, outfit.NamePlateId);
-            Main.clientIdList.Add(pc.GetClientId());
-
-            // 初手会議での役職説明表示
-            if (Options.ShowRoleInfoAtFirstMeeting.GetBool())
+            foreach (var pc in Main.AllPlayerControls)
             {
-                Main.ShowRoleInfoAtMeeting.Add(pc.PlayerId);
+                var colorId = pc.Data.DefaultOutfit.ColorId;
+                if (AmongUsClient.Instance.AmHost)
+                {
+                    if (Options.GetNameChangeModes() == NameChange.Color)
+                    {
+                        if (pc.Is(CustomRoles.Rainbow)) pc.RpcSetName(GetString("RainbowColor"));
+                        else pc.RpcSetName(Palette.GetColorName(colorId));
+                    }
+                }
+                PlayerState.Create(pc.PlayerId);
+                Main.AllPlayerNames[pc.PlayerId] = pc?.Data?.PlayerName;
+                Main.PlayerColors[pc.PlayerId] = Palette.PlayerColors[colorId];
+                Main.AllPlayerSpeed[pc.PlayerId] = Main.RealOptionsData.GetFloat(FloatOptionNames.PlayerSpeedMod);
+                ReportDeadBodyPatch.WaitReport[pc.PlayerId] = new();
+                pc.cosmetics.nameText.text = pc.name;
+
+                RandomSpawn.CustomNetworkTransformPatch.FirstTP.Add(pc.PlayerId, true);
+                var outfit = pc.Data.DefaultOutfit;
+                Camouflage.PlayerSkins[pc.PlayerId] = new NetworkedPlayerInfo.PlayerOutfit().Set(outfit.PlayerName, outfit.ColorId, outfit.HatId, outfit.SkinId, outfit.VisorId, outfit.PetId, outfit.NamePlateId);
+                Main.clientIdList.Add(pc.GetClientId());
+
+                if (Options.ShowRoleInfoAtFirstMeeting.GetBool())
+                {
+                    Main.ShowRoleInfoAtMeeting.Add(pc.PlayerId);
+                }
             }
+
+            Main.VisibleTasksCount = true;
+            if (__instance.AmHost)
+            {
+                RPC.SyncCustomSettingsRPC();
+                if (Options.CurrentGameMode == CustomGameMode.HideAndSeek)
+                {
+                    Options.HideAndSeekKillDelayTimer = Options.KillDelay.GetFloat();
+                }
+                if (Options.IsStandardHAS)
+                {
+                    Options.HideAndSeekKillDelayTimer = Options.StandardHASWaitingTime.GetFloat();
+                }
+            }
+
+            IRandom.SetInstanceById(Options.RoleAssigningAlgorithm.GetValue());
+
+            MeetingStates.FirstMeeting = true;
+            GameStates.AlreadyDied = false;
+
+            Logger.Info("ChangeRoleSettings 完了", "ChangeRoleSettings");
         }
-        Main.VisibleTasksCount = true;
-        if (__instance.AmHost)
+        catch (System.Exception ex)
         {
-            RPC.SyncCustomSettingsRPC();
-            if (Options.CurrentGameMode == CustomGameMode.HideAndSeek)
-            {
-                Options.HideAndSeekKillDelayTimer = Options.KillDelay.GetFloat();
-            }
-            if (Options.IsStandardHAS)
-            {
-                Options.HideAndSeekKillDelayTimer = Options.StandardHASWaitingTime.GetFloat();
-            }
+            Logger.Error($"ChangeRoleSettings で例外が発生しました: {ex.Message}", "ChangeRoleSettings");
+            Logger.Exception(ex, "ChangeRoleSettings");
+            AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame);
         }
-
-        IRandom.SetInstanceById(Options.RoleAssigningAlgorithm.GetValue());
-
-        MeetingStates.FirstMeeting = true;
-        GameStates.AlreadyDied = false;
     }
 }
 [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.SelectRoles))]

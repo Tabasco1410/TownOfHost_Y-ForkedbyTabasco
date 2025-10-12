@@ -151,6 +151,7 @@ public class Main : BasePlugin
     public override void Load()
     {
         Instance = this;
+        TownOfHostY.Modules.OptionSaver.Initialize(); // オプション保存用ディレクトリ・ファイルを起動時に作成
 
         //Client Options
         HideName = Config.Bind("Client Options", "Hide Game Code Name", "TOH_Y");
