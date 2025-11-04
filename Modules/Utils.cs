@@ -1458,6 +1458,26 @@ public static class Utils
         string fileName = $"{path}/TownOfHost-v{Main.PluginVersion}-{t}.log";
         FileInfo file = new(@$"{System.Environment.CurrentDirectory}/BepInEx/LogOutput.log");
         var logFile = file.CopyTo(fileName);
+
+        // 追加コピー: ワークスペースに LogOutput.log を保存（タイムスタンプ付きと最新コピー）
+        try
+        {
+            var workspaceDest = @"D:\Among Us\Project Files\TownOfHost_Y";
+            if (!Directory.Exists(workspaceDest)) Directory.CreateDirectory(workspaceDest);
+
+            // タイムスタンプ付きコピー
+            var destTimestamp = Path.Combine(workspaceDest, $"LogOutput-{t}.log");
+            file.CopyTo(destTimestamp, true);
+
+            // 常に上書きする最新コピー
+            var destLatest = Path.Combine(workspaceDest, "LogOutput.log");
+            file.CopyTo(destLatest, true);
+        }
+        catch (System.Exception ex)
+        {
+            Logger.Warn($"LogOutput の追加コピーに失敗しました: {ex.Message}", "CopyLog");
+        }
+
         return logFile.FullName;
     }
     public static void OpenLogFolder()
@@ -1594,4 +1614,50 @@ public static class Utils
     public static int PlayersCount(CountTypes countTypes) => PlayerState.AllPlayerStates.Values.Count(state => state.CountType == countTypes);
     public static int AlivePlayersCount(CountTypes countTypes) => Main.AllAlivePlayerControls.Count(pc => pc.Is(countTypes));
     private const string ActiveSettingsSize = "90%";
+    /// <summary>
+    /// 安全にキル可能距離を取得します。LogicOptions が null の場合はデフォルト値を返します。
+    /// </summary>
+    public static float SafeGetKillDistance()
+    {
+        try
+        {
+            var gm = GameManager.Instance;
+            if (gm == null)
+            {
+                Logger.Warn("GameManager.Instance が null のため SafeGetKillDistance はデフォルトを返します", "Utils");
+                return 0.5f;
+            }
+
+            // LogicOptions が null または内部で例外が出る可能性があるので保護する
+            try
+            {
+                var logic = gm.LogicOptions;
+                if (logic == null)
+                {
+                    Logger.Warn("GameManager.Instance.LogicOptions が null のため SafeGetKillDistance はデフォルトを返します", "Utils");
+                    return 0.5f;
+                }
+
+                return logic.GetKillDistance();
+            }
+            catch (System.NullReferenceException ex)
+            {
+                Logger.Error($"LogicOptions.GetKillDistance で例外: {ex.Message}", "Utils");
+                Logger.Exception(ex, "Utils");
+                return 0.5f;
+            }
+            catch (System.Exception ex)
+            {
+                Logger.Error($"LogicOptions.GetKillDistance で予期しない例外: {ex.Message}", "Utils");
+                Logger.Exception(ex, "Utils");
+                return 0.5f;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Logger.Error($"SafeGetKillDistance の取得で例外: {ex.Message}", "Utils");
+            Logger.Exception(ex, "Utils");
+            return 0.5f;
+        }
+    }
 }

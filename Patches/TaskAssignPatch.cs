@@ -14,8 +14,10 @@ namespace TownOfHostY
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.AddTasksFromList))]
     class AddTasksFromListPatch
     {
+        // Use ref so we can replace the list instance instead of mutating it in-place,
+        // which can cause the original method to crash when it iterates over the list.
         public static void Prefix(ShipStatus __instance,
-            [HarmonyArgument(4)] Il2CppSystem.Collections.Generic.List<NormalPlayerTask> unusedTasks)
+            [HarmonyArgument(4)] ref Il2CppSystem.Collections.Generic.List<NormalPlayerTask> unusedTasks)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (!Options.DisableTasks.GetBool()) return;
@@ -26,29 +28,39 @@ namespace TownOfHostY
                 return;
             }
 
-            List<NormalPlayerTask> DisabledTasks = new();
+            // Build a new Il2Cpp list containing only the tasks we want to keep.
+            var filtered = new Il2CppSystem.Collections.Generic.List<NormalPlayerTask>();
             for (var i = 0; i < unusedTasks.Count; i++)
             {
                 var task = unusedTasks[i];
                 if (task == null) continue;
 
-                if (task.TaskType == TaskTypes.SwipeCard && Options.DisableSwipeCard.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.SubmitScan && Options.DisableSubmitScan.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.UnlockSafe && Options.DisableUnlockSafe.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.UploadData && Options.DisableUploadData.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.StartReactor && Options.DisableStartReactor.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.ResetBreakers && Options.DisableResetBreaker.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.RewindTapes && Options.DisableRewindTapes.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.VentCleaning && Options.DisableVentCleaning.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.BuildSandcastle && Options.DisableBuildSandcastle.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.TestFrisbee && Options.DisableTestFrisbee.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.WaterPlants && Options.DisableWaterPlants.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.CatchFish && Options.DisableCatchFish.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.HelpCritter && Options.DisableHelpCritter.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.TuneRadio && Options.DisableTuneRadio.GetBool()) DisabledTasks.Add(task);
-                if (task.TaskType == TaskTypes.AssembleArtifact && Options.DisableAssembleArtifact.GetBool()) DisabledTasks.Add(task);
+                bool isDisabled = false;
+                if (task.TaskType == TaskTypes.SwipeCard && Options.DisableSwipeCard.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.SubmitScan && Options.DisableSubmitScan.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.UnlockSafe && Options.DisableUnlockSafe.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.UploadData && Options.DisableUploadData.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.StartReactor && Options.DisableStartReactor.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.ResetBreakers && Options.DisableResetBreaker.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.RewindTapes && Options.DisableRewindTapes.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.VentCleaning && Options.DisableVentCleaning.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.BuildSandcastle && Options.DisableBuildSandcastle.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.TestFrisbee && Options.DisableTestFrisbee.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.WaterPlants && Options.DisableWaterPlants.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.CatchFish && Options.DisableCatchFish.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.HelpCritter && Options.DisableHelpCritter.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.TuneRadio && Options.DisableTuneRadio.GetBool()) isDisabled = true;
+                if (task.TaskType == TaskTypes.AssembleArtifact && Options.DisableAssembleArtifact.GetBool()) isDisabled = true;
+
+                if (!isDisabled)
+                {
+                    filtered.Add(task);
+                }
             }
-            DisabledTasks.ForEach(task => unusedTasks.Remove(task));
+
+            // Replace the original list reference with the filtered one so the original method
+            // iterates over a safe list that doesn't contain disabled tasks.
+            unusedTasks = filtered;
         }
     }
 
@@ -173,6 +185,29 @@ namespace TownOfHostY
                     Shuffle(ShortTasks);
                 }
 
+                // If no common tasks are available (TasksList empty), but there are Long/Short tasks
+                // populate TasksList from available tasks so assignment can proceed without nulls.
+                if (TasksList.Count == 0 && (LongTasks.Count > 0 || ShortTasks.Count > 0))
+                {
+                    foreach (var t in LongTasks)
+                    {
+                        if (t != null) TasksList.Add((byte)t.TaskType);
+                    }
+                    foreach (var t in ShortTasks)
+                    {
+                        if (t != null) TasksList.Add((byte)t.TaskType);
+                    }
+
+                    // Remove duplicates while preserving order
+                    var seen = new HashSet<byte>();
+                    var dedup = new Il2CppSystem.Collections.Generic.List<byte>();
+                    foreach (var b in TasksList)
+                    {
+                        if (seen.Add(b)) dedup.Add(b);
+                    }
+                    TasksList = dedup;
+                }
+
                 // VentManager / FoxSpirit 固有処理
                 if (pc.Is(CustomRoles.VentManager) || pc.Is(CustomRoles.FoxSpirit))
                 {
@@ -184,13 +219,33 @@ namespace TownOfHostY
                         var ventTask = ShipStatus.Instance.ShortTasks.FirstOrDefault(t => t != null && t.TaskType == TaskTypes.VentCleaning);
                         if (ventTask != null) ShortTasks.Add(ventTask);
                     }
+
+                    // Ensure TasksList contains vent task type if needed
+                    if (ShortTasks.Count > 0)
+                    {
+                        bool hasVent = false;
+                        for (int _i = 0; _i < TasksList.Count; _i++)
+                        {
+                            if (TasksList[_i] == (byte)TaskTypes.VentCleaning)
+                            {
+                                hasVent = true;
+                                break;
+                            }
+                        }
+
+                        if (!hasVent) TasksList.Add((byte)TaskTypes.VentCleaning);
+                    }
                 }
 
                 // タスク割り当て（null チェック付き）
-                if (LongTasks.Count > 0 || ShortTasks.Count > 0)
+                if ((LongTasks.Count > 0 || ShortTasks.Count > 0) && TasksList.Count > 0)
                 {
                     ShipStatus.Instance.AddTasksFromList(ref start2, NumLongTasks, TasksList, usedTaskTypes, LongTasks);
                     ShipStatus.Instance.AddTasksFromList(ref start3, NumShortTasks, TasksList, usedTaskTypes, ShortTasks);
+                }
+                else if (TasksList.Count == 0)
+                {
+                    Logger.Info($"{pc.name} に割り当て可能なタスクがありませんでした。", "RpcSetTasksPatch");
                 }
 
                 // 配列に変換
