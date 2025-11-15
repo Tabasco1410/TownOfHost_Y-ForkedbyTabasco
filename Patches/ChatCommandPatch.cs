@@ -275,6 +275,12 @@ namespace TownOfHostY
                         Utils.SetKillFlashAfterDead(PlayerControl.LocalPlayer, true);
                         break;
 
+                    case "/killFlashAll":
+                    case "/kfa":
+                        if (GameStates.InGame)
+                            Main.AllPlayerControls.Do(pc => pc.KillFlash());
+                        break;
+
                     case "/offhat":
                     case "/offskin":
                     case "/offvisor":

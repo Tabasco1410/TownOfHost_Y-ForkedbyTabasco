@@ -9,32 +9,32 @@ using TownOfHostY.Roles.Core;
 using static TownOfHostY.Translator;
 
 namespace TownOfHostY;
-[HarmonyPatch(typeof(IntroCutscene._ShowRole_d__41), nameof(IntroCutscene._ShowRole_d__41.MoveNext))]
+[HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.CoBegin))]
+
 class SetUpRoleTextPatch
 {
-    public static void Postfix(IntroCutscene._ShowRole_d__41 __instance)
+    public static void Postfix(IntroCutscene __instance, ref Il2CppSystem.Collections.IEnumerator __result)
     {
         if (!GameStates.IsModHost) return;
-        var _instance = __instance.__4__this;
         _ = new LateTask(() =>
         {
             CustomRoles role = PlayerControl.LocalPlayer.GetCustomRole();
             if (!role.IsVanilla() && role != CustomRoles.Potentialist)
             {
-                _instance.YouAreText.color = Utils.GetRoleColor(role);
-                _instance.RoleText.text = Utils.GetRoleName(role);
-                _instance.RoleText.color = Utils.GetRoleColor(role);
-                _instance.RoleBlurbText.color = Utils.GetRoleColor(role);
+                __instance.YouAreText.color = Utils.GetRoleColor(role);
+                __instance.RoleText.text = Utils.GetRoleName(role);
+                __instance.RoleText.color = Utils.GetRoleColor(role);
+                __instance.RoleBlurbText.color = Utils.GetRoleColor(role);
 
-                _instance.RoleBlurbText.text = PlayerControl.LocalPlayer.GetRoleInfo();
+                __instance.RoleBlurbText.text = PlayerControl.LocalPlayer.GetRoleInfo();
             }
 
             foreach (var subRole in PlayerState.GetByPlayerId(PlayerControl.LocalPlayer.PlayerId).SubRoles)
             {
                 if (subRole == CustomRoles.ChainShifterAddon) continue;
-                _instance.RoleBlurbText.text += "\n" + Utils.ColorString(Utils.GetRoleColor(subRole), GetString($"{subRole}Info"));
+                __instance.RoleBlurbText.text += "\n" + Utils.ColorString(Utils.GetRoleColor(subRole), GetString($"{subRole}Info"));
             }
-            _instance.RoleText.text = RoleText.GetRoleNameText(PlayerControl.LocalPlayer.PlayerId, showSubRole: false);
+            __instance.RoleText.text = RoleText.GetRoleNameText(PlayerControl.LocalPlayer.PlayerId, showSubRole: false);
 
         }, 0.01f, "Override Role Text");
 
