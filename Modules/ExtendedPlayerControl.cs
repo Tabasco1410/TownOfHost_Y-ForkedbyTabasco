@@ -182,27 +182,31 @@ static class ExtendedPlayerControl
     public static void RpcSetRoleNormal(this PlayerControl player, RoleTypes role, bool canOverrideRole = false)
     {
         if (player == null) return;
-        if (AmongUsClient.Instance.AmClient)
+        // Apply locally first (host & clients) so state updates immediately
+        if (AmongUsClient.Instance?.AmClient == true)
         {
-            player.StartCoroutine(player.CoSetRole(role, canOverrideRole));
+            try
+            {
+                player.StartCoroutine(player.CoSetRole(role, canOverrideRole));
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn($"CoSetRole invoke failed: {ex.Message}", "RpcSetRoleNormal");
+            }
         }
-        // StartRpc メソッドを非公開から取得
-        var startRpcMethod = typeof(AmongUsClient).GetMethod(
-            "StartRpc",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
-        );
-
-        // Reflection で呼び出して MessageWriter を取得
-        var messageWriter = startRpcMethod.Invoke(
-            AmongUsClient.Instance,
-            new object[] { player.NetId, (byte)RpcCalls.SetRole, Hazel.SendOption.Reliable }
-        ) as Hazel.MessageWriter;
-
-        messageWriter.Write((ushort)role);
-        messageWriter.Write(true); //canOverrideRole
-        messageWriter.EndMessage();
-
-        Logger.Info($"RpcSetRoleNormal toClientId:All{-1}) player:{player?.name}({role})", "RpcSetRole");
+        // Send RPC to all (-1 broadcast). Use public StartRpcImmediately API instead of reflection (reflection was returning null in some lifecycle moments).
+        try
+        {
+            var writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, Hazel.SendOption.Reliable, -1);
+            writer.Write((ushort)role);
+            writer.Write(canOverrideRole); // preserve caller intent
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            Logger.Info($"RpcSetRoleNormal toClientId:All(-1) player:{player?.name}({role}) override:{canOverrideRole}", "RpcSetRole");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"RpcSetRoleNormal failed: {ex.Message}", "RpcSetRoleNormal");
+        }
     }
 
     public static void SetKillCooldown(this PlayerControl player, float time = -1f, bool ForceProtect = false)

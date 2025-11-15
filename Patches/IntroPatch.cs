@@ -106,6 +106,7 @@ class CoBeginPatch
             }
 
             GameStates.InGame = true;
+            Logger.Info("CoBegin completed: GameStates.InGame set to true", "CoBeginPatch");
         }
         catch (Exception ex)
         {
@@ -417,62 +418,180 @@ class IntroCutsceneDestroyPatch
     {
         if (!GameStates.IsInGame) return;
         Main.introDestroyed = true;
-        if (AmongUsClient.Instance.AmHost)
+        Logger.Info("IntroCutscene.OnDestroy: introDestroyed set to true", "IntroCutscene");
+
+        // Wrap entire host-specific block to prevent exceptions from bubbling into native trampolines
+        try
         {
-            if (Main.NormalOptions.MapId != 4)
+            if (!AmongUsClient.Instance.AmHost)
             {
-                Main.AllPlayerControls.Do(pc => pc.RpcResetAbilityCooldown());
+                Logger.Info("Not host - skipping host-specific OnDestroy actions", "IntroCutscene");
+                return;
+            }
+
+            Logger.Info("Host-specific OnDestroy actions starting", "IntroCutscene");
+
+            // Reset ability cooldowns for all players (safe iteration)
+            if (Main.NormalOptions == null)
+            {
+                Logger.Warn("Main.NormalOptions is null during IntroCutscene.OnDestroy", "IntroCutscene");
+            }
+
+            if (Main.NormalOptions == null || Main.NormalOptions.MapId != 4)
+            {
+                Logger.Info("Resetting ability cooldowns for all players (if available)", "IntroCutscene");
+                try
+                {
+                    foreach (var pc in Main.AllPlayerControls)
+                    {
+                        if (pc == null) continue;
+                        try { pc.RpcResetAbilityCooldown(); } catch (Exception ex) { Logger.Warn($"RpcResetAbilityCooldown failed for {pc.PlayerId}: {ex.Message}", "IntroCutscene"); }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"Failed iterating AllPlayerControls: {ex.Message}", "IntroCutscene");
+                }
+
                 if (Options.FixFirstKillCooldown.GetBool())
                 {
                     _ = new LateTask(() =>
                     {
-                        Main.AllPlayerControls.Do(pc => pc.SetKillCooldown(Main.AllPlayerKillCooldown[pc.PlayerId] - 2f));
+                        try
+                        {
+                            Logger.Info("Applying first kill cooldown fix (delayed)", "IntroCutscene");
+                            if (Main.AllPlayerKillCooldown != null)
+                            {
+                                foreach (var pc in Main.AllPlayerControls)
+                                {
+                                    if (pc == null) continue;
+                                    try
+                                    {
+                                        if (Main.AllPlayerKillCooldown.TryGetValue(pc.PlayerId, out var val))
+                                            pc.SetKillCooldown(val - 2f);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Warn($"SetKillCooldown failed for {pc.PlayerId}: {ex.Message}", "IntroCutscene");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Logger.Warn("Main.AllPlayerKillCooldown is null; skipping FixFirstKillCooldown", "IntroCutscene");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Exception(ex, "IntroCutscene");
+                        }
                     }, 2f, "FixKillCooldownTask");
                 }
             }
-            //_ = new LateTask(() => Main.AllPlayerControls.Do(pc => pc.RpcSetRoleDesync(RoleTypes.Shapeshifter, -3)), 2f, "SetImpostorForServer");
-            if (PlayerControl.LocalPlayer.Is(CustomRoles.GM))
+
+            // GM exile: guard LocalPlayer
+            var local = PlayerControl.LocalPlayer;
+            if (local != null)
             {
-                PlayerControl.LocalPlayer.RpcExile();
-                PlayerState.GetByPlayerId(PlayerControl.LocalPlayer.PlayerId).SetDead();
+                try
+                {
+                    if (local.Is(CustomRoles.GM))
+                    {
+                        Logger.Info("Local player is GM: Exiling host", "IntroCutscene");
+                        try { local.RpcExile(); } catch (Exception ex) { Logger.Warn($"RpcExile failed: {ex.Message}", "IntroCutscene"); }
+                        try { PlayerState.GetByPlayerId(local.PlayerId)?.SetDead(); } catch (Exception ex) { Logger.Warn($"SetDead failed for GM: {ex.Message}", "IntroCutscene"); }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"Checking GM failed: {ex.Message}", "IntroCutscene");
+                }
             }
-            // 初手のランダムスポーン
-            switch ((MapNames)Main.NormalOptions.MapId)
+            else
             {
-                case MapNames.Skeld:
-                    if (Options.RandomSpawn_Skeld.GetBool() && !Options.FirstFixedSpawn_Skeld.GetBool())
-                    {
-                        Main.AllPlayerControls.Do(new RandomSpawn.SkeldSpawnMap().RandomTeleport);
-                    }
-                    break;
-                case MapNames.MiraHQ:
-                    if (Options.RandomSpawn_MiraHQ.GetBool() && !Options.FirstFixedSpawn_MiraHQ.GetBool())
-                    {
-                        Main.AllPlayerControls.Do(new RandomSpawn.MiraHQSpawnMap().RandomTeleport);
-                    }
-                    break;
-                case MapNames.Polus:
-                    if (Options.RandomSpawn_Polus.GetBool() && !Options.FirstFixedSpawn_Polus.GetBool())
-                    {
-                        Main.AllPlayerControls.Do(new RandomSpawn.PolusSpawnMap().RandomTeleport);
-                    }
-                    break;
-                case MapNames.Fungle:
-                    if (Options.RandomSpawn_Fungle.GetBool() && !Options.FirstFixedSpawn_Fungle.GetBool())
-                    {
-                        Main.AllPlayerControls.Do(new RandomSpawn.FungleSpawnMap().RandomTeleport);
-                    }
-                    break;
+                Logger.Warn("PlayerControl.LocalPlayer is null in IntroCutscene.OnDestroy", "IntroCutscene");
             }
 
-            // そのままだとホストのみDesyncImpostorの暗室内での視界がクルー仕様になってしまう
-            var roleInfo = PlayerControl.LocalPlayer.GetCustomRole().GetRoleInfo();
-            var amDesyncImpostor = roleInfo?.IsDesyncImpostor == true;
-            if (amDesyncImpostor)
+            // 初手のランダムスポーン (safe checks)
+            try
             {
-                PlayerControl.LocalPlayer.Data.Role.AffectedByLightAffectors = false;
+                if (Main.NormalOptions != null)
+                {
+                    switch ((MapNames)Main.NormalOptions.MapId)
+                    {
+                        case MapNames.Skeld:
+                            if (Options.RandomSpawn_Skeld.GetBool() && !Options.FirstFixedSpawn_Skeld.GetBool())
+                            {
+                                Logger.Info("Applying random spawn for Skeld", "IntroCutscene");
+                                Main.AllPlayerControls.Do(new RandomSpawn.SkeldSpawnMap().RandomTeleport);
+                            }
+                            break;
+                        case MapNames.MiraHQ:
+                            if (Options.RandomSpawn_MiraHQ.GetBool() && !Options.FirstFixedSpawn_MiraHQ.GetBool())
+                            {
+                                Logger.Info("Applying random spawn for MiraHQ", "IntroCutscene");
+                                Main.AllPlayerControls.Do(new RandomSpawn.MiraHQSpawnMap().RandomTeleport);
+                            }
+                            break;
+                        case MapNames.Polus:
+                            if (Options.RandomSpawn_Polus.GetBool() && !Options.FirstFixedSpawn_Polus.GetBool())
+                            {
+                                Logger.Info("Applying random spawn for Polus", "IntroCutscene");
+                                Main.AllPlayerControls.Do(new RandomSpawn.PolusSpawnMap().RandomTeleport);
+                            }
+                            break;
+                        case MapNames.Fungle:
+                            if (Options.RandomSpawn_Fungle.GetBool() && !Options.FirstFixedSpawn_Fungle.GetBool())
+                            {
+                                Logger.Info("Applying random spawn for Fungle", "IntroCutscene");
+                                Main.AllPlayerControls.Do(new RandomSpawn.FungleSpawnMap().RandomTeleport);
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    Logger.Warn("Main.NormalOptions is null; skipping random spawn", "IntroCutscene");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn($"Random spawn handling failed: {ex.Message}", "IntroCutscene");
+            }
+
+            // Desync impostor handling (guard local)
+            try
+            {
+                if (local != null)
+                {
+                    var roleInfo = local.GetCustomRole().GetRoleInfo();
+                    var amDesyncImpostor = roleInfo?.IsDesyncImpostor == true;
+                    if (amDesyncImpostor)
+                    {
+                        try
+                        {
+                            local.Data.Role.AffectedByLightAffectors = false;
+                            Logger.Info("Host is desync impostor: AffectedByLightAffectors set to false", "IntroCutscene");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warn($"Failed to set AffectedByLightAffectors: {ex.Message}", "IntroCutscene");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn($"Desync impostor handling failed: {ex.Message}", "IntroCutscene");
             }
         }
-        Logger.Info("OnDestroy", "IntroCutscene");
+        catch (Exception ex)
+        {
+            // Log but do not rethrow to avoid breaking native trampoline
+            Logger.Error($"IntroCutscene.OnDestroy encountered exception: {ex.Message}", "IntroCutscene");
+            Logger.Exception(ex, "IntroCutscene");
+        }
+
+        Logger.Info("IntroCutscene.OnDestroy completed", "IntroCutscene");
     }
 }

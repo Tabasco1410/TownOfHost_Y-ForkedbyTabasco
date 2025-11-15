@@ -10,6 +10,7 @@ using TownOfHostY.Templates;
 
 namespace TownOfHostY;
 
+
 [HarmonyPatch(typeof(HudManager))]
 class HudManagerPatch
 {
@@ -203,75 +204,93 @@ class HudManagerPatch
             }
         }
     }
-}
-[HarmonyPatch(typeof(Vent), nameof(Vent.SetOutline))]
-class SetVentOutlinePatch
-{
-    public static void Postfix(Vent __instance, [HarmonyArgument(1)] ref bool mainTarget)
+    [HarmonyPatch(typeof(Vent), nameof(Vent.SetOutline))]
+    class SetVentOutlinePatch
     {
-        var player = PlayerControl.LocalPlayer;
-        Color color = PlayerControl.LocalPlayer.GetRoleColor(true);
-        ((Renderer)__instance.myRend).material.SetColor("_OutlineColor", color);
-        ((Renderer)__instance.myRend).material.SetColor("_AddColor", mainTarget ? color : Color.clear);
-    }
-}
-[HarmonyPatch(typeof(HudManager), nameof(HudManager.SetHudActive), new Type[] { typeof(PlayerControl), typeof(RoleBehaviour), typeof(bool) })]
-class SetHudActivePatch
-{
-    public static bool IsActive = false;
-    public static void Postfix(HudManager __instance, [HarmonyArgument(2)] bool isActive)
-    {
-        __instance.ReportButton.ToggleVisible(!GameStates.IsLobby && isActive);
-        if (!GameStates.IsModHost) return;
-        IsActive = isActive;
-        if (GameStates.IsLobby) return;
-        if (!isActive) return;
-
-        var player = PlayerControl.LocalPlayer;
-        __instance.KillButton.ToggleVisible(player.CanUseKillButton());
-        __instance.ImpostorVentButton.ToggleVisible(player.CanUseImpostorVentButton());
-        __instance.SabotageButton.ToggleVisible(player.CanUseSabotageButton());
-    }
-}
-[HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.Show))]
-class MapBehaviourShowPatch
-{
-    public static void Prefix(MapBehaviour __instance, ref MapOptions opts)
-    {
-        if (GameStates.IsMeeting) return;
-
-        if (opts.Mode is MapOptions.Modes.Normal or MapOptions.Modes.Sabotage)
+        public static void Postfix(Vent __instance, [HarmonyArgument(1)] ref bool mainTarget)
         {
             var player = PlayerControl.LocalPlayer;
-            if (player.GetRoleClass() is IKiller killer && killer.CanUseSabotageButton())
-                opts.Mode = MapOptions.Modes.Sabotage;
-            else
-                opts.Mode = MapOptions.Modes.Normal;
+            Color color = PlayerControl.LocalPlayer.GetRoleColor(true);
+            ((Renderer)__instance.myRend).material.SetColor("_OutlineColor", color);
+            ((Renderer)__instance.myRend).material.SetColor("_AddColor", mainTarget ? color : Color.clear);
         }
     }
-}
-[HarmonyPatch(typeof(TaskPanelBehaviour), nameof(TaskPanelBehaviour.SetTaskText))]
-class TaskPanelBehaviourPatch
-{
-    // タスク表示の文章が更新・適用された後に実行される
-    public static void Postfix(TaskPanelBehaviour __instance)
+    [HarmonyPatch(typeof(HudManager), nameof(HudManager.SetHudActive), new Type[] { typeof(PlayerControl), typeof(RoleBehaviour), typeof(bool) })]
+    class SetHudActivePatch
     {
-        if (GameStates.IsLobby) return; 
-        if (!GameStates.IsModHost) return;
-        PlayerControl player = PlayerControl.LocalPlayer;
-
-        // 役職説明表示
-        if (!player.GetCustomRole().IsVanilla())
+        public static bool IsActive = false;
+        public static void Postfix(HudManager __instance, [HarmonyArgument(2)] bool isActive)
         {
-            var RoleWithInfo = $"{RoleText.GetRoleNameText(player.PlayerId, showSubRole: false)}:\r\n";
-            RoleWithInfo += player.GetRoleInfo();
-            __instance.taskText.text = Utils.ColorString(player.GetRoleColor(true), RoleWithInfo) + "\n" + __instance.taskText.text;
+            __instance.ReportButton.ToggleVisible(!GameStates.IsLobby && isActive);
+            if (!GameStates.IsModHost) return;
+            IsActive = isActive;
+            if (GameStates.IsLobby) return;
+            if (!isActive) return;
+
+            var player = PlayerControl.LocalPlayer;
+            __instance.KillButton.ToggleVisible(player.CanUseKillButton());
+            __instance.ImpostorVentButton.ToggleVisible(player.CanUseImpostorVentButton());
+            __instance.SabotageButton.ToggleVisible(player.CanUseSabotageButton());
+
+            // ログを追加: HUD有効化時のプレイヤー移動に関する状態
+            try
+            {
+                string inputHandlerEnabled = "null";
+                try { inputHandlerEnabled = player?.MyPhysics?.inputHandler != null ? player.MyPhysics.inputHandler.enabled.ToString() : "null"; } catch { inputHandlerEnabled = "err"; }
+                Logger.Info($"SetHudActive: isActive={isActive}, LocalPlayer.CanMove={player?.CanMove}, moveable={player?.moveable}, inputHandler.enabled={inputHandlerEnabled}", "SetHudActive");
+
+                // 全プレイヤーの簡易状態ログ
+                foreach (var pc in Main.AllPlayerControls)
+                {
+                    Logger.Info($"Player {pc.PlayerId}:{pc.name} IsAlive={pc.IsAlive()} CanMove={pc.CanMove} moveable={pc.moveable}", "SetHudActive");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Logger.Exception(ex, "SetHudActive");
+            }
         }
-
-        // RepairSenderの表示
-        if (RepairSender.enabled && AmongUsClient.Instance.NetworkMode != NetworkModes.OnlineGame)
+    }
+    [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.Show))]
+    class MapBehaviourShowPatch
+    {
+        public static void Prefix(MapBehaviour __instance, ref MapOptions opts)
         {
-            __instance.taskText.text = RepairSender.GetText();
+            if (GameStates.IsMeeting) return;
+
+            if (opts.Mode is MapOptions.Modes.Normal or MapOptions.Modes.Sabotage)
+            {
+                var player = PlayerControl.LocalPlayer;
+                if (player.GetRoleClass() is IKiller killer && killer.CanUseSabotageButton())
+                    opts.Mode = MapOptions.Modes.Sabotage;
+                else
+                    opts.Mode = MapOptions.Modes.Normal;
+            }
+        }
+    }
+    [HarmonyPatch(typeof(TaskPanelBehaviour), nameof(TaskPanelBehaviour.SetTaskText))]
+    class TaskPanelBehaviourPatch
+    {
+        // タスク表示の文章が更新・適用された後に実行される
+        public static void Postfix(TaskPanelBehaviour __instance)
+        {
+            if (GameStates.IsLobby) return; 
+            if (!GameStates.IsModHost) return;
+            PlayerControl player = PlayerControl.LocalPlayer;
+
+            // 役職説明表示
+            if (!player.GetCustomRole().IsVanilla())
+            {
+                var RoleWithInfo = $"{RoleText.GetRoleNameText(player.PlayerId, showSubRole: false)}:\r\n";
+                RoleWithInfo += player.GetRoleInfo();
+                __instance.taskText.text = Utils.ColorString(player.GetRoleColor(true), RoleWithInfo) + "\n" + __instance.taskText.text;
+            }
+
+            // RepairSenderの表示
+            if (RepairSender.enabled && AmongUsClient.Instance.NetworkMode != NetworkModes.OnlineGame)
+            {
+                __instance.taskText.text = RepairSender.GetText();
+            }
         }
     }
 }
@@ -327,7 +346,4 @@ class RepairSender
     {
         return SystemType.ToString() + "(" + ((SystemTypes)SystemType).ToString() + ")\r\n" + amount;
     }
-
-   
-
 }

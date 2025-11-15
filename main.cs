@@ -53,7 +53,7 @@ public class Main : BasePlugin
     // ==========
     //Sorry for many Japanese comments.
     public const string PluginGuid = "com.Tabasco.townofhosty_ForkedbyTabasco";
-    public const string PluginVersion = "1.0.1";
+    public const string PluginVersion = "1.0.10";
 
     //Fork元のTOH_Y
     public const string BaseModName = "TOH_Y";

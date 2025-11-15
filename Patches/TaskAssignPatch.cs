@@ -28,8 +28,11 @@ namespace TownOfHostY
                 return;
             }
 
+            Logger.Info($"AddTasksFromList called. incoming unusedTasks.Count={unusedTasks.Count}", "AddTasksFromListPatch");
+
             // Build a new Il2Cpp list containing only the tasks we want to keep.
             var filtered = new Il2CppSystem.Collections.Generic.List<NormalPlayerTask>();
+            var removedTypes = new List<TaskTypes>();
             for (var i = 0; i < unusedTasks.Count; i++)
             {
                 var task = unusedTasks[i];
@@ -52,10 +55,21 @@ namespace TownOfHostY
                 if (task.TaskType == TaskTypes.TuneRadio && Options.DisableTuneRadio.GetBool()) isDisabled = true;
                 if (task.TaskType == TaskTypes.AssembleArtifact && Options.DisableAssembleArtifact.GetBool()) isDisabled = true;
 
+                if (isDisabled)
+                {
+                    removedTypes.Add(task.TaskType);
+                }
+
                 if (!isDisabled)
                 {
                     filtered.Add(task);
                 }
+            }
+
+            Logger.Info($"AddTasksFromList: kept={filtered.Count}, removed={removedTypes.Count}", "AddTasksFromListPatch");
+            if (removedTypes.Count > 0)
+            {
+                Logger.Info($"Removed task types: {string.Join(",", removedTypes)}", "AddTasksFromListPatch");
             }
 
             // Replace the original list reference with the filtered one so the original method
@@ -93,6 +107,8 @@ namespace TownOfHostY
                     return;
                 }
 
+                Logger.Info($"RpcSetTasks called for player {pc.GetNameWithRole()} (id={pc.PlayerId}) incoming taskTypeIds.Count={(taskTypeIds==null?0:taskTypeIds.Count)}", "RpcSetTasksPatch");
+
                 CustomRoles? RoleNullable = pc.GetCustomRole();
                 if (RoleNullable == null)
                 {
@@ -104,8 +120,8 @@ namespace TownOfHostY
 
                 // デフォルトのタスク数
                 bool hasCommonTasks = true;
-                int NumLongTasks = Main.NormalOptions.NumLongTasks;
-                int NumShortTasks = Main.NormalOptions.NumShortTasks;
+                int NumLongTasks = Main.NormalOptions != null ? Main.NormalOptions.NumLongTasks : 0;
+                int NumShortTasks = Main.NormalOptions != null ? Main.NormalOptions.NumShortTasks : 0;
 
                 // タスク数オーバーライド
                 if (Options.OverrideTasksData.AllData.TryGetValue(role, out var data) && data.doOverride.GetBool())
@@ -113,6 +129,7 @@ namespace TownOfHostY
                     hasCommonTasks = data.assignCommonTasks.GetBool();
                     NumLongTasks = data.numLongTasks.GetInt();
                     NumShortTasks = data.numShortTasks.GetInt();
+                    Logger.Info($"OverrideTasks for {pc.name}: hasCommon={hasCommonTasks} long={NumLongTasks} short={NumShortTasks}", "RpcSetTasksPatch");
                 }
 
                 // 固有タスク処理
@@ -138,6 +155,8 @@ namespace TownOfHostY
                 Il2CppSystem.Collections.Generic.List<byte> TasksList = new();
                 foreach (var num in taskTypeIds) TasksList.Add(num);
 
+                Logger.Info($"Initial TasksList count={TasksList.Count} hasCommonTasks={hasCommonTasks}", "RpcSetTasksPatch");
+
                 // 共通タスク処理
                 int defaultCommonTasksNum = Main.RealOptionsData.GetInt(Int32OptionNames.NumCommonTasks);
                 if (hasCommonTasks)
@@ -146,10 +165,12 @@ namespace TownOfHostY
                     int removeCount = TasksList.Count - defaultCommonTasksNum;
                     if (removeStart >= 0 && removeStart < TasksList.Count && removeCount > 0)
                         TasksList.RemoveRange(removeStart, removeCount);
+                    Logger.Info($"After trimming common tasks TasksList count={TasksList.Count}", "RpcSetTasksPatch");
                 }
                 else
                 {
                     TasksList.Clear();
+                    Logger.Info($"Cleared common tasks for {pc.name}", "RpcSetTasksPatch");
                 }
 
                 // ShipStatus チェック
@@ -185,6 +206,8 @@ namespace TownOfHostY
                     Shuffle(ShortTasks);
                 }
 
+                Logger.Info($"LongTasks={LongTasks.Count}, ShortTasks={ShortTasks.Count}", "RpcSetTasksPatch");
+
                 // If no common tasks are available (TasksList empty), but there are Long/Short tasks
                 // populate TasksList from available tasks so assignment can proceed without nulls.
                 if (TasksList.Count == 0 && (LongTasks.Count > 0 || ShortTasks.Count > 0))
@@ -206,6 +229,7 @@ namespace TownOfHostY
                         if (seen.Add(b)) dedup.Add(b);
                     }
                     TasksList = dedup;
+                    Logger.Info($"Repopulated TasksList from available tasks count={TasksList.Count}", "RpcSetTasksPatch");
                 }
 
                 // VentManager / FoxSpirit 固有処理
@@ -235,13 +259,29 @@ namespace TownOfHostY
 
                         if (!hasVent) TasksList.Add((byte)TaskTypes.VentCleaning);
                     }
+                    Logger.Info($"VentManager/FoxSpirit special handling TasksList count={TasksList.Count}", "RpcSetTasksPatch");
                 }
 
                 // タスク割り当て（null チェック付き）
                 if ((LongTasks.Count > 0 || ShortTasks.Count > 0) && TasksList.Count > 0)
                 {
-                    ShipStatus.Instance.AddTasksFromList(ref start2, NumLongTasks, TasksList, usedTaskTypes, LongTasks);
-                    ShipStatus.Instance.AddTasksFromList(ref start3, NumShortTasks, TasksList, usedTaskTypes, ShortTasks);
+                    try
+                    {
+                        ShipStatus.Instance.AddTasksFromList(ref start2, NumLongTasks, TasksList, usedTaskTypes, LongTasks);
+                        ShipStatus.Instance.AddTasksFromList(ref start3, NumShortTasks, TasksList, usedTaskTypes, ShortTasks);
+                        Logger.Info($"Performed AddTasksFromList for {pc.name}", "RpcSetTasksPatch");
+                    }
+                    catch (Il2CppInterop.Runtime.Il2CppException ilEx)
+                    {
+                        // Il2Cpp exceptions may wrap managed NREs; log and continue without crashing the trampoline
+                        Logger.Error($"AddTasksFromList threw Il2CppException: {ilEx.Message}", "RpcSetTasksPatch");
+                        Logger.Exception(ilEx, "RpcSetTasksPatch");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Logger.Error($"AddTasksFromList failed: {ex.Message}", "RpcSetTasksPatch");
+                        Logger.Exception(ex, "RpcSetTasksPatch");
+                    }
                 }
                 else if (TasksList.Count == 0)
                 {

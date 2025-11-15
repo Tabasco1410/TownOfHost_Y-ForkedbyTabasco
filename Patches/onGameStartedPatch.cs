@@ -23,7 +23,9 @@ class ChangeRoleSettings
     {
         try
         {
-            // === 初期化チェック ===
+            Logger.Info("CoStartGame invoked: starting game initialization", "ChangeRoleSettings");
+
+            
             if (GameOptionsManager.Instance == null)
             {
                 Logger.Error("CRITICAL: GameOptionsManager.Instance が null です", "ChangeRoleSettings");
@@ -41,7 +43,7 @@ class ChangeRoleSettings
             Logger.Info($"GameOptions 初期化確認: OK", "ChangeRoleSettings");
             Logger.Info($"NormalOptions: {GameOptionsManager.Instance.currentNormalGameOptions != null}", "ChangeRoleSettings");
 
-            // === ゲーム設定 ===
+           
             Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
             Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
@@ -52,7 +54,7 @@ class ChangeRoleSettings
 
             if (Options.IsCCMode) Main.NormalOptions.NumImpostors = 1;
 
-            // === データ初期化 ===
+            
             Main.AllPlayerKillCooldown = new Dictionary<byte, float>();
             Main.AllPlayerSpeed = new Dictionary<byte, float>();
 
@@ -72,7 +74,7 @@ class ChangeRoleSettings
             MeetingHudPatch.RevengeTargetPlayer = new();
             Options.UsedButtonCount = 0;
 
-            // === RealOptionsData 初期化 ===
+            
             Main.RealOptionsData = new OptionBackupData(GameOptionsManager.Instance.CurrentGameOptions);
 
             if (Main.RealOptionsData == null)
@@ -363,7 +365,7 @@ class SelectRolesPatch
 
         if (roleTypesList != null)
         {
-            // LINQ を使わず、TeamType と GhostRole 判定でフィルタリング
+            
             List<RoleBehaviour> source = new();
             foreach (var role in DestroyableSingleton<RoleManager>.Instance.AllRoles)
             {
@@ -388,7 +390,7 @@ class SelectRolesPatch
             AssignRolesFromList(players, teamMax, list, ref num);
         }
 
-        // 足りない分はデフォルト役職を追加
+       
         while (list.Count < players.Count && list.Count + num < teamMax)
         {
             list.Add(defaultRole);
@@ -432,7 +434,7 @@ class SelectRolesPatch
             var selfRole = player.PlayerId == hostId ? hostBaseRole : BaseRole;
             var othersRole = player.PlayerId == hostId ? RoleTypes.Crewmate : RoleTypes.Scientist;
 
-            //Desync役職視点
+           
             foreach (var target in Main.AllPlayerControls)
             {
                 if (player.PlayerId != target.PlayerId)
@@ -445,7 +447,7 @@ class SelectRolesPatch
                 }
             }
 
-            //他者視点
+            
             foreach (var seer in Main.AllPlayerControls)
             {
                 if (player.PlayerId != seer.PlayerId)
@@ -454,7 +456,7 @@ class SelectRolesPatch
                 }
             }
             RpcSetRoleReplacer.OverriddenSenderList.Add(player.PlayerId);
-            //ホスト視点はロール決定
+            
             player.StartCoroutine(player.CoSetRole(othersRole, false));
             assignedNum++;
 
@@ -573,7 +575,7 @@ public class RpcSetRoleReplacer
     private static bool doReplace = false;
     private static Dictionary<byte, CustomRpcSender> senders;
     public static List<(PlayerControl, RoleTypes)> StoragedData = new();
-    // 役職DesyncなどRolesMapでSetRoleRpcを書き込みするリスト
+    
     public static List<byte> OverriddenSenderList;
     public static Dictionary<(byte, byte), RoleTypes> RolesMap;
     public static bool DoReplace() => doReplace;
@@ -595,7 +597,7 @@ public class RpcSetRoleReplacer
 
         DummySetRole();
 
-        // 不要なオブジェクトの削除
+        
         EndReplace();
     }
     public static void DummySetRole()
@@ -698,7 +700,7 @@ public class RpcSetRoleReplacer
                 player.StartCoroutine(player.CoSetRole(roleType, false));
                 sender.AutoStartRpc(player.NetId, (byte)RpcCalls.SetRole, clientId)
                     .Write((ushort)roleType)
-                    .Write(true)           //canOverrideRole = false
+                    .Write(true)           
                     .EndRpc();
                 Logger.Info($"ReleaseNormalSetRole toClientId:{clientId} player:{player?.name}({roleType})", "RpcSetRole");
             }

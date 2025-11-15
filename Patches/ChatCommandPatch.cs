@@ -630,30 +630,52 @@ namespace TownOfHostY
     {
         public static bool Prefix(PlayerControl __instance, string chatText, ref bool __result)
         {
+            // Validate input
             if (string.IsNullOrWhiteSpace(chatText))
             {
                 __result = false;
                 return false;
             }
-            int return_count = PlayerControl.LocalPlayer.name.Count(x => x == '\n');
+
+            // Adjust for local name line feeds (guard for nulls)
+            var localName = PlayerControl.LocalPlayer != null ? PlayerControl.LocalPlayer.name : string.Empty;
+            int return_count = 0;
+            if (!string.IsNullOrEmpty(localName))
+            {
+                return_count = localName.Count(x => x == '\n');
+            }
             chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
-            if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
+
+            // Local echo (safe guards)
+            if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
+            {
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
-            if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
-                DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-            var startRpcMethod = typeof(AmongUsClient).GetMethod(
-    "StartRpc",
-    System.Reflection.BindingFlags.Instance |
-    System.Reflection.BindingFlags.NonPublic);
+            }
 
-            var messageWriter = startRpcMethod.Invoke(
-                AmongUsClient.Instance,
-                new object[] { __instance.NetId, (byte)RpcCalls.SendChat, SendOption.None }
-            ) as MessageWriter;
+            // Optional telemetry (guard instance)
+            try
+            {
+                if (chatText.IndexOf("who", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    var ut = DestroyableSingleton<UnityTelemetry>.Instance;
+                    if (ut != null) ut.SendWho();
+                }
+            }
+            catch { /* ignore telemetry issues */ }
 
-            messageWriter.Write(chatText);
-            messageWriter.EndMessage();
-            __result = true;
+            // Send chat RPC using public API
+            try
+            {
+                var writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, -1);
+                writer.Write(chatText);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                __result = true;
+            }
+            catch (System.Exception ex)
+            {
+                Logger.Error($"RpcSendChat failed: {ex.Message}", nameof(RpcSendChatPatch));
+                __result = false;
+            }
             return false;
         }
     }

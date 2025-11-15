@@ -1,9 +1,9 @@
-    using System.Collections.Generic;
-    using AmongUs.GameOptions;
-    using Hazel;
-    using Il2CppInterop.Runtime.InteropTypes.Arrays;
-    using Il2CppSystem;
-    using InnerNet;
+using System.Collections.Generic;
+using AmongUs.GameOptions;
+using Hazel;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppSystem;
+using InnerNet;
     // Il2CppStructArray<byte>とbyte[]との間での暗黙的な変換の際に発生する重い計算を抑制するため，意図的にIl2CppSystemとIl2CppInterop.Runtime.InteropTypes.Arraysを使用します - Hyz-sui
 
     namespace TownOfHostY.Modules
@@ -30,32 +30,54 @@
             public virtual void SendGameOptions()
             {
                 var opt = BuildGameOptions();
-                var currentGameMode = AprilFoolsMode.IsAprilFoolsModeToggledOn //April fools mode toggled on by host
-                    ? opt.AprilFoolsOnMode : opt.GameMode; //Change game mode, same as well as in "RpcSyncSettings()"
-            
-                // option => byte[]
-                MessageWriter writer = MessageWriter.Get(SendOption.None);
-                writer.Write(opt.Version);
-                writer.StartMessage(0);
-                writer.Write((byte)currentGameMode);
-                if (opt.TryCast<NormalGameOptionsV09>(out var normalOpt))
-                    NormalGameOptionsV09.Serialize(writer, normalOpt);
-                else if (opt.TryCast<HideNSeekGameOptionsV09>(out var hnsOpt))
-                    HideNSeekGameOptionsV09.Serialize(writer, hnsOpt);
-                else
+                if (opt == null)
                 {
-                    writer.Recycle();
-                    Logger.Error("オプションのキャストに失敗しました", this.ToString());
+                    Logger.Error("BuildGameOptions returned null", nameof(GameOptionsSender));
+                    return;
                 }
-                writer.EndMessage();
-
-                // 配列化&送信
-                var byteArray = new Il2CppStructArray<byte>(writer.Length - 1);
-                // MessageWriter.ToByteArray
-                Buffer.BlockCopy(writer.Buffer.Cast<Array>(), 1, byteArray.Cast<Array>(), 0, writer.Length - 1);
-
-                SendOptionsArray(byteArray);
-                writer.Recycle();
+                var currentGameMode = AprilFoolsMode.IsAprilFoolsModeToggledOn ? opt.AprilFoolsOnMode : opt.GameMode;
+                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                try
+                {
+                    writer.Write(opt.Version);
+                    writer.StartMessage(0);
+                    writer.Write((byte)currentGameMode);
+                    NormalGameOptionsV09 normalOpt = null;
+                    HideNSeekGameOptionsV09 hnsOpt = null;
+                    if (opt.TryCast<NormalGameOptionsV09>(out normalOpt) && normalOpt != null)
+                    {
+                        NormalGameOptionsV09.Serialize(writer, normalOpt);
+                    }
+                    else if (opt.TryCast<HideNSeekGameOptionsV09>(out hnsOpt) && hnsOpt != null)
+                    {
+                        HideNSeekGameOptionsV09.Serialize(writer, hnsOpt);
+                    }
+                    else
+                    {
+                        writer.EndMessage();
+                        writer.Recycle();
+                        Logger.Error("オプションのキャストに失敗しました (unknown concrete type)", nameof(GameOptionsSender));
+                        return;
+                    }
+                    writer.EndMessage();
+                    if (writer.Length <= 1)
+                    {
+                        writer.Recycle();
+                        Logger.Error("MessageWriter produced invalid length when serializing game options", nameof(GameOptionsSender));
+                        return;
+                    }
+                    var byteArray = new Il2CppStructArray<byte>(writer.Length - 1);
+                    Buffer.BlockCopy(writer.Buffer.Cast<Array>(), 1, byteArray.Cast<Array>(), 0, writer.Length - 1);
+                    SendOptionsArray(byteArray);
+                }
+                catch (System.Exception ex)
+                {
+                    Logger.Error($"SendGameOptions exception: {ex.Message}", nameof(GameOptionsSender));
+                }
+                finally
+                {
+                    if (writer != null) writer.Recycle();
+                }
             }
             public virtual void SendOptionsArray(Il2CppStructArray<byte> optionArray)
             {

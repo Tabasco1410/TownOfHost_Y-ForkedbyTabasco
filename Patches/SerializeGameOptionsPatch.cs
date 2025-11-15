@@ -23,11 +23,16 @@ namespace TownOfHost_Y_ForkedbyTabasco.Patches
         // IL2CPP の実際のパラメータ名に合わせて 'data' に変更
         public static bool Prefix(ref IGameOptions data)
         {
-            if (data == null)
+            try
             {
-                return false; // バニラ処理に戻す
+                // Do not interfere with vanilla serialization. Allow original method to run.
+                return true;
             }
-            return true;
+            catch
+            {
+                // In case of unexpected errors, still allow original to run to avoid breaking flow.
+                return true;
+            }
         }
     }
 }

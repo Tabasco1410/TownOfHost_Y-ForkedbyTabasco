@@ -5,6 +5,7 @@ using AmongUs.GameOptions;
 using System.Reflection;
 using System.Text;
 using System.IO;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace TownOfHostY
 {
@@ -13,7 +14,7 @@ namespace TownOfHostY
     {
         public static bool Prefix(GameManager __instance, [HarmonyArgument(0)] MessageWriter writer, [HarmonyArgument(1)] bool initialState, ref bool __result)
         {
-            // null チェック
+            
             if (__instance == null)
             {
                 Logger.Error("GameManager が null です", "GameManagerSerializeFix");
@@ -40,7 +41,7 @@ namespace TownOfHostY
             {
                 GameLogicComponent logicComponent = __instance.LogicComponents[index];
 
-                // LogicComponent が null の場合はスキップ
+                
                 if (logicComponent == null)
                 {
                     Logger.Warn($"LogicComponent[{index}] が null です - スキップします", "GameManagerSerializeFix");
@@ -56,12 +57,11 @@ namespace TownOfHostY
                     {
                         bool hasBody = false;
 
-                        // LogicOptions (ゲーム設定) は特に不安定なので特別扱い
+                        
                         if (logicComponent.GetType().Name == "LogicOptions")
                         {
                             try
                             {
-                                // Try normal serialize first; if it throws, perform diagnostics and attempt repair
                                 try
                                 {
                                     hasBody = logicComponent.Serialize(writer);
@@ -71,14 +71,12 @@ namespace TownOfHostY
                                     Logger.Error($"LogicComponent[{index}] (LogicOptions) 初回Serializeで例外: {firstEx.Message}", "GameManagerSerializeFix");
                                     Logger.Exception(firstEx, "GameManagerSerializeFix");
 
-                                    // ダンプと修復を試みる
                                     var dump = DumpLogicOptionsState(logicComponent);
                                     SaveDiagnosticDump(dump);
 
                                     bool repaired = AttemptRepairLogicOptions(logicComponent);
                                     Logger.Info($"LogicOptions 修復を試みました: 成功={repaired}", "GameManagerSerializeFix");
 
-                                    // 修復後に再試行
                                     try
                                     {
                                         hasBody = logicComponent.Serialize(writer);
@@ -88,8 +86,11 @@ namespace TownOfHostY
                                         Logger.Error($"LogicComponent[{index}] (LogicOptions) 再Serializeで例外: {secondEx.Message}", "GameManagerSerializeFix");
                                         Logger.Exception(secondEx, "GameManagerSerializeFix");
 
-                                        // 最終手段: 安全に空ボディを書き込んで継続する
                                         hasBody = SafeWriteEmptyLogicOptionsBody(writer);
+                                        if (!hasBody)
+                                        {
+                                            try { writer.CancelMessage(); } catch { }
+                                        }
                                     }
                                 }
                             }
@@ -97,7 +98,7 @@ namespace TownOfHostY
                             {
                                 Logger.Error($"LogicComponent[{index}] (LogicOptions) の安全シリアライズに失敗: {ex.Message}", "GameManagerSerializeFix");
                                 Logger.Exception(ex, "GameManagerSerializeFix");
-                                writer.CancelMessage();
+                                try { writer.CancelMessage(); } catch { }
                                 continue;
                             }
                         }
@@ -112,7 +113,7 @@ namespace TownOfHostY
                                 Logger.Error($"LogicComponent[{index}].Serialize で NullReferenceException が発生しました: {ex.Message}",
                                             "GameManagerSerializeFix");
                                 Logger.Exception(ex, "GameManagerSerializeFix");
-                                writer.CancelMessage();
+                                try { writer.CancelMessage(); } catch { }
                                 continue;
                             }
                         }
@@ -126,8 +127,7 @@ namespace TownOfHostY
                         Logger.Error($"LogicComponent[{index}].Serialize で予期しない例外が発生しました: {ex.Message}",
                                     "GameManagerSerializeFix");
                         Logger.Exception(ex, "GameManagerSerializeFix");
-                        writer.CancelMessage();
-                        // 重大な例外はループ継続で他コンポーネントに影響を与えない
+                        try { writer.CancelMessage(); } catch { }
                         continue;
                     }
                 }
@@ -189,7 +189,6 @@ namespace TownOfHostY
         {
             try
             {
-                // 可能なら GameOptionsManager の現在のオプションを再設定して内部状態を初期化する
                 var go = GameOptionsManager.Instance?.CurrentGameOptions;
                 if (go == null) return false;
 
@@ -197,7 +196,6 @@ namespace TownOfHostY
                 if (mi != null)
                 {
                     mi.Invoke(logicOptions, new object[] { go });
-                    // さらに SyncOptions があれば呼ぶ
                     var ms = logicOptions.GetType().GetMethod("SyncOptions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     ms?.Invoke(logicOptions, null);
                     return true;
@@ -217,20 +215,78 @@ namespace TownOfHostY
         {
             try
             {
-                // 最終手段で空のバイト列を書き込み、Hazel側でNREを起こさないようにする
-                var dummy = new byte[0];
-                var mi = typeof(MessageWriter).GetMethod("WriteBytesAndSize", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (mi != null)
+                byte[] emptyBytes = Array.Empty<byte>();
+
+                MethodInfo mi = typeof(MessageWriter).GetMethod("WriteBytesAndSize", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (mi == null)
                 {
-                    mi.Invoke(writer, new object[] { dummy });
-                    return true;
+                    Logger.Error("MessageWriter.WriteBytesAndSize が見つかりません", "GameManagerSerializeFix");
+                    return false;
                 }
-                return false;
+
+                var param = mi.GetParameters()[0].ParameterType;
+                try
+                {
+                    if (param == typeof(byte[]))
+                    {
+                        mi.Invoke(writer, new object[] { emptyBytes });
+                        return true;
+                    }
+                    else if (param.FullName != null && param.FullName.Contains("Il2CppStructArray"))
+                    {
+                        var ilArr = new Il2CppStructArray<byte>(0);
+                        mi.Invoke(writer, new object[] { ilArr });
+                        return true;
+                    }
+                    else if (param.IsArray && param.GetElementType() == typeof(byte))
+                    {
+                        mi.Invoke(writer, new object[] { emptyBytes });
+                        return true;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            mi.Invoke(writer, new object[] { emptyBytes });
+                            return true;
+                        }
+                        catch (TargetInvocationException) { }
+                        catch (ArgumentException) { }
+
+                        try
+                        {
+                            var ilArr = new Il2CppStructArray<byte>(0);
+                            mi.Invoke(writer, new object[] { ilArr });
+                            return true;
+                        }
+                        catch (Exception ex2)
+                        {
+                            Logger.Error($"SafeWriteEmptyLogicOptionsBody: 両方式とも失敗しました: {ex2.Message}", "GameManagerSerializeFix");
+                            Logger.Exception(ex2, "GameManagerSerializeFix");
+                            return false;
+                        }
+                    }
+                }
+                catch (TargetInvocationException tie)
+                {
+                    Logger.Error($"SafeWriteEmptyLogicOptionsBody invoke で TargetInvocationException: {tie.InnerException?.Message ?? tie.Message}", "GameManagerSerializeFix");
+                    Logger.Exception(tie, "GameManagerSerializeFix");
+                    try { writer.CancelMessage(); } catch { }
+                    return false;
+                }
+                catch (ArgumentException aex)
+                {
+                    Logger.Error($"SafeWriteEmptyLogicOptionsBody invoke で ArgumentException: {aex.Message}", "GameManagerSerializeFix");
+                    Logger.Exception(aex, "GameManagerSerializeFix");
+                    try { writer.CancelMessage(); } catch { }
+                    return false;
+                }
             }
             catch (System.Exception ex)
             {
                 Logger.Error($"SafeWriteEmptyLogicOptionsBody で例外: {ex.Message}", "GameManagerSerializeFix");
                 Logger.Exception(ex, "GameManagerSerializeFix");
+                try { writer.CancelMessage(); } catch { }
                 return false;
             }
         }

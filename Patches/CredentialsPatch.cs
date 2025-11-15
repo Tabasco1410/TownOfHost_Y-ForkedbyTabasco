@@ -54,9 +54,9 @@ namespace TownOfHostY
         class VersionShowerStartPatch
         {
             static string[] mainManuText = {
-                "Town Of Host_YのフォークModです\nこのModに関して、本家TOH・TOH_Yへ問い合わせないでください",
-                "新しいバニラの役職、探偵・バイパーはもうちょっと待ってね！\n次のバージョンで実装するよ！",
-                "まずは猫取合戦だけできるように。"
+                "Town Of Host_YのフォークModです\nこのModに関して、他のMod開発者様へ問い合わせないでください",
+                "新しいバニラの役職、探偵・バイパーはもうちょっと待ってね！\nこのModに関して、他のMod開発者様へ問い合わせないでください"
+                
                /* "このコメントは21種類らしい\nなんか増えてる？",
                 "いつもありがとう！\nこれからも沢山遊んでね",
                 "【今日のおすすめ役職】\nアドミニスター",
@@ -154,7 +154,7 @@ namespace TownOfHostY
                 else if (Main.IsInitialRelease)
                 {
                     SpecialEventText.color = Color.yellow;
-                    SpecialEventText.text = $"Happy Birthday to {Main.ModName}!";
+                    SpecialEventText.text = $"Happy Birthday to TownOfHost_Y!";
                     if (CultureInfo.CurrentCulture.Name == "ja-JP")
                         SpecialEventText.text += "<size=60%>\n期間限定：ポテンシャリスト・おにぎり屋復刻！</size>";
                 }
