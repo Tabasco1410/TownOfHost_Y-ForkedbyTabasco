@@ -14,6 +14,8 @@
 "Impostor","Impostor","インポスター","内鬼","偽裝者","Предатель","Impostor"
 "Shapeshifter","Shapeshifter","シェイプシフター","变形者","變形者","Оборотень","Metamorfo"
 "Phantom","Phantom","ファントム","","",""
+"Viper","Viper","バイパー","","",""
+"Detective","Detective","探偵","侦探","偵探","Детектив","Detetive"
 "NormalImpostor","Normal Impostor","通常インポスター","普通内鬼"
 "NormalShapeshifter","Shapeshifter","シェイプシフター","变形者","變形者","Оборотень","Metamorfo"
 "NormalEngineer","Engineer","エンジニア","工程师","工程師","Инженер","Engenheiro"
@@ -21,6 +23,8 @@
 "NormalPhantom","Phantom","ファントム","","",""
 "NormalTracker","Tracker","トラッカー","","",""
 "NormalNoisemaker","Noisemaker","ノイズメーカー","","",""
+"NormalViper","Viper","バイパー","","",""
+"NormalDetective","Detective","探偵","侦探","偵探","Детектив","Detetive"
 
 "# 特殊インポスター役職"
 "CustomImpostor","Custom Impostor","カスタムインポスター",

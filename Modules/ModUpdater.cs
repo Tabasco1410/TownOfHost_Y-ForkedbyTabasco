@@ -14,7 +14,7 @@ namespace TownOfHostY
     [HarmonyPatch]
     public class ModUpdater
     {
-        private static readonly string URL = "";
+        private static readonly string URL = "https://api.github.com/repos/Tabasco1410/TownOfHost_Y-ForkedbyTabasco";
         public static bool hasUpdate = false;
         public static bool isBroken = false;
         public static bool isChecked = false;

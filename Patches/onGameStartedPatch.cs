@@ -51,6 +51,8 @@ class ChangeRoleSettings
             Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
             Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
             Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Viper, 0, 0);
+            Main.NormalOptions.roleOptions.SetRoleRate(RoleTypes.Detective, 0,0);
 
             if (Options.IsCCMode) Main.NormalOptions.NumImpostors = 1;
 
@@ -198,7 +200,7 @@ class SelectRolesPatch
         var assignedNumImpostors = 0;
 
         Dictionary<RoleTypes, int> roleTypesList = new();
-        foreach (var roleTypes in new RoleTypes[] { RoleTypes.Scientist, RoleTypes.Engineer, RoleTypes.Tracker, RoleTypes.Noisemaker, RoleTypes.Shapeshifter, RoleTypes.Phantom })
+        foreach (var roleTypes in new RoleTypes[] { RoleTypes.Scientist, RoleTypes.Engineer, RoleTypes.Tracker, RoleTypes.Noisemaker, RoleTypes.Shapeshifter, RoleTypes.Phantom,RoleTypes.Viper,RoleTypes.Detective })
         {
             roleTypesList.Add(roleTypes, GetRoleTypesCount(roleTypes));
         }
@@ -532,7 +534,8 @@ class SelectRolesPatch
         Dictionary<RoleTypes, List<PlayerControl>> roleTypePlayers = new();
         foreach (var roleType in new RoleTypes[] { RoleTypes.Crewmate, RoleTypes.Scientist, RoleTypes.Engineer,
                                                    RoleTypes.Tracker, RoleTypes.Noisemaker, RoleTypes.GuardianAngel,
-                                                   RoleTypes.Impostor, RoleTypes.Shapeshifter, RoleTypes.Phantom })
+                                                   RoleTypes.Impostor, RoleTypes.Shapeshifter, RoleTypes.Phantom,
+                                                   RoleTypes.Viper,RoleTypes.Detective})
         {
             roleTypePlayers.Add(roleType, new());
         }
@@ -561,6 +564,8 @@ class SelectRolesPatch
                 RoleTypes.Impostor => CustomRoles.Impostor,
                 RoleTypes.Shapeshifter => CustomRoles.Shapeshifter,
                 RoleTypes.Phantom => CustomRoles.Phantom,
+                RoleTypes.Viper => CustomRoles.Viper,
+                RoleTypes.Detective => CustomRoles.Detective,
                 _ => CustomRoles.NotAssigned,
             };
             state.SetMainRole(defaultRole);

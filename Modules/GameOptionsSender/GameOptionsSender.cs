@@ -42,15 +42,15 @@ using InnerNet;
                     writer.Write(opt.Version);
                     writer.StartMessage(0);
                     writer.Write((byte)currentGameMode);
-                    NormalGameOptionsV09 normalOpt = null;
-                    HideNSeekGameOptionsV09 hnsOpt = null;
-                    if (opt.TryCast<NormalGameOptionsV09>(out normalOpt) && normalOpt != null)
+                    NormalGameOptionsV10 normalOpt = null;
+                    HideNSeekGameOptionsV10 hnsOpt = null;
+                    if (opt.TryCast<NormalGameOptionsV10>(out normalOpt) && normalOpt != null)
                     {
-                        NormalGameOptionsV09.Serialize(writer, normalOpt);
+                        NormalGameOptionsV10.Serialize(writer, normalOpt);
                     }
-                    else if (opt.TryCast<HideNSeekGameOptionsV09>(out hnsOpt) && hnsOpt != null)
+                    else if (opt.TryCast<HideNSeekGameOptionsV10>(out hnsOpt) && hnsOpt != null)
                     {
-                        HideNSeekGameOptionsV09.Serialize(writer, hnsOpt);
+                        HideNSeekGameOptionsV10.Serialize(writer, hnsOpt);
                     }
                     else
                     {
