@@ -11,7 +11,7 @@ namespace TownOfHostY
     {
         private static SimpleButton discordButton;
         private static SimpleButton twitterButton;
-        
+        private static SimpleButton wikiwikiButton;
         private static SimpleButton gitHubButton;
         public static SimpleButton UpdateButton { get; private set; }
 
@@ -45,7 +45,19 @@ namespace TownOfHostY
                     "Twitter/X",
                     new(1.85f, 0.5f));
             }
-            
+            // WIKIWIKIボタンを生成
+            if (SimpleButton.IsNullOrDestroyed(wikiwikiButton))
+            {
+                wikiwikiButton = CreateButton(
+                    "WikiwikiButton",
+                    new(0.75f, -2.7f, 1f),
+                    new(255, 142, 168, byte.MaxValue),
+                    new(255, 226, 153, byte.MaxValue),
+                    () => Application.OpenURL("https://wikiwiki.jp/tohy_amongus"),
+                    "WIKIWIKI(TOH_Y)",
+                    new(1.85f, 0.5f));
+            }
+
             // GitHubボタンを生成
             if (SimpleButton.IsNullOrDestroyed(gitHubButton))
             {
