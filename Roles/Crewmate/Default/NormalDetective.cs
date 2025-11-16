@@ -12,7 +12,7 @@ public sealed class NormalDetective : RoleBase
             CustomRoles.NormalDetective,
             () => RoleTypes.Detective,
             CustomRoleTypes.Crewmate,
-            (int)Options.offsetId.CrewDefault + 100,
+            (int)Options.offsetId.CrewDefault + 400,
             SetupOptionItem,
             "探偵",
             "#8cffff"

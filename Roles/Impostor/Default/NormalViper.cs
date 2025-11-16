@@ -13,7 +13,7 @@ public sealed class NormalViper : RoleBase, IImpostor
             CustomRoles.NormalViper,
             () => RoleTypes.Viper,
             CustomRoleTypes.Impostor,
-            (int)Options.offsetId.ImpDefault + 200,
+            (int)Options.offsetId.ImpDefault + 300,
             SetupOptionItem,
             "バイパー"
         );
