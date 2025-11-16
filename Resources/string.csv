@@ -115,6 +115,7 @@
 "EvilHackerInfo","Hack Systmes and kill the crewmate","アドミンを駆使しクルーをキルせよ",
 "TelekineticInfo","Kill them with TK","念力で殺せ",
 "AdministerInfo","Get everybody in position","最終位置を監視し優位に付け",
+"NormalViperInfo","Killed corpses dissolve and leave no trace.","キルした死体は溶けて残らない",
 
 "CustomImpostorInfoLong","(Impostors):\nImpostor with the ability to Add-On to attributes set by the host.","[インポスター陣営]\nホストによって設定された属性の能力をもつインポスター。",
 "EvilWatcherInfoLong","(Impostors):\nYou can see everyone's votes even if anonymous voting is on.","(インポスター陣営):\n全員の投票先を見ることができる。","(内鬼阵营):\n会议时窥视者可以看到所有人的投票。","(狼人陣營):\n會議時觀察者可以看到所有人的投票。","(Предатель):\nNice Watcher может видеть все цвета голосов несмотря на анонимное голосование.","(Impostores):\nVocê consegue ver os votos de todos, mesmo que os votos anônimos estejam ligados."
@@ -814,6 +815,7 @@ DSchrodingerCatInfo,You are now on Team Darkhide,ダークハイドの味方に�
 "TrackerDuration","Tracking Duration","追跡の長さ"
 "NoisemakerImpostorAlert","Impostor get alert","インポスターへの警報"
 "NoisemakerAlertDuration","Alert duration","警報の長さ"
+"DetectiveSuspectLimit","Suspect Limit","事件ごとの容疑者数"
 
 "AssignMode","Assign Algorithm Mode","アサインモード","分配算法","","Алгоритм назначения",""
 "AssignAlgorithm.Fixed","Fixed","固定","固定","","Фиксированный",""

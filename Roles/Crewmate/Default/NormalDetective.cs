@@ -28,14 +28,14 @@ public sealed class NormalDetective : RoleBase
     private static OptionItem OptionDetectiveSuspectLimit;
     enum OptionName
     {
-        detectiveSuspectLimit
+        DetectiveSuspectLimit
 
     }
     private static float detectiveSuspectLimit;
 
     private static void SetupOptionItem()
     {
-        OptionDetectiveSuspectLimit = FloatOptionItem.Create(RoleInfo, 3, OptionName.detectiveSuspectLimit, new(0f, 180f, 5f), 15f, false)
+        OptionDetectiveSuspectLimit = FloatOptionItem.Create(RoleInfo, 3, OptionName.DetectiveSuspectLimit, new(0f, 180f, 5f), 15f, false)
             .SetValueFormat(OptionFormat.Seconds);
        
     }
