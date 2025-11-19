@@ -32,6 +32,7 @@ namespace TownOfHostY
         SetCurrentDousingTarget,
         SetEvilTrackerTarget,
         SetRealKiller,
+        CustomRoleSync,
         SyncPuppet,
         MareSync,
         SetSchrodingerCatTeam,
@@ -178,6 +179,9 @@ namespace TownOfHostY
                     byte targetId = reader.ReadByte();
                     byte killerId = reader.ReadByte();
                     RPC.SetRealKiller(targetId, killerId);
+                    break;
+                case CustomRPC.CustomRoleSync:
+                    CustomRoleManager.DispatchRpc(reader);
                     break;
                 default:
                     CustomRoleManager.DispatchRpc(reader, rpcType);

@@ -113,6 +113,13 @@ public abstract class RoleBase : IDisposable
     /// RoleRPCSenderで送信されたPlayerIdは削除されて渡されるため意識しなくてもよい。
     /// </summary>
     /// <param name="reader">届いたRPCの情報</param>
+    public virtual void ReceiveRPC(MessageReader reader)
+    { }
+    /// <summary>
+    /// RPCを受け取った時に呼ばれる関数
+    /// RoleRPCSenderで送信されたPlayerIdは削除されて渡されるため意識しなくてもよい。
+    /// </summary>
+    /// <param name="reader">届いたRPCの情報</param>
     /// <param name="rpcType">届いたCustomRPC</param>
     public virtual void ReceiveRPC(MessageReader reader, CustomRPC rpcType)
     { }
