@@ -45,9 +45,8 @@ namespace TownOfHostY
         SetEvilDiviner,
         SetLawyerTarget,
         SetRemoveLawyerTarget,
-        EvilHackerWarpSync,
-        CustomRoleSync,
-    }
+        EvilHackerWarpSync
+        }
     public enum Sounds
     {
         KillSound,

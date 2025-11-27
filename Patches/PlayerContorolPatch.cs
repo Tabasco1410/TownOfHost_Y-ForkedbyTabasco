@@ -505,9 +505,8 @@ class ReportDeadBodyPatch
     public static NetworkedPlayerInfo ReportTarget;
     public static bool SpecialMeeting = reporter?.PlayerId == ReportTarget?.PlayerId;
 
-    public static List<byte> CannotReportList;
-    public static List<byte> CannotReportByDeadBodyList;
-    public static List<byte> DontReportMarkList;
+   
+
     public static Dictionary<byte, List<NetworkedPlayerInfo>> WaitReport = new();
     public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] NetworkedPlayerInfo target)
     {
@@ -534,34 +533,18 @@ class ReportDeadBodyPatch
         if ((reporter.Object.Is(CustomRoles.NonReport) || reporter.Object.Is(CustomRoles.FoxSpirit)) &&
             target != null && !target.Object.Is(CustomRoles.Bait) && !target.Object.Is(CustomRoles.AddBait))
         {
-            DontReportMarkList.Add(reporter.PlayerId);
+            
             Utils.NotifyRoles(SpecifySeer: reporter.Object);
             _ = new LateTask(() =>
             {
-                DontReportMarkList.Remove(reporter.PlayerId);
+                
                 Utils.NotifyRoles(SpecifySeer: reporter.Object);
             }, 5f, "Don't Report Mark Remove");
             return false;
         }
         // Scavenger
-        if (target != null && CannotReportByDeadBodyList.Contains(target.PlayerId))
-        {
-            DontReportMarkList.Add(reporter.PlayerId);
-            Utils.NotifyRoles(SpecifySeer: reporter.Object);
-            _ = new LateTask(() =>
-            {
-                DontReportMarkList.Remove(reporter.PlayerId);
-                Utils.NotifyRoles(SpecifySeer: reporter.Object);
-            }, 5f, "Scavenger DontReportMark Remove");
-            return false;
-        }
 
-        if (CannotReportList.Contains(__instance.PlayerId))
-        {
-            WaitReport[__instance.PlayerId].Add(target);
-            Logger.Warn($"{__instance.GetNameWithRole()}:通報禁止中のため可能になるまで待機します", "ReportDeadBody");
-            return false;
-        }
+        
 
         //会議ボタンの場合、サボタージュ中に呼び出しを受けない
         if (target == null && Utils.IsActiveDontOpenMeetingSabotage(out var sabotage))

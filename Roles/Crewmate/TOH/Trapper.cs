@@ -1,8 +1,9 @@
 using AmongUs.GameOptions;
-
 using TownOfHostY.Roles.Core;
+using TownOfHostY;
 
 namespace TownOfHostY.Roles.Crewmate;
+
 public sealed class Trapper : RoleBase
 {
     public static readonly SimpleRoleInfo RoleInfo =
@@ -12,9 +13,9 @@ public sealed class Trapper : RoleBase
             CustomRoles.Trapper,
             () => RoleTypes.Crewmate,
             CustomRoleTypes.Crewmate,
-            (int)Options.offsetId.CrewTOH + 800,
+            20800,
             SetupOptionItem,
-            "トラッパー",
+            "tra",
             "#5a8fd0"
         );
     public Trapper(PlayerControl player)
@@ -42,17 +43,16 @@ public sealed class Trapper : RoleBase
     public override void OnMurderPlayerAsTarget(MurderInfo info)
     {
         if (info.IsSuicide) return;
-        if (info.IsMeeting) return;
 
         var killer = info.AttemptKiller;
         var tmpSpeed = Main.AllPlayerSpeed[killer.PlayerId];
         Main.AllPlayerSpeed[killer.PlayerId] = Main.MinSpeed;    //tmpSpeedで後ほど値を戻すので代入しています。
-        ReportDeadBodyPatch.CannotReportList.Add(killer.PlayerId);
+        ReportDeadBodyPatch.CanReport[killer.PlayerId] = false;
         killer.MarkDirtySettings();
         _ = new LateTask(() =>
         {
             Main.AllPlayerSpeed[killer.PlayerId] = tmpSpeed;
-            ReportDeadBodyPatch.CannotReportList.Remove(killer.PlayerId);
+            ReportDeadBodyPatch.CanReport[killer.PlayerId] = true;
             killer.MarkDirtySettings();
             RPC.PlaySoundRPC(killer.PlayerId, Sounds.TaskComplete);
         }, BlockMoveTime, "Trapper BlockMove");

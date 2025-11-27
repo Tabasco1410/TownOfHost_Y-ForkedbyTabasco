@@ -111,8 +111,7 @@ public sealed class Scavenger : RoleBase, IImpostor
         }
         else //ベイトじゃない又はベイト無効など
         {
-            if (target.Is(CustomRoles.Bait)) Bait.BaitKillPlayer = null; //ベイトマーク取り消し
-            ReportDeadBodyPatch.CannotReportByDeadBodyList.Add(target.PlayerId);
+            if (target.Is(CustomRoles.Bait)) Bait.BaitKillPlayer = null; //ベイトマーク取り消し            
             Logger.Info($"{target.GetNameWithRole()}：通報できない死体", "Scavenger");
         }
     }
