@@ -45,6 +45,7 @@ namespace TownOfHostY
         SetLawyerTarget,
         SetRemoveLawyerTarget,
         EvilHackerWarpSync,
+        CustomRoleSync,
     }
     public enum Sounds
     {
@@ -179,8 +180,8 @@ namespace TownOfHostY
                     byte killerId = reader.ReadByte();
                     RPC.SetRealKiller(targetId, killerId);
                     break;
-                default:
-                    CustomRoleManager.DispatchRpc(reader, rpcType);
+                case CustomRPC.CustomRoleSync:
+                    CustomRoleManager.DispatchRpc(reader);                 
                     break;
             }
         }

@@ -71,7 +71,7 @@ public class ModNews
             Number = 1000001,
             ShortTitle = "<color=#ee7800>TOH_Y byT\nv1.0.10</color>",
 
-            Title = "TOH_Y ForkedbyTabasco v1.0.10",
+            Title = "TOH_Y-Tabasco v1.0.10",
             SubTitle = "<color=#ee7800><b>☆☆</b>v1.0.10<b>☆☆</b></color>",            
             Text = "このバージョンはβ版です\n\nこんにちは。\nTown Of Host_Y が更新休止になっている中、ForkしたModを開発中。\n\n<b>【このModについて】</b>\nこのModは「TownOfHost_Y」を復活させようという開発者個人のプロジェクトのため、初回リリース時に新しく役職を追加することは考えていません（新規バニラ役職には対応させようと考えています）。\nそもそもまだ完成していませんので、リリースしたうえで安定してModが使用できると判断できれば新しい役職の提案を募集するかもしれません。\nっていうお話でした。開発中のひとりごと。\nTabasco",
             Date = "2025-11-14T20:00:00Z"

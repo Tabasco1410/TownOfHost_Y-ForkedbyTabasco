@@ -57,7 +57,7 @@ public static class Options
 
     public static readonly string[] gameModes =
     {
-        "Standard", "HideAndSeek", "CatchCat",/* "OneNight",*/
+        "Standard"/*, "HideAndSeek", "CatchCat", "OneNight",*/
     };
 
     // MapActive

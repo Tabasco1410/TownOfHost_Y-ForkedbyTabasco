@@ -56,7 +56,7 @@ namespace TownOfHostY
             static string[] mainManuText = {
                 "Town Of Host_YのフォークModです\nこのModに関して、他のMod開発者様へ問い合わせないでください",
                 "バイパー・探偵も使えます。\nあとは役職の追加はしてません。",
-                "追加したい役職はある？\n実装するかはわかりませんが募集するかも？",
+                "かくれんぼモード・猫取合戦は封印されています。ｺﾞﾒﾝﾈ｡",
                 "ここに表示される期間限定メッセージはそのまま残ってます。\nいつか見えるといいね!"
                 
                /* "このコメントは21種類らしい\nなんか増えてる？",
@@ -177,7 +177,7 @@ namespace TownOfHostY
                 else if (CultureInfo.CurrentCulture.Name == "ja-JP")
                 {
                     var num = IRandom.Instance.Next(mainManuText.Length);
-                    SpecialEventText.text = $"TOH_Y ForkedbyTabasco\n<size=55%>{mainManuText[num]}</size>";                    
+                    SpecialEventText.text = $"TownOfHost_Y-Tabasco\n<size=55%>{mainManuText[num]}</size>";                    
                 }
             }
         }

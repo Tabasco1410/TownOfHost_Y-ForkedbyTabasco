@@ -17,7 +17,7 @@ using TownOfHostY.Roles.Core;
 [assembly: AssemblyInformationalVersionAttribute(TownOfHostY.Main.PluginVersion)]
 namespace TownOfHostY;
 
-[BepInPlugin(PluginGuid, "Town Of Host_Y ForkedbyTabasco", PluginVersion)]
+[BepInPlugin(PluginGuid, "Town Of Host_Y_Tabasco", PluginVersion)]
 [BepInIncompatibility("jp.ykundesu.supernewroles")]
 [BepInIncompatibility("com.emptybottle.townofhost")]
 [BepInIncompatibility("com.AsumuAkaguma.townofhostfore")]
@@ -27,13 +27,13 @@ public class Main : BasePlugin
 {
     // == プログラム設定 / Program Config ==
     // modの名前 / Mod Name (Default: Town Of Host)
-    public static readonly string ModName = "Town Of Host_Y ForkedbyTabasco";
+    public static readonly string ModName = "Town Of Host_Y-Tabasco";
     // modの色 / Mod Color (Default: #00bfff)
     public static readonly string ModColor = "#ee7800";
     // 公開ルームを許可する / Allow Public Room (Default: true)
     public static readonly bool AllowPublicRoom = true;
     // フォークID / ForkId (Default: OriginalTOH)
-    public static readonly string ForkId = "TOH_Y byTabasco";
+    public static readonly string ForkId = "TOH_Y-Tabasco";
     // Discordボタンを表示するか / Show Discord Button (Default: true)
     public static readonly bool ShowDiscordButton = true;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)
@@ -52,7 +52,7 @@ public class Main : BasePlugin
 
     // ==========
     //Sorry for many Japanese comments.
-    public const string PluginGuid = "com.Tabasco.townofhosty_ForkedbyTabasco";
+    public const string PluginGuid = "com.Tabasco.townofhosty_tabasco";
     public const string PluginVersion = "1.0.10";
 
     //Fork元のTOH_Y
@@ -133,6 +133,7 @@ public class Main : BasePlugin
     public const float RoleTextSize = 2f;
     public static HashSet<byte> ShowRoleInfoAtMeeting = new();
     public static HashSet<byte> ShowChangeMainRole = new();
+    public static bool isFirstTurn = false;
 
     // 期間限定
     public static bool IsValentine = DateTime.Now.Month == 2 && DateTime.Now.Day is 9 or 10 or 11 or 12 or 13 or 14 or 15;
