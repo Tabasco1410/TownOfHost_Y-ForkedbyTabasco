@@ -32,6 +32,7 @@ namespace TownOfHostY
         SetCurrentDousingTarget,
         SetEvilTrackerTarget,
         SetRealKiller,
+        CustomRoleSync,
         SyncPuppet,
         MareSync,
         SetSchrodingerCatTeam,
