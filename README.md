@@ -1,3 +1,4 @@
+アサインできない。
 
 # TownOfHost_Y — ForkedbyTabasco
 
