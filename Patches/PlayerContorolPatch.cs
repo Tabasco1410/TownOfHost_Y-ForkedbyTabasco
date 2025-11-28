@@ -500,13 +500,13 @@ public static class PhantomRoleUseAbilityPatch
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.ReportDeadBody))]
 class ReportDeadBodyPatch
 {
+    public static Dictionary<byte, bool> CanReport;
     public static NetworkedPlayerInfo  reporter;
     public static NetworkedPlayerInfo ReportTarget;
     public static bool SpecialMeeting = reporter?.PlayerId == ReportTarget?.PlayerId;
 
-    public static List<byte> CannotReportList;
-    public static List<byte> CannotReportByDeadBodyList;
-    public static List<byte> DontReportMarkList;
+   
+
     public static Dictionary<byte, List<NetworkedPlayerInfo>> WaitReport = new();
     public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] NetworkedPlayerInfo target)
     {
@@ -518,6 +518,12 @@ class ReportDeadBodyPatch
         if (SpecialMeeting) return true;
         if (Options.IsStandardHAS && target != null && __instance == target.Object) return true; //[StandardHAS] ボタンでなく、通報者と死体が同じなら許可
         if (Options.CurrentGameMode == CustomGameMode.HideAndSeek || Options.IsStandardHAS) return false;
+        if (!CanReport[__instance.PlayerId])
+        {
+            WaitReport[__instance.PlayerId].Add(target);
+            Logger.Warn($"{__instance.GetNameWithRole()}:通報禁止中のため可能になるまで待機します", "ReportDeadBody");
+            return false;
+        }
         if (Options.IsCCMode && CatchCat.Option.IgnoreReport.GetBool() && target != null) return false;
         if (target == null && Options.DisableButtonInMushroomMixup.GetBool() && MushroomMixupUpdateSystemPatch.InSabotage)
         {
@@ -527,34 +533,18 @@ class ReportDeadBodyPatch
         if ((reporter.Object.Is(CustomRoles.NonReport) || reporter.Object.Is(CustomRoles.FoxSpirit)) &&
             target != null && !target.Object.Is(CustomRoles.Bait) && !target.Object.Is(CustomRoles.AddBait))
         {
-            DontReportMarkList.Add(reporter.PlayerId);
+            
             Utils.NotifyRoles(SpecifySeer: reporter.Object);
             _ = new LateTask(() =>
             {
-                DontReportMarkList.Remove(reporter.PlayerId);
+                
                 Utils.NotifyRoles(SpecifySeer: reporter.Object);
             }, 5f, "Don't Report Mark Remove");
             return false;
         }
         // Scavenger
-        if (target != null && CannotReportByDeadBodyList.Contains(target.PlayerId))
-        {
-            DontReportMarkList.Add(reporter.PlayerId);
-            Utils.NotifyRoles(SpecifySeer: reporter.Object);
-            _ = new LateTask(() =>
-            {
-                DontReportMarkList.Remove(reporter.PlayerId);
-                Utils.NotifyRoles(SpecifySeer: reporter.Object);
-            }, 5f, "Scavenger DontReportMark Remove");
-            return false;
-        }
 
-        if (CannotReportList.Contains(__instance.PlayerId))
-        {
-            WaitReport[__instance.PlayerId].Add(target);
-            Logger.Warn($"{__instance.GetNameWithRole()}:通報禁止中のため可能になるまで待機します", "ReportDeadBody");
-            return false;
-        }
+        
 
         //会議ボタンの場合、サボタージュ中に呼び出しを受けない
         if (target == null && Utils.IsActiveDontOpenMeetingSabotage(out var sabotage))
@@ -778,7 +768,7 @@ class PlayerControlSetRolePatch
 {
     public static bool Prefix(PlayerControl __instance, ref RoleTypes roleType, bool canOverrideRole)
     {
-        if (RpcSetRoleReplacer.DoReplace()) return true;
+        
 
         var target = __instance;
         var targetName = __instance.GetNameWithRole();

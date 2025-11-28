@@ -10,7 +10,9 @@ namespace TownOfHostY.Roles
 {
     public static class RoleAssignManager
     {
+        
         private static readonly int idStart = (int)Options.offsetId.FeatSpecial + 200;
+
         class RandomAssignOptions
         {
             public int Min => min();
@@ -21,7 +23,7 @@ namespace TownOfHostY.Roles
             private RandomAssignOptions(int id, OptionItem parent, CustomRoleTypes roleTypes, int maxCount)
             {
                 var replacementDictionary = new Dictionary<string, string>()
-                { { "%roleType%", GetString( $"CustomRoleTypes.{roleTypes}") } };
+                { { "%roleType%", GetString($"CustomRoleTypes.{roleTypes}") } };
 
                 var minOption = IntegerOptionItem.Create(idStart + id + 1, "RoleTypeMin", new(0, maxCount, 1), 0, TabGroup.ModMainSettings, false)
                     .SetParent(parent)
@@ -41,6 +43,7 @@ namespace TownOfHostY.Roles
             public static RandomAssignOptions Create(int id, OptionItem parent, CustomRoleTypes roleTypes, int maxCount = 15)
                 => new(id, parent, roleTypes, maxCount);
         }
+
         private static AssignAlgorithm AssignMode => assignMode();
         private static Func<AssignAlgorithm> assignMode;
         private enum AssignAlgorithm
@@ -48,16 +51,19 @@ namespace TownOfHostY.Roles
             Fixed,
             Random
         }
+
         private static readonly string[] AssignModeSelections =
         {
             "AssignAlgorithm.Fixed",
             "AssignAlgorithm.Random"
         };
+
         private static readonly CustomRoles[] AllMainRoles = CustomRolesHelper.AllMainRoles;
         public static OptionItem OptionAssignMode;
-        private static Dictionary<CustomRoleTypes, RandomAssignOptions> RandomAssignOptionsCollection = new(CustomRolesHelper.AllRoleTypes.Length);
-        private static Dictionary<CustomRoleTypes, int> AssignCount = new(CustomRolesHelper.AllRoleTypes.Length);
-        private static List<CustomRoles> AssignRoleList = new(CustomRolesHelper.AllRoles.Length);
+        private static readonly Dictionary<CustomRoleTypes, RandomAssignOptions> RandomAssignOptionsCollection = new(CustomRolesHelper.AllRoleTypes.Length);
+        private static readonly Dictionary<CustomRoleTypes, int> AssignCount = new(CustomRolesHelper.AllRoleTypes.Length);
+        private static readonly List<CustomRoles> AssignRoleList = new(CustomRolesHelper.AllRoles.Length);
+
         public static void SetupOptionItem()
         {
             OptionAssignMode = StringOptionItem.Create(idStart, "AssignMode", AssignModeSelections, 0, TabGroup.ModMainSettings, false)
@@ -70,10 +76,10 @@ namespace TownOfHostY.Roles
             RandomAssignOptions.Create(30, OptionAssignMode, CustomRoleTypes.Crewmate);
             RandomAssignOptions.Create(40, OptionAssignMode, CustomRoleTypes.Neutral);
         }
+
         public static bool CheckRoleCount()
         {
             if (AssignMode == AssignAlgorithm.Fixed) return true;
-            var result = true;
             var opt = Main.NormalOptions.Cast<IGameOptions>();
 
             var playerCount = GameData.Instance.PlayerCount;
@@ -88,8 +94,9 @@ namespace TownOfHostY.Roles
                 var msg = GetString("Warning.NotMatchImpostorCount");
                 Logger.SendInGame(msg);
                 Logger.Warn(msg, "BeginGame");
-                result = false;
+                return false;
             }
+
             var roleMinCount = 0;
             foreach (var options in RandomAssignOptionsCollection.Values)
                 roleMinCount += options.Min;
@@ -98,11 +105,12 @@ namespace TownOfHostY.Roles
                 var msg = GetString("Warning.NotMatchRoleCount");
                 Logger.SendInGame(msg);
                 Logger.Warn(msg, "BeginGame");
-                result = false;
+                return false;
             }
 
-            return result;
+            return true;
         }
+
         public static void SelectAssignRoles()
         {
             AssignCount.Clear();
@@ -122,18 +130,19 @@ namespace TownOfHostY.Roles
             }
 
             AssignRoleList.Sort();
+
+            
             Logger.Info($"{string.Join(", ", AssignCount)}", "AssignCount");
             Logger.Info($"{string.Join(", ", AssignRoleList)}", "AssignRoleList");
         }
+
         ///<summary>
-        ///役職の固定アサイン抽選
-        ///chanceが10%以上の役職を全て追加
+        /// 役職の固定アサイン抽選
+        /// chanceが10%以上の役職を全て追加
         ///</summary>
         private static void SetFixedAssignRole()
         {
             int numImpostorsLeft = Math.Min(GameData.Instance.PlayerCount, Main.RealOptionsData.GetInt(Int32OptionNames.NumImpostors));
-            //インポスター以外の人数
-            //マッド、クルー、ニュートラル合計の限界値
             int numOthersLeft = GameData.Instance.PlayerCount - numImpostorsLeft;
 
             foreach (var role in GetCandidateRoleList(10).OrderBy(x => Guid.NewGuid()))
@@ -141,11 +150,10 @@ namespace TownOfHostY.Roles
                 if (numImpostorsLeft <= 0 && numOthersLeft <= 0) break;
 
                 var targetRoles = role.GetAssignUnitRolesArray();
-                var numImpostorAssign = targetRoles.Count(role => role.GetAssignRoleType() == CustomRoleTypes.Impostor);
+                var numImpostorAssign = targetRoles.Count(r => r.GetAssignRoleType() == CustomRoleTypes.Impostor);
                 var numOthersAssign = targetRoles.Length - numImpostorAssign;
-                //アサイン枠が足りてない場合
-                if (numImpostorAssign > numImpostorsLeft
-                || numOthersAssign > numOthersLeft) continue;
+
+                if (numImpostorAssign > numImpostorsLeft || numOthersAssign > numOthersLeft) continue;
 
                 AssignRoleList.AddRange(targetRoles);
                 numImpostorsLeft -= numImpostorAssign;
@@ -154,55 +162,45 @@ namespace TownOfHostY.Roles
 
             foreach (var roleType in CustomRolesHelper.AllRoleTypes)
             {
-                var count = AssignRoleList.Count(role => role.GetAssignRoleType() == roleType);
+                var count = AssignRoleList.Count(r => r.GetAssignRoleType() == roleType);
                 AssignCount.Add(roleType, count);
             }
         }
+
         ///<summary>
-        ///設定と実際の人数から各役職のアサイン数を決定
+        /// 設定と実際の人数から各役職のアサイン数を決定
         ///</summary>
         private static void SetRandomAssignCount()
         {
-
             var rand = IRandom.Instance;
             int numImpostors = Math.Min(GameData.Instance.PlayerCount, Main.RealOptionsData.GetInt(Int32OptionNames.NumImpostors));
-            //インポスター以外の人数
-            //マッド、クルー、ニュートラル合計の限界値
             int numOthers = GameData.Instance.PlayerCount - numImpostors;
 
             List<CustomRoleTypes> otherRoleTypesList = new();
-            if (numOthers > 0) //マッド、クルー、ニュートラルの人数決定
+            if (numOthers > 0)
             {
-                var otherRoleTypesOptions = RandomAssignOptionsCollection.Where(x => x.Key != CustomRoleTypes.Impostor);
-                //一旦最少人数を設定
-                foreach (var (roleType, options) in otherRoleTypesOptions)
-                    otherRoleTypesList.AddRange(Enumerable.Repeat(roleType, options.Min).ToList());
+                var otherOpts = RandomAssignOptionsCollection.Where(x => x.Key != CustomRoleTypes.Impostor);
+                foreach (var (roleType, options) in otherOpts)
+                    otherRoleTypesList.AddRange(Enumerable.Repeat(roleType, options.Min));
 
-                //超えている場合はランダムに削除
                 while (otherRoleTypesList.Count > numOthers)
                     otherRoleTypesList.RemoveAt(rand.Next(otherRoleTypesList.Count));
 
                 int numAdditional = numOthers - otherRoleTypesList.Count;
-                if (numAdditional > 0) //最少人数で限界値に満たない場合
+                if (numAdditional > 0)
                 {
                     List<CustomRoleTypes> additionalList = new();
-                    foreach (var (roleType, options) in otherRoleTypesOptions)
+                    foreach (var (roleType, options) in otherOpts)
                     {
-                        //追加人数を取得
-                        int additionalCount = Math.Max(0, rand.Next(options.Max - options.Min + 1));
-
-                        additionalList.AddRange(Enumerable.Repeat(roleType, additionalCount).ToList());
+                        int addCount = Math.Max(0, rand.Next(options.Max - options.Min + 1));
+                        additionalList.AddRange(Enumerable.Repeat(roleType, addCount));
                     }
-
-                    //超えている場合はランダムに削除
                     while (additionalList.Count > numAdditional)
                         additionalList.RemoveAt(rand.Next(additionalList.Count));
-
                     otherRoleTypesList.AddRange(additionalList);
                 }
             }
 
-            //Dictionaryに変換
             foreach (var (roleTypes, options) in RandomAssignOptionsCollection)
             {
                 if (roleTypes == CustomRoleTypes.Impostor)
@@ -211,73 +209,75 @@ namespace TownOfHostY.Roles
                     AssignCount.Add(roleTypes, impAssignCount);
                 }
                 else
+                {
                     AssignCount.Add(roleTypes, otherRoleTypesList.Count(x => x == roleTypes));
+                }
             }
         }
+
         ///<summary>
-        ///役職のアサイン抽選
-        ///既に決まったアサイン枠数に合わせて決定
+        /// 役職のアサイン抽選
+        /// 既に決まったアサイン枠数に合わせて決定
         ///</summary>
         private static void SetRandomAssignRoleList()
         {
-            List<(CustomRoles, int)> randomRoleTicketPool = new(); //ランダム抽選時のプール
+            List<(CustomRoles, int)> randomRoleTicketPool = new();
             var rand = IRandom.Instance;
-            var assignCount = new Dictionary<CustomRoleTypes, int>(AssignCount); //アサイン枠のDictionary
+            var assignCount = new Dictionary<CustomRoleTypes, int>(AssignCount);
+
             foreach (var role in GetCandidateRoleList(100).OrderBy(x => Guid.NewGuid()))
             {
                 var targetRoles = role.GetAssignUnitRolesArray();
-                //アサイン枠が足りてない場合
-                if (CustomRolesHelper.AllRoleTypes.Any(
-                    type => assignCount.TryGetValue(type, out var count) &&
-                    targetRoles.Count(role => role.GetAssignRoleType() == type) > count
-                )) continue;
+                if (CustomRolesHelper.AllRoleTypes.Any(type =>
+                        assignCount.TryGetValue(type, out var cnt) &&
+                        targetRoles.Count(r => r.GetAssignRoleType() == type) > cnt))
+                    continue;
 
-                foreach (var targetRole in targetRoles)
+                foreach (var target in targetRoles)
                 {
-                    AssignRoleList.Add(targetRole);
-                    var targetRoleType = targetRole.GetAssignRoleType();
-                    if (assignCount.ContainsKey(targetRoleType))
-                        assignCount[targetRoleType]--;
+                    AssignRoleList.Add(target);
+                    var tType = target.GetAssignRoleType();
+                    if (assignCount.ContainsKey(tType)) assignCount[tType]--;
                 }
             }
+
             if (assignCount.All(kvp => kvp.Value <= 0)) return;
 
-            foreach (var role in AllMainRoles.OrderBy(x => Guid.NewGuid())) //確定枠が偏らないようにシャッフル
+            foreach (var role in AllMainRoles.OrderBy(x => Guid.NewGuid()))
             {
                 if (!role.IsAssignable()) continue;
-
                 var chance = role.GetChance();
                 var count = role.GetCount();
                 if (chance is 0 or 100) continue;
                 if (count == 0) continue;
-                //確率がそのまま追加枚数に
-                for (var i = 0; i < count; i++)
-                    randomRoleTicketPool.AddRange(Enumerable.Repeat((role, i), chance / 10).ToList());
+                for (int i = 0; i < count; i++)
+                    randomRoleTicketPool.AddRange(Enumerable.Repeat((role, i), chance / 10));
             }
 
-            //確定分では足りない場合に抽選を行う
             while (assignCount.Any(kvp => kvp.Value > 0) && randomRoleTicketPool.Count > 0)
             {
-                var selectedTicket = randomRoleTicketPool[rand.Next(randomRoleTicketPool.Count)];
-                Logger.Info($"{selectedTicket.Item1}", "SetRandomAssignRoleList");
-                var targetRoles = selectedTicket.Item1.GetAssignUnitRolesArray();
-                Logger.Info($"{targetRoles}", "SetRandomAssignRoleList");
-                //アサイン枠が足りていれば追加
-                if (CustomRolesHelper.AllRoleTypes.Where(type => type != CustomRoleTypes.Unit).All(type => targetRoles.Count(role => role.GetAssignRoleType() == type) <= assignCount[type]))
+                var ticket = randomRoleTicketPool[rand.Next(randomRoleTicketPool.Count)];
+                Logger.Info($"{ticket.Item1}", "SetRandomAssignRoleList");
+                var targets = ticket.Item1.GetAssignUnitRolesArray();
+                Logger.Info($"{targets}", "SetRandomAssignRoleList");
+
+                if (CustomRolesHelper.AllRoleTypes.Where(t => t != CustomRoleTypes.Unit)
+                    .All(t => targets.Count(r => r.GetAssignRoleType() == t) <= assignCount[t]))
                 {
-                    foreach (var targetRole in targetRoles)
+                    foreach (var trg in targets)
                     {
-                        AssignRoleList.Add(targetRole);
-                        assignCount[targetRole.GetAssignRoleType()]--;
+                        AssignRoleList.Add(trg);
+                        assignCount[trg.GetAssignRoleType()]--;
                     }
                 }
-                //1-9個ある同じチケットを削除
-                randomRoleTicketPool.RemoveAll(x => x == selectedTicket);
+
+                randomRoleTicketPool.RemoveAll(x => x == ticket);
             }
         }
+
         ///<summary>
-        ///属性のアサイン抽選
-        ///枠制限が無いので個別に抽選
+        /// 属性のアサイン抽選
+        /// 枠制限が無いので個別に抽選
         ///</summary>
         private static void SetAddOnsList(bool isFixedAssign)
         {
@@ -287,14 +287,15 @@ namespace TownOfHostY.Roles
                 var count = subRole.GetAssignCount();
                 if (chance == 0 || count == 0) continue;
                 var rnd = IRandom.Instance;
-                for (var i = 0; i < count; i++) //役職の単位数ごとに抽選
+                for (int i = 0; i < count; i++)
                     if (isFixedAssign || rnd.Next(100) < chance)
                         AssignRoleList.AddRange(subRole.GetAssignUnitRolesArray());
             }
         }
+
         private static List<CustomRoles> GetCandidateRoleList(int availableRate)
         {
-            var candidateRoleList = new List<CustomRoles>();
+            var list = new List<CustomRoles>();
             foreach (var role in AllMainRoles)
             {
                 if (!role.IsAssignable()) continue;
@@ -303,16 +304,20 @@ namespace TownOfHostY.Roles
                 var chance = role.GetChance();
                 var count = role.GetAssignCount();
                 if (chance < availableRate || count == 0) continue;
-                candidateRoleList.AddRange(Enumerable.Repeat(role, count).ToList());
+                list.AddRange(Enumerable.Repeat(role, count));
             }
-            return candidateRoleList;
+            return list;
         }
+
         public static RoleAssignInfo GetRoleAssignInfo(this CustomRoles role) =>
             CustomRoleManager.GetRoleInfo(role)?.AssignInfo;
+
         private static CustomRoleTypes GetAssignRoleType(this CustomRoles role) =>
             role.GetRoleAssignInfo()?.AssignRoleType ?? role.GetCustomRoleTypes();
+
         private static bool IsAssignable(this CustomRoles role)
             => role.GetRoleAssignInfo()?.IsInitiallyAssignable ?? true;
+
         /// <summary>
         /// アサインの抽選回数
         /// </summary>
@@ -327,9 +332,10 @@ namespace TownOfHostY.Roles
                 };
             return maximumCount / assignUnitCount;
         }
+
         ///<summary>
-        ///RoleOptionのKey => 実際にアサインされる役職の配列
-        ///両陣営役職、コンビ役職向け
+        /// RoleOptionのKey => 実際にアサインされる役職の配列
+        /// 両陣営役職、コンビ役職向け
         ///</summary>
         private static CustomRoles[] GetAssignUnitRolesArray(this CustomRoles role)
             => role.GetRoleAssignInfo()?.AssignUnitRoles ??
@@ -338,9 +344,11 @@ namespace TownOfHostY.Roles
                 CustomRoles.Lovers => new CustomRoles[2] { CustomRoles.Lovers, CustomRoles.Lovers },
                 _ => new CustomRoles[1] { role },
             };
+
         public static bool IsPresent(this CustomRoles role) => AssignRoleList.Any(x => x == role);
         public static int GetRealCount(this CustomRoles role) => AssignRoleList.Count(x => x == role);
     }
+
     public class RoleAssignInfo
     {
         public RoleAssignInfo(CustomRoles role, CustomRoleTypes roleType)
@@ -357,7 +365,7 @@ namespace TownOfHostY.Roles
         /// </summary>
         public CustomRoleTypes AssignRoleType { get; init; }
         /// <summary>
-        /// 試合開始時にアサインされるかどうかのデリゲート
+        /// 試合開始時にアサインされるかどうか
         /// </summary>
         public Func<bool> IsInitiallyAssignableCallBack { get; init; }
         public bool IsInitiallyAssignable => IsInitiallyAssignableCallBack.Invoke();
@@ -366,8 +374,7 @@ namespace TownOfHostY.Roles
         /// </summary>
         public IntegerValueRule AssignCountRule { get; init; }
         /// <summary>
-        /// 人数設定に対し何人単位でアサインするか
-        /// 役職の抽選回数 = 設定人数 / AssignUnitCount
+        /// 一単位人数
         /// </summary>
         public int AssignUnitCount => AssignCountRule.Step;
         /// <summary>

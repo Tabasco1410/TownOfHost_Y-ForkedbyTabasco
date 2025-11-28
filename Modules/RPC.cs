@@ -32,6 +32,7 @@ namespace TownOfHostY
         SetCurrentDousingTarget,
         SetEvilTrackerTarget,
         SetRealKiller,
+        CustomRoleSync,
         SyncPuppet,
         MareSync,
         SetSchrodingerCatTeam,
@@ -44,8 +45,8 @@ namespace TownOfHostY
         SetEvilDiviner,
         SetLawyerTarget,
         SetRemoveLawyerTarget,
-        EvilHackerWarpSync,
-    }
+        EvilHackerWarpSync
+        }
     public enum Sounds
     {
         KillSound,
@@ -179,8 +180,8 @@ namespace TownOfHostY
                     byte killerId = reader.ReadByte();
                     RPC.SetRealKiller(targetId, killerId);
                     break;
-                default:
-                    CustomRoleManager.DispatchRpc(reader, rpcType);
+                case CustomRPC.CustomRoleSync:
+                    CustomRoleManager.DispatchRpc(reader);                 
                     break;
             }
         }
