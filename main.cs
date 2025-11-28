@@ -17,27 +17,26 @@ using TownOfHostY.Roles.Core;
 [assembly: AssemblyInformationalVersionAttribute(TownOfHostY.Main.PluginVersion)]
 namespace TownOfHostY;
 
-[BepInPlugin(PluginGuid, "Town Of Host_Y ForkedbyTabasco", PluginVersion)]
+[BepInPlugin(PluginGuid, "Town Of Host_Y", PluginVersion)]
 [BepInIncompatibility("jp.ykundesu.supernewroles")]
 [BepInIncompatibility("com.emptybottle.townofhost")]
 [BepInIncompatibility("com.AsumuAkaguma.townofhostfore")]
-[BepInIncompatibility("com.yumenopai.townofhosty")]
 [BepInProcess("Among Us.exe")]
 public class Main : BasePlugin
 {
     // == プログラム設定 / Program Config ==
     // modの名前 / Mod Name (Default: Town Of Host)
-    public static readonly string ModName = "Town Of Host_Y ForkedbyTabasco";
+    public static readonly string ModName = "Town Of Host_Y";
     // modの色 / Mod Color (Default: #00bfff)
-    public static readonly string ModColor = "#ee7800";
+    public static readonly string ModColor = "#ffff00";
     // 公開ルームを許可する / Allow Public Room (Default: true)
     public static readonly bool AllowPublicRoom = true;
     // フォークID / ForkId (Default: OriginalTOH)
-    public static readonly string ForkId = "TOH_Y byTabasco";
+    public static readonly string ForkId = "TOH_Y";
     // Discordボタンを表示するか / Show Discord Button (Default: true)
     public static readonly bool ShowDiscordButton = true;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)
-    public static readonly string DiscordInviteUrl = "https://discord.gg/T348mSSAvN";
+    public static readonly string DiscordInviteUrl = "https://discord.gg/YCUY8b3jew";
     // ==========
     public const string OriginalForkId = "OriginalTOH"; // Don't Change The Value. / この値を変更しないでください。
     // == 認証設定 / Authentication Config ==
@@ -52,25 +51,16 @@ public class Main : BasePlugin
 
     // ==========
     //Sorry for many Japanese comments.
-    public const string PluginGuid = "com.Tabasco.townofhosty_ForkedbyTabasco";
-    public const string PluginVersion = "1.0.10";
-
-    //Fork元のTOH_Y
-    public const string BaseModName = "TOH_Y";
-    public const string BaseModVersion = "519.27.1";
-    public const string BaseModColor = "#ffff00";
-
+    public const string PluginGuid = "com.yumenopai.townofhosty";
+    public const string PluginVersion = "519.27.1";
     // サポートされている最低のAmongUsバージョン
-    public static readonly string LowestSupportedVersion = "2025.4.20";
+    public static readonly string LowestSupportedVersion = "2025.3.25";
     // このバージョンのみで公開ルームを無効にする場合
     public static readonly bool IsPublicAvailableOnThisVersion = false;
     // プレリリースかどうか
     public static bool IsPrerelease { get; } = false;
     public const string PluginSubVersion = "β";
-    public const string PluginVersionName = "Debugversion";
-
-    /// 配布するデバッグ版なのであればtrue。リリース時にはfalseにすること。
-    public static bool DebugVersion = false;
+    public const string PluginVersionName = "StreamerDebug";
 
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
     public static Version version = Version.Parse(PluginVersion);
@@ -133,6 +123,7 @@ public class Main : BasePlugin
     public const float RoleTextSize = 2f;
     public static HashSet<byte> ShowRoleInfoAtMeeting = new();
     public static HashSet<byte> ShowChangeMainRole = new();
+    public static bool isFirstTurn = false;
 
     // 期間限定
     public static bool IsValentine = DateTime.Now.Month == 2 && DateTime.Now.Day is 9 or 10 or 11 or 12 or 13 or 14 or 15;

@@ -66,7 +66,7 @@ namespace TownOfHostY
                     new(2.35f, -2.7f, 1f),
                     new(153, 153, 153, byte.MaxValue),
                     new(209, 209, 209, byte.MaxValue),
-                    () => Application.OpenURL("https://github.com/Tabasco1410/TownOfHost_Y-ForkedbyTabasco"),
+                    () => Application.OpenURL("https://github.com/Yumenopai/TownOfHost_Y"),
                     "GitHub",
                     new(1.85f, 0.5f));
             }
@@ -181,7 +181,7 @@ namespace TownOfHostY
                 ModWarningText.transform.localPosition = new Vector3(1.4f, 0.25f, 0f);
                 ModWarningText.transform.localScale = new Vector3(1.9f, 1.9f, 2f);
                 var renderer = ModWarningText.AddComponent<SpriteRenderer>();
-                renderer.sprite = Utils.LoadSprite($"TownOfHost_Y ForkedbyTabasco.Resources.warning_online.png", 400f);
+                renderer.sprite = Utils.LoadSprite($"TownOfHost_Y.Resources.warning_online.png", 400f);
             }
         }
     }

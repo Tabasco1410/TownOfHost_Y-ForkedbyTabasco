@@ -54,12 +54,7 @@ namespace TownOfHostY
         class VersionShowerStartPatch
         {
             static string[] mainManuText = {
-                "Town Of Host_YのフォークModです\nこのModに関して、他のMod開発者様へ問い合わせないでください",
-                "バイパー・探偵も使えます。\nあとは役職の追加はしてません。",
-                "追加したい役職はある？\n実装するかはわかりませんが募集するかも？",
-                "ここに表示される期間限定メッセージはそのまま残ってます。\nいつか見えるといいね!"
-                
-               /* "このコメントは21種類らしい\nなんか増えてる？",
+                "このコメントは21種類らしい\nなんか増えてる？",
                 "いつもありがとう！\nこれからも沢山遊んでね",
                 "【今日のおすすめ役職】\nアドミニスター",
                 "【今日のおすすめ属性】\nリフュージング",
@@ -79,7 +74,7 @@ namespace TownOfHostY
                 "シンクロカラーモードという\nカオスなモードがありました",
                 "ジャッカルサイドキックが登場。\nご主人の想いを受け継ぎキルせよ。",
                 "ファントム(亡霊)・ノイズメーカー・トラッカー\n新しいバニラ役職も使えます。",
-                "ワンナイトモードを早く復活させたい。",*/
+                "ワンナイトモードを早く復活させたい。",
             };
 
             static TextMeshPro SpecialEventText;
@@ -87,14 +82,12 @@ namespace TownOfHostY
             {
                 TMPTemplate.SetBase(__instance.text);
                 Main.credentialsText = $"<color={Main.ModColor}>{Main.ModName}</color> v{Main.PluginVersion}";
-                Main.credentialsText +=$"\r\n<color={Main.BaseModColor}>{Main.BaseModName}</color>: v{Main.BaseModVersion}";
-
                 if (Main.IsPrerelease)
                 {
                     Main.credentialsText += $"{Main.PluginSubVersion}\r\n<#F39C12>{Main.PluginVersionName}</color>";
                 }
 #if DEBUG
-                Main.credentialsText += $"\r\n{ThisAssembly.Git.Branch}({ThisAssembly.Git.Commit})";
+                Main.credentialsText += $"\r\n<color={Main.ModColor}>{ThisAssembly.Git.Branch}({ThisAssembly.Git.Commit})</color>";
 #endif
                 var credentials = TMPTemplate.Create(
                     "TOHCredentialsText",
@@ -156,7 +149,7 @@ namespace TownOfHostY
                 else if (Main.IsInitialRelease)
                 {
                     SpecialEventText.color = Color.yellow;
-                    SpecialEventText.text = $"Happy Birthday to TownOfHost_Y!";
+                    SpecialEventText.text = $"Happy Birthday to {Main.ModName}!";
                     if (CultureInfo.CurrentCulture.Name == "ja-JP")
                         SpecialEventText.text += "<size=60%>\n期間限定：ポテンシャリスト・おにぎり屋復刻！</size>";
                 }
@@ -177,7 +170,8 @@ namespace TownOfHostY
                 else if (CultureInfo.CurrentCulture.Name == "ja-JP")
                 {
                     var num = IRandom.Instance.Next(mainManuText.Length);
-                    SpecialEventText.text = $"TOH_Y ForkedbyTabasco\n<size=55%>{mainManuText[num]}</size>";                    
+                    SpecialEventText.text = $"★TOH_Yへようこそ！★\n<size=55%>{mainManuText[num]}</size>";
+                    SpecialEventText.color = Color.yellow;
                 }
             }
         }
@@ -199,7 +193,7 @@ namespace TownOfHostY
                 logoTransform.parent = rightpanel;
                 logoTransform.localPosition = new(0f, 0.18f, 1f);
                 //logoTransform.localScale *= 1f;
-                TohLogo.sprite = Utils.LoadSprite("TownOfHost_Y ForkedbyTabasco.Resources.TownOfHostY-Logo.png", 300f);
+                TohLogo.sprite = Utils.LoadSprite("TownOfHost_Y.Resources.TownOfHostY-Logo.png", 300f);
             }
         }
         [HarmonyPatch(typeof(ModManager), nameof(ModManager.LateUpdate))]
