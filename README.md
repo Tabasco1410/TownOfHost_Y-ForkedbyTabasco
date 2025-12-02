@@ -1,4 +1,5 @@
-アサインできない。
+シェリフがインポスターわかっちゃう?!
+切れない?!
 
 # TownOfHost_Y — ForkedbyTabasco
 
