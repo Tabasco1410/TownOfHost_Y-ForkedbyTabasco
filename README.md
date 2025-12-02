@@ -4,7 +4,7 @@
 
 完成次第Yへプルリク予定。
 
-## [Discord](http://discord.com/invite/DhjSAwAreU)
+## [テストプレイはDiscordで募集中](http://discord.com/invite/DhjSAwAreU)
 連絡はサーバーまたはDMへ
 
 このプロジェクトは **Yumenopai 氏の TownOfHost_Y** をフォークしたものです。  
