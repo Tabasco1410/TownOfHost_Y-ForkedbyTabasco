@@ -1,4 +1,4 @@
-/*using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using AmongUs.GameOptions;
 using HarmonyLib;
@@ -6,7 +6,6 @@ using HarmonyLib;
 using TownOfHostY.Modules;
 using TownOfHostY.Roles;
 using TownOfHostY.Roles.Core;
-using TownOfHostY.Patches;
 
 namespace TownOfHostY;
 
@@ -113,4 +112,3 @@ class SelectRolesCCModePatch
         return false;
     }
 }
-*/

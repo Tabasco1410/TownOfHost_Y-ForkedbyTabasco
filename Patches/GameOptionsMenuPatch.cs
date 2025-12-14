@@ -122,7 +122,6 @@ public static class GameOptionsMenuPatch
                         optionBehaviour.SetClickMask(__instance.ButtonClickMask);
                         optionBehaviour.SetUpFromData(baseGameSetting, 20);
                         ModGameOptionsMenu.OptionList.TryAdd(optionBehaviour, index);
-                        //Logger.Info($"{option.Name}, {index}", "OptionList.TryAdd");
                         break;
                     }
                 case OptionTypes.Float:
@@ -169,7 +168,7 @@ public static class GameOptionsMenuPatch
     }
     private static void OptionBehaviourSetSizeAndPosition(OptionBehaviour optionBehaviour, OptionItem option, OptionTypes type)
     {
-        optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().sprite = Utils.LoadSprite($"TownOfHost_Y.Resources.SettingMenu_LabelBackground.png", 100f);
+        optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().sprite = Utils.LoadSprite($"TownOfHost_Y ForkedbyTabasco.Resources.SettingMenu_LabelBackground.png", 100f);
 
         Vector3 positionOffset = new(0f, 0f, 0f);
         Vector3 scaleOffset = new(0f, 0f, 0f);

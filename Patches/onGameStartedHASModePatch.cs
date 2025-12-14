@@ -1,4 +1,4 @@
-/*using AmongUs.GameOptions;
+using AmongUs.GameOptions;
 using HarmonyLib;
 
 using TownOfHostY.Roles;
@@ -59,4 +59,4 @@ class SelectRolesHASModePatch
 
         return false;
     }
-}*/
+}

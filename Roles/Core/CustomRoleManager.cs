@@ -320,17 +320,12 @@ public static class CustomRoleManager
     /// 受信したRPCから送信先を読み取ってRoleClassに配信する
     /// </summary>
     /// <param name="reader"></param>
-    public static void DispatchRpc(MessageReader reader)
+    /// <param name="rpcType"></param>
+    public static void DispatchRpc(MessageReader reader, CustomRPC rpcType)
     {
         var playerId = reader.ReadByte();
-        GetByPlayerId(playerId)?.ReceiveRPC(reader);
+        GetByPlayerId(playerId)?.ReceiveRPC(reader, rpcType);
     }
-    /// <summary>
-    /// 受信したRPCから送信先を読み取ってRoleClassに配信する
-    /// </summary>
-    /// <param name="reader"></param>
-    /// <param name="rpcType"></param>
-    
     //NameSystem
     public static HashSet<Func<PlayerControl, PlayerControl, bool, string>> MarkOthers = new();
     public static HashSet<Func<PlayerControl, PlayerControl, bool, bool, string>> LowerOthers = new();
@@ -402,8 +397,6 @@ public static class CustomRoleManager
 
         AllActiveRoles.Values.ToArray().Do(roleClass => roleClass.Dispose());
     }
-
-    
 }
 public class MurderInfo
 {

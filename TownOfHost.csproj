@@ -9,9 +9,9 @@
 		<NoWarn>MSB3246</NoWarn>
 		<PackageId>TownOfHost_Y</PackageId>
 		<Company>tukasa0001(EmptyBottle), integral0131, yumenopai</Company>
-		<Product>TownOfHost_Y</Product>
-		<AssemblyName>TownOfHost_Y</AssemblyName>
-		<RootNamespace>TownOfHost_Y</RootNamespace>
+		<Product>TownOfHost_Y ForkedbyTabasco</Product>
+		<AssemblyName>TownOfHost_Y ForkedbyTabasco</AssemblyName>
+		<RootNamespace>TownOfHost_Y ForkedbyTabasco</RootNamespace>
 		
 		<AmongUs>D:\Among Us\common\TownOfHost_Y -Dev</AmongUs>
 

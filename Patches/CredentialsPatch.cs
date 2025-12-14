@@ -82,12 +82,14 @@ namespace TownOfHostY
             {
                 TMPTemplate.SetBase(__instance.text);
                 Main.credentialsText = $"<color={Main.ModColor}>{Main.ModName}</color> v{Main.PluginVersion}";
+               
+
                 if (Main.IsPrerelease)
                 {
                     Main.credentialsText += $"{Main.PluginSubVersion}\r\n<#F39C12>{Main.PluginVersionName}</color>";
                 }
 #if DEBUG
-                Main.credentialsText += $"\r\n<color={Main.ModColor}>{ThisAssembly.Git.Branch}({ThisAssembly.Git.Commit})</color>";
+                Main.credentialsText += $"\r\n{ThisAssembly.Git.Branch}({ThisAssembly.Git.Commit})";
 #endif
                 var credentials = TMPTemplate.Create(
                     "TOHCredentialsText",
@@ -149,7 +151,7 @@ namespace TownOfHostY
                 else if (Main.IsInitialRelease)
                 {
                     SpecialEventText.color = Color.yellow;
-                    SpecialEventText.text = $"Happy Birthday to {Main.ModName}!";
+                    SpecialEventText.text = $"Happy Birthday to TownOfHost_Y!";
                     if (CultureInfo.CurrentCulture.Name == "ja-JP")
                         SpecialEventText.text += "<size=60%>\n期間限定：ポテンシャリスト・おにぎり屋復刻！</size>";
                 }
@@ -170,8 +172,7 @@ namespace TownOfHostY
                 else if (CultureInfo.CurrentCulture.Name == "ja-JP")
                 {
                     var num = IRandom.Instance.Next(mainManuText.Length);
-                    SpecialEventText.text = $"★TOH_Yへようこそ！★\n<size=55%>{mainManuText[num]}</size>";
-                    SpecialEventText.color = Color.yellow;
+                    SpecialEventText.text = $"TOH_Y ForkedbyTabasco\n<size=55%>{mainManuText[num]}</size>";                    
                 }
             }
         }
@@ -193,7 +194,7 @@ namespace TownOfHostY
                 logoTransform.parent = rightpanel;
                 logoTransform.localPosition = new(0f, 0.18f, 1f);
                 //logoTransform.localScale *= 1f;
-                TohLogo.sprite = Utils.LoadSprite("TownOfHost_Y.Resources.TownOfHostY-Logo.png", 300f);
+                TohLogo.sprite = Utils.LoadSprite("TownOfHost_Y ForkedbyTabasco.Resources.TownOfHostY-Logo.png", 300f);
             }
         }
         [HarmonyPatch(typeof(ModManager), nameof(ModManager.LateUpdate))]

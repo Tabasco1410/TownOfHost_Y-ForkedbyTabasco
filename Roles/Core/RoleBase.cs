@@ -88,9 +88,9 @@ public abstract class RoleBase : IDisposable
     protected class RoleRPCSender : IDisposable
     {
         public MessageWriter Writer;
-        public RoleRPCSender(RoleBase role)
+        public RoleRPCSender(RoleBase role, CustomRPC rpcType)
         {
-            Writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.CustomRoleSync, SendOption.Reliable, -1);
+            Writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)rpcType, SendOption.Reliable, -1);
             Writer.Write(role.Player.PlayerId);
         }
         public void Dispose()
@@ -104,29 +104,17 @@ public abstract class RoleBase : IDisposable
     /// </summary>
     /// <param name="rpcType">送信するCustomRPC</param>
     /// <returns>送信に使用するRoleRPCSender</returns>
-    protected RoleRPCSender CreateSender()
-    {
-        return new RoleRPCSender(this);
-    }
-
     protected RoleRPCSender CreateSender(CustomRPC rpcType)
     {
-        var sender = new RoleRPCSender(this);
-        try
-        {
-            sender.Writer.Write((byte)rpcType);
-        }
-        catch
-        {
-        }
-        return sender;
+        return new RoleRPCSender(this, rpcType);
     }
     /// <summary>
     /// RPCを受け取った時に呼ばれる関数
     /// RoleRPCSenderで送信されたPlayerIdは削除されて渡されるため意識しなくてもよい。
     /// </summary>
     /// <param name="reader">届いたRPCの情報</param>
-    public virtual void ReceiveRPC(MessageReader reader)
+    /// <param name="rpcType">届いたCustomRPC</param>
+    public virtual void ReceiveRPC(MessageReader reader, CustomRPC rpcType)
     { }
     /// <summary>
     /// 能力ボタンを使えるかどうか
@@ -180,6 +168,17 @@ public abstract class RoleBase : IDisposable
     /// <param name="target">変身先</param>
     public virtual void OnShapeshift(PlayerControl target)
     { }
+
+    /// <summary>
+    /// 透明化チェック時に呼ばれる
+    /// 自分自身が透明化したときのみ呼ばれる
+    /// ※透明化キャンセルの場合にキルクールが10秒に強制されてしまうため、
+    /// falseで返す時があれば能力に応じた任意のキルクールを設定しておく。
+    /// </summary>
+    /// <returns>falseを返すと透明化がキャンセルされる</returns>
+    /// <param name="killCooldown">キルクール</param>
+    /// <param name="canResetAbilityCooldown">使用後アビリティクールをリセットするか</param>
+    public virtual bool OnCheckVanish(ref float killCooldown, ref bool canResetAbilityCooldown) => true;
 
     /// <summary>
     /// タスクターンに常時呼ばれる関数
@@ -247,15 +246,7 @@ public abstract class RoleBase : IDisposable
     /// </summary>
     public virtual void AfterMeetingTasks()
     { }
-    /// <summary>
-    /// タスクターンにスポーンした時に呼ばれる関数
-    /// 実行後必ず、SyncSettings()、RpcResetAbilityCooldown()が呼ばれる
-    /// </summary>
-    /// <param name="initialState">ゲーム最初のスポーンかどうか</param>
-    public virtual void OnSpawn(bool initialState = false)
-    {
 
-    }
     /// <summary>
     /// タスクが一個完了するごとに呼ばれる関数
     /// </summary>
@@ -276,7 +267,7 @@ public abstract class RoleBase : IDisposable
     /// </summary>
     /// <param name="player">アクションを起こしたプレイヤー</param>
     /// <param name="systemType">サボタージュの種類</param>
-    /// <returns>falseでサボタージュをキャンセル</returns>
+    /// <returns>falseでサボタージュのキャンセル</returns>
     public virtual bool OnSabotage(PlayerControl player, SystemTypes systemType) => true;
 
     // NameSystem
@@ -296,7 +287,7 @@ public abstract class RoleBase : IDisposable
     /// <param name="enabled">RoleNameを表示するかどうか</param>
     /// <param name="roleColor">RoleNameの色</param>
     /// <param name="roleText">RoleNameのテキスト</param>
-    public virtual void OverrideDisplayRoleNameAsSeen(PlayerControl seer, ref bool enabled, ref Color roleColor, ref string roleText)
+    public virtual void OverrideDisplayRoleNameAsSeen(PlayerControl seer, bool isMeeting, ref bool enabled, ref string roleText)
     { }
     /// <summary>
     /// seerによる表示上のRoleNameの書き換え
@@ -305,35 +296,15 @@ public abstract class RoleBase : IDisposable
     /// <param name="enabled">RoleNameを表示するかどうか</param>
     /// <param name="roleColor">RoleNameの色</param>
     /// <param name="roleText">RoleNameのテキスト</param>
-    public virtual void OverrideDisplayRoleNameAsSeer(PlayerControl seen, ref bool enabled, ref Color roleColor, ref string roleText)
-    { }
-
-    // Compatibility overloads used by older/newer derived classes
-    public virtual void OverrideDisplayRoleNameAsSeen(PlayerControl seer, bool isMeeting, ref bool enabled, ref string roleText)
-    {
-        Color dummy = Color.white;
-        OverrideDisplayRoleNameAsSeen(seer, ref enabled, ref dummy, ref roleText);
-    }
     public virtual void OverrideDisplayRoleNameAsSeer(PlayerControl seen, bool isMeeting, ref bool enabled, ref string roleText)
-    {
-        Color dummy = Color.white;
-        OverrideDisplayRoleNameAsSeer(seen, ref enabled, ref dummy, ref roleText);
-    }
-
+    { }
     /// <summary>
     /// 本来の役職名の書き換え
     /// </summary>
     /// <param name="roleColor">RoleNameの色</param>
     /// <param name="roleText">RoleNameのテキスト</param>
-    public virtual void OverrideTrueRoleName(ref Color roleColor, ref string roleText)
+    public virtual void OverrideShowMainRoleText(ref Color roleColor, ref string roleText)
     { }
-
-    /// <summary>
-    /// 役職名の横に出るテキスト
-    /// </summary>
-    /// <param name="comms">コミュサボ中扱いするかどうか</param>
-    public virtual string GetProgressText(bool comms = false) => "";
-
     /// <summary>
     /// seerによるProgressTextの書き換え
     /// </summary>
@@ -342,28 +313,11 @@ public abstract class RoleBase : IDisposable
     /// <param name="text">ProgressTextのテキスト</param>
     public virtual void OverrideProgressTextAsSeer(PlayerControl seen, ref bool enabled, ref string text)
     { }
-
     /// <summary>
-    /// 追加: ReceiveRPC with CustomRPC param for compatibility
+    /// 役職名の横に出るテキスト
     /// </summary>
-    /// <param name="reader"></param>
-    /// <param name="rpcType"></param>
-    public virtual void ReceiveRPC(MessageReader reader, CustomRPC rpcType)
-    {
-        ReceiveRPC(reader);
-    }
-
-    /// <summary>
-    /// 役職表示（全表示）上のオーバーライド
-    /// </summary>
-    public virtual void OverrideShowMainRoleText(ref Color roleColor, ref string roleText)
-    { }
-
-    /// <summary>
-    /// Vanishチェック互換メソッド
-    /// </summary>
-    public virtual bool OnCheckVanish(ref float killCooldown, ref bool canResetAbilityCooldown) => true;
-
+    /// <param name="comms">コミュサボ中扱いするかどうか</param>
+    public virtual string GetProgressText(bool comms = false) => "";
     /// <summary>
     /// seerが自分であるときのMark
     /// seer,seenともに自分以外であるときに表示したい場合は同じ引数でstaticとして実装し
@@ -374,7 +328,6 @@ public abstract class RoleBase : IDisposable
     /// <param name="isForMeeting">会議中フラグ</param>
     /// <returns>構築したMark</returns>
     public virtual string GetMark(PlayerControl seer, PlayerControl seen = null, bool isForMeeting = false) => "";
-
     /// <summary>
     /// seerが自分であるときのLowerTex
     /// seer,seenともに自分以外であるときに表示したい場合は同じ引数でstaticとして実装し
@@ -386,7 +339,6 @@ public abstract class RoleBase : IDisposable
     /// <param name="isForHud">ModでHudとして表示する場合</param>
     /// <returns>構築したLowerText</returns>
     public virtual string GetLowerText(PlayerControl seer, PlayerControl seen = null, bool isForMeeting = false, bool isForHud = false) => "";
-
     /// <summary>
     /// seer自分であるときのSuffix
     /// seer,seenともに自分以外であるときに表示したい場合は同じ引数でstaticとして実装し
@@ -405,11 +357,11 @@ public abstract class RoleBase : IDisposable
     {
         StringNames? str = Player.Data.Role.Role switch
         {
-            RoleTypes.Phantom => Player.Data.Role.TryCast<PhantomRole>(out var phantomRole) ? (phantomRole.IsInvisible ? StringNames.PhantomAbilityUndo : StringNames.PhantomAbility) : null,
-            RoleTypes.Tracker => Player.Data.Role.TryCast<TrackerRole>(out var trackerRole) ? (trackerRole.isTrackingActive ? StringNames.TrackerAbilityUndo : StringNames.TrackerAbility) : null,
             RoleTypes.Engineer => StringNames.VentAbility,
             RoleTypes.Scientist => StringNames.VitalsAbility,
+            RoleTypes.Tracker => StringNames.TrackerAbility,
             RoleTypes.Shapeshifter => StringNames.ShapeshiftAbility,
+            RoleTypes.Phantom => StringNames.PhantomAbility,
             RoleTypes.GuardianAngel => StringNames.ProtectAbility,
             RoleTypes.ImpostorGhost or RoleTypes.CrewmateGhost => StringNames.HauntAbilityName,
             _ => null
@@ -417,8 +369,18 @@ public abstract class RoleBase : IDisposable
         return str.HasValue ? GetString(str.Value) : "Invalid";
     }
 
-    protected static AudioClip GetIntroSound(RoleTypes roleType) =>
-        RoleManager.Instance.AllRoles.ToArray().Where((role) => role.Role == roleType).FirstOrDefault().IntroSound;
+    protected static AudioClip GetIntroSound(RoleTypes roleType)
+    {
+        foreach (var role in RoleManager.Instance.AllRoles)
+        {
+            if (role.Role == roleType)
+            {
+                return role.IntroSound;
+            }
+        }
+        return null; // 見つからなかった場合は null を返す
+    }
+
 
     protected enum GeneralOption
     {

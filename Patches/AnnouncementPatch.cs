@@ -54,7 +54,7 @@ public class ModNews
         };
     }
 
-    
+   
     public const string ModNewsURL =
         "https://raw.githubusercontent.com/Yumenopai/TownOfHost_Y/main/modNews.json";
 
@@ -102,7 +102,8 @@ public class ModNews
         [HarmonyArgument(0)] ref Il2CppReferenceArray<Announcement> aRange)
     {
         if (AllModNews.Count < 1)
-        {            
+        {
+            
             AllModNews.Do(n => JsonAndAllModNews.Add(n));
             JsonAndAllModNews.Sort((a1, a2) =>
                 DateTime.Compare(DateTime.Parse(a2.Date), DateTime.Parse(a1.Date)));
