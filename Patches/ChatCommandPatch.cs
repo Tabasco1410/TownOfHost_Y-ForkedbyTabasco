@@ -277,6 +277,7 @@ namespace TownOfHostY
 
                     case "/killFlashAll":
                     case "/kfa":
+                        canceled = true;
                         if (GameStates.InGame)
                             Main.AllPlayerControls.Do(pc => pc.KillFlash());
                         break;

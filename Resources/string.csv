@@ -285,9 +285,9 @@
 "LoyalDoggyInfo","How are you doing? Master!","調子はどうですか？ご主人様！",
 "RabbitInfo","I have a good ear, so.","耳がいいので探知できるんだ",
 "VentManagerInfo","Vent,Vent,Vent!","ベント、ベント、ベント！",
-"NiceGuesserInfo","Guess and shoot","推測して撃ち抜こう","","","",""
-"ElderInfo","I am still not as young as I used to be.","まだ若者には負けんわい","","","",""
-"NormalDetectiveInfo","Gathering information. Solving murders.""情報収集。殺人事件解決。"","","","","",""
+"NiceGuesserInfo","Guess and shoot","推測して撃ち抜こう","","","","",
+"ElderInfo","I am still not as young as I used to be.","まだ若者には負けんわい","","","","",
+"NormalDetectiveInfo","Gathering information. Solving murders.""情報収集。殺人事件解決。",
 
 
 "CustomCrewmateInfoLong","(Crewmates):\Crewmate with the ability to Add-On to attributes set by the host.","[クルー陣営]\nホストによって設定された属性の能力をもつクルーメイト。",
@@ -1259,6 +1259,7 @@ DSchrodingerCatInfo,You are now on Team Darkhide,ダークハイドの味方に�
 "Command.h_modes","<ModeName> - Display Mode Description","<モード名> - モードの説明を表示","<模式名> - 显示模式介绍","<模式名> - 顯示關於該模式的介紹","<ИмяРежима> - Показать описание Режима","<NomedoModo> - Mostrar Nome do Modo"
 "Command.dump","Output Log to Desktop","デスクトップにログを出力","将游戏运行日志输出到桌面","在桌面上建立遊戲輸出日誌","Вывод журнала на Рабочий Стол","Enviar Registro (log) Para Área de Trabalho"
 "Command.h_args","Available Args (Clipped)","使用可能な引数 (略称)","可用参数（简写）","可用的參數(簡稱)","Доступные Аргументы (Ограниченные)","Argumentos Disponíveis (Atalho)"
+"Command.killflashall","Show Kill Flash to All","キルフラッシュを全員に表示","向所有人显示击杀闪光","向所有人顯示擊殺閃光","Показать всем эффект убийства","Mostrar Flash de Morte para Todos"
 
 "CantUse.lastresult","Unable to use /lastresult during a game.","試合中に/lastresultを使用することはできません。","不可以在游戏中使用/lastresult命令","不可以在遊戲中使用/lastresult指令","Нельзя использовать /lastresult во время игры","Impossível usar /lastresult durante um jogo."
 "CantUse.killlog","Unable to use /killlog during a game.","試合中に/killlogを使用することはできません。","不可以在游戏中使用/killlog命令","不可以在遊戲中使用/killlog指令","Нельзя использовать /killlog во время игры","Impossível usar /killlog durante um jogo."

@@ -151,7 +151,13 @@ namespace TownOfHostY
                 Logger.isAlsoInGame = !Logger.isAlsoInGame;
                 Logger.SendInGame($"ログのゲーム内出力: {Logger.isAlsoInGame}");
             }
+            //全員にキルフラッシュ表示する（暗転時修復用）
+            if(GetKeysDown(KeyCode.K,KeyCode.L,KeyCode.LeftShift))
+            {
+                if (GameStates.InGame)
+                    Main.AllPlayerControls.Do(pc => pc.KillFlash());                
 
+            }
             //--以下フリープレイ用コマンド--//
             //if (!GameStates.IsFreePlay) return;
             //キルクールを0秒に設定
