@@ -1,6 +1,11 @@
+シェリフがインポスターわかっちゃう?!
+切れない?!
 
 # TownOfHost_Y — ForkedbyTabasco
-## [Discord](http://discord.com/invite/DhjSAwAreU)
+
+完成次第Yへプルリク予定。
+
+## [テストプレイはDiscordで募集中](http://discord.com/invite/DhjSAwAreU)
 連絡はサーバーまたはDMへ
 
 このプロジェクトは **Yumenopai 氏の TownOfHost_Y** をフォークしたものです。  
