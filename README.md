@@ -1,12 +1,8 @@
-シェリフがインポスターわかっちゃう?!
-切れない?!
+バニラサーバーではホストがキックされてしまいます。
 
-# TownOfHost_Y — ForkedbyTabasco
 
 完成次第Yへプルリク予定。
 
-## [テストプレイはDiscordで募集中](http://discord.com/invite/DhjSAwAreU)
-連絡はサーバーまたはDMへ
 
 このプロジェクトは **Yumenopai 氏の TownOfHost_Y** をフォークしたものです。  
 元は **tukasa0001 氏の TownOfHost** をベースとしています。  
