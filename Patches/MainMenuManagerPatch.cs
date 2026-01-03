@@ -41,7 +41,7 @@ namespace TownOfHostY
                     new(-0.85f, -2.7f, 1f),
                     new(29, 160, 241, byte.MaxValue),
                     new(169, 215, 242, byte.MaxValue),
-                    () => Application.OpenURL("https://twitter.com/"),
+                    () => Application.OpenURL("https://twitter.com/yumeno_AmongUs"),
                     "Twitter/X",
                     new(1.85f, 0.5f));
             }
@@ -54,10 +54,9 @@ namespace TownOfHostY
                     new(255, 142, 168, byte.MaxValue),
                     new(255, 226, 153, byte.MaxValue),
                     () => Application.OpenURL("https://wikiwiki.jp/tohy_amongus"),
-                    "WIKIWIKI(TOH_Y)",
+                    "WIKIWIKI",
                     new(1.85f, 0.5f));
             }
-
             // GitHubボタンを生成
             if (SimpleButton.IsNullOrDestroyed(gitHubButton))
             {
