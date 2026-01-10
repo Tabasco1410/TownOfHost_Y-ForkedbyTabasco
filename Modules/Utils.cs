@@ -923,7 +923,7 @@ public static class Utils
             + $"\n/h modes {GetString("Command.h_modes")}"
             + $"\n/dump - {GetString("Command.dump")}"
             + $"\n/kfa - {GetString("Command.killflashall")}"
-            + $"\n\n視界が暗転した参加者が発生した場合は、\nチャットコマンドを使用するか、左Shift,K,Lを同時に押下してください、"
+            + $"\n\n視界が暗転した参加者が発生した場合は、\nチャットコマンドを使用するか、左Control,K,Lを同時に押下してください、"
             );
     }
     public static void SendMessage(string text, byte sendTo = byte.MaxValue, string title = "")
