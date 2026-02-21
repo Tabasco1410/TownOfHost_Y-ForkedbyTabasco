@@ -33,6 +33,17 @@ namespace TownOfHostY
             Main.isChatCommand = true;
             Logger.Info(text, "SendChat");
 
+            if (args[0] == "/cmd" && args.Length >= 2)
+            {
+                canceled = true;
+                string cmdArg = args[1].StartsWith("/") ? args[1] : "/" + args[1];
+                string[] newArgs = new string[args.Length - 1];
+                newArgs[0] = cmdArg;
+                for (int i = 2; i < args.Length; i++) newArgs[i - 1] = args[i];
+                args = newArgs;
+                text = string.Join(" ", args);
+            }
+
             var tag = !PlayerControl.LocalPlayer.Data.IsDead ? "SendChatHost" : "SendChatDeadHost";
             if (text.StartsWith("試合結果:") || text.StartsWith("キル履歴:")) tag = "SendSystemChat";
             VoiceReader.ReadHost(text, tag);
@@ -446,6 +457,16 @@ namespace TownOfHostY
 
             string[] args = text.Split(' ');
             string subArgs = "";
+
+            if (text.StartsWith("/") && !text.Contains("cmd"))
+            {
+                Utils.SendMessage(GetString("Error.CommandFailed"), player.PlayerId);
+                return;
+            }
+            if (args[0] != "/cmd" || args.Length <= 1) return;
+            args = args.Skip(1).ToArray();
+            if (args[0].StartsWith("/") is false) args[0] = $"/{args[0]}";
+
             switch (args[0]?.ToLower())
             {
                 case "/l":
