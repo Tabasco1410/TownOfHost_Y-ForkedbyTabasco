@@ -81,6 +81,9 @@ namespace TownOfHostY
     [HarmonyPatch(typeof(NetworkedPlayerInfo), nameof(NetworkedPlayerInfo.RpcSetTasks))]
     class RpcSetTasksPatch
     {
+        // ★ TOH-K移植: StandardIntroでのタスク再配布のためにtaskIdsをキャッシュする
+        public static Il2CppSystem.Collections.Generic.Dictionary<byte, Il2CppStructArray<byte>> taskIds = new();
+
         public static void Prefix(NetworkedPlayerInfo __instance,
             [HarmonyArgument(0)] ref Il2CppStructArray<byte> taskTypeIds)
         {
@@ -294,6 +297,13 @@ namespace TownOfHostY
                     taskTypeIds[i] = TasksList[i];
 
                 Logger.Info($"{pc.name} にタスク {TasksList.Count} 個を割り当てました (長: {NumLongTasks}, 短: {NumShortTasks})", "RpcSetTasksPatch");
+
+                // ★ TOH-K移植: StandardモードかつIsroleAssigned前（イントロ前）ならtaskIdsにキャッシュ
+                //   StandardIntroHelper.ShowIntroForVanilla内でタスク再配布に使用する
+                if (Options.CurrentGameMode == CustomGameMode.Standard && !Main.IsroleAssigned)
+                {
+                    taskIds[__instance.PlayerId] = taskTypeIds;
+                }
             }
             catch (System.Exception ex)
             {

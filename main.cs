@@ -17,7 +17,7 @@ using TownOfHostY.Roles.Core;
 [assembly: AssemblyInformationalVersionAttribute(TownOfHostY.Main.PluginVersion)]
 namespace TownOfHostY;
 
-[BepInPlugin(PluginGuid, "Town Of Host_Y", PluginVersion)]
+[BepInPlugin(PluginGuid, "Town Of Host_Y_T", PluginVersion)]
 [BepInIncompatibility("jp.ykundesu.supernewroles")]
 [BepInIncompatibility("com.emptybottle.townofhost")]
 [BepInIncompatibility("com.AsumuAkaguma.townofhostfore")]
@@ -26,13 +26,13 @@ public class Main : BasePlugin
 {
     // == プログラム設定 / Program Config ==
     // modの名前 / Mod Name (Default: Town Of Host)
-    public static readonly string ModName = "Town Of Host_Y";
+    public static readonly string ModName = "Town Of Host_Y_T";
     // modの色 / Mod Color (Default: #00bfff)
     public static readonly string ModColor = "#ffff00";
     // 公開ルームを許可する / Allow Public Room (Default: true)
     public static readonly bool AllowPublicRoom = true;
     // フォークID / ForkId (Default: OriginalTOH)
-    public static readonly string ForkId = "TOH_Y";
+    public static readonly string ForkId = "TOH_Y_T";
     // Discordボタンを表示するか / Show Discord Button (Default: true)
     public static readonly bool ShowDiscordButton = true;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)
@@ -51,8 +51,8 @@ public class Main : BasePlugin
 
     // ==========
     //Sorry for many Japanese comments.
-    public const string PluginGuid = "com.yumenopai.townofhosty";
-    public const string PluginVersion = "519.27.1";
+    public const string PluginGuid = "com.tabasco.townofhosty_t";
+    public const string PluginVersion = "1.0";
     // サポートされている最低のAmongUsバージョン
     public static readonly string LowestSupportedVersion = "2025.3.25";
     // このバージョンのみで公開ルームを無効にする場合
@@ -118,6 +118,13 @@ public class Main : BasePlugin
     public static bool VisibleTasksCount;
     public static string nickName = "";
     public static bool introDestroyed = false;
+    // ★ TOH-K移植: Standardモードのイントロ処理でSetRoleをクライアントに反映させるかどうか
+    //   true = CoResetRoleY方式（イントロ後に再SetRoleする）→ falseで送信
+    //   false = 従来方式
+    public static bool SetRoleOverride = true;
+    // ★ TOH-K移植: 役職割り当てが完了したかどうか（StandardIntroでのタスク再配布判定に使用）
+    public static bool IsroleAssigned
+        => !SetRoleOverride || SelectRolesPatch.roleAssigned;
     public static float DefaultCrewmateVision;
     public static float DefaultImpostorVision;
     public const float RoleTextSize = 2f;

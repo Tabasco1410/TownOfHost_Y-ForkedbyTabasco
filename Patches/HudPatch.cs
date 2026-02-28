@@ -113,7 +113,7 @@ class HudManagerPatch
 
                 LowerInfoText.text = VentEnterTask.GetLowerText(player, isForMeeting: GameStates.IsMeeting, isForHud: true);
                 LowerInfoText.text += LowerInfoText.text != "" ? '\n' : "";
-              　LowerInfoText.text += roleClass?.GetLowerText(player, isForMeeting: GameStates.IsMeeting, isForHud: true) ?? "";
+                LowerInfoText.text += roleClass?.GetLowerText(player, isForMeeting: GameStates.IsMeeting, isForHud: true) ?? "";
                 LowerInfoText.enabled = LowerInfoText.text != "";
 
                 if (!AmongUsClient.Instance.IsGameStarted && AmongUsClient.Instance.NetworkMode != NetworkModes.FreePlay)
@@ -274,7 +274,7 @@ class HudManagerPatch
         // タスク表示の文章が更新・適用された後に実行される
         public static void Postfix(TaskPanelBehaviour __instance)
         {
-            if (GameStates.IsLobby) return; 
+            if (GameStates.IsLobby) return;
             if (!GameStates.IsModHost) return;
             PlayerControl player = PlayerControl.LocalPlayer;
 
@@ -292,6 +292,26 @@ class HudManagerPatch
                 __instance.taskText.text = RepairSender.GetText();
             }
         }
+    }
+}
+
+
+[HarmonyPatch(typeof(HudManager), nameof(HudManager.CoShowIntro))]
+class HudManagerCoShowIntroPatch
+{
+    public static bool Cancel = true;
+    public static bool Prefix(HudManager __instance)
+    {
+        if (AmongUsClient.Instance.AmHost
+            && Options.CurrentGameMode == CustomGameMode.Standard
+            && Cancel)
+        {
+            Logger.Warn("イントロの表示をキャンセルしました", "CoShowIntro");
+            return false;
+        }
+        
+        Cancel = true;
+        return true;
     }
 }
 

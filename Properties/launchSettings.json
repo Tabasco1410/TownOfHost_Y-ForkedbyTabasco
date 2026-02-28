@@ -2,9 +2,9 @@
   "profiles": {
     "TownOfHostY": {
       "commandName": "Executable",
-      "executablePath": "D:\\Among Us\\common\\TownOfHost_Y -Dev\\Among Us.exe",
+      "executablePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\TownOfHost_Y -Dev\\Among Us.exe",
       "environmentVariables": {
-        "AmongUs": "D:\\Application\\Steam\\steamapps\\common\\TownOfHost_Y"
+        "AmongUs": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\TownOfHost_Y -Dev"
       }
     }
   }
