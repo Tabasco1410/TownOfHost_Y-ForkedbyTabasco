@@ -201,6 +201,7 @@ public static class Utils
         {
             if (subRole == CustomRoles.VIP) return true;
         }
+        // ターゲット(役職)
         if (target == BestieWolf.EnableKillFlash) return true;
 
         if (seer.Data.IsDead || killer == seer || target == seer) return false;
@@ -1114,6 +1115,13 @@ public static class Utils
                     SelfName.Append(str);
                     selfNameOriginal = false;
                 }
+            }
+            if (Options.IsSyncColorMode && isForMeeting && seer.IsAlive() &&
+                !seer.Is(CustomRoleTypes.Impostor) &&
+                !seer.Is(CustomRoles.Rainbow) &&
+                !seer.Is(CustomRoles.Workaholic))
+            {
+                SelfName.Append($"{ColorString(Color.white, SeerRealName)}{SelfDeathReason}{SelfMark}");
             }
             if (Options.IsSyncColorMode && isForMeeting && seer.IsAlive() &&
                 !seer.Is(CustomRoleTypes.Impostor) &&

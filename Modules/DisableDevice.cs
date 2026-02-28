@@ -11,14 +11,14 @@ namespace TownOfHostY
     //参考元 : https://github.com/ykundesu/SuperNewRoles/blob/master/SuperNewRoles/Mode/SuperHostRoles/BlockTool.cs
     class DisableDevice
     {
-        // 型(Main/Options)には ?. を使わない。内部の値が null の可能性にだけ ?. を使う。
+        
         public static bool DoDisable
         {
             get
             {
                 try
                 {
-                    var normal = Main.NormalOptions; // Main は型なので ?. は禁止
+                    var normal = Main.NormalOptions; 
                     if (normal == null) return false;
 
                     var map = (MapNames)normal.MapId;
@@ -29,7 +29,7 @@ namespace TownOfHostY
                         (map == MapNames.Airship && (Options.DisableDevices_Airship?.GetBool() ?? false)) ||
                         (map == MapNames.Fungle && (Options.DisableDevices_Fungle?.GetBool() ?? false));
 
-                    // IsStandardHAS は bool（OptionItem ではない）なのでそのまま参照
+                   
                     bool standardHas = Options.IsStandardHAS;
 
                     return byMap || standardHas || IsPoorEnableSafe();
