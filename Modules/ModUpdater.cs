@@ -14,7 +14,7 @@ namespace TownOfHostY
     [HarmonyPatch]
     public class ModUpdater
     {
-        private static readonly string URL = "https://api.github.com/repos/Yumenopai/TownOfHost_Y";
+        private static readonly string URL = "https://api.github.com/repos/Tabasco1410/TownOfHost_Y-ForkedbyTabasco";
         public static bool hasUpdate = false;
         public static bool isBroken = false;
         public static bool isChecked = false;
@@ -179,7 +179,7 @@ namespace TownOfHostY
                     button.GetComponent<PassiveButton>().OnClick = new();
                     button.GetComponent<PassiveButton>().OnClick.AddListener((Action)(() =>
                     {
-                        Application.OpenURL("https://github.com/Yumenopai/TownOfHost_Y/releases/latest");
+                        Application.OpenURL("https://github.com/Tabasco1410/TownOfHost_Y-ForkedbyTabasco/releases/latest");
                         Application.Quit();
                     }));
                 }

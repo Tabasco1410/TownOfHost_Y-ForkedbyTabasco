@@ -3,8 +3,8 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
 		<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-		<Description>Town Of Host_Y</Description>
-		<Authors>tukasa0001(EmptyBottle), integral0131, yumenopai</Authors>
+		<Description>Town Of Host_Y-ForkedbyTabasco</Description>
+		<Authors>tukasa0001(EmptyBottle), integral0131, yumenopai,Tabasco</Authors>
 		<langVersion>preview</langVersion>
 		<NoWarn>MSB3246</NoWarn>
 		<PackageId>TownOfHost_Y</PackageId>
