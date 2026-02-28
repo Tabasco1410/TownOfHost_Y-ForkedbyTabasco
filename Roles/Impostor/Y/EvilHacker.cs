@@ -62,14 +62,14 @@ public sealed class EvilHacker : RoleBase, IImpostor
                 return new Vector2(2.96f, -8.62f);
             case MapNames.Polus:
                 return new Vector2(22.63f, -21.75f);
-            case MapNames.Mira:
+            case MapNames.MiraHQ:
                 return new Vector2(22.22f, 18.77f);
             default:
                 // デフォルトの座標（必要に応じて設定）
                 return new Vector2(0f, 0f);
         }
     }
-    public override bool OnCheckVanish()
+    public override bool OnCheckVanish(ref float killCooldown, ref bool canResetAbilityCooldown)
     {
         // 移動前の位置を保持
         LastPosition = Player.GetTruePosition();

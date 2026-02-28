@@ -172,9 +172,13 @@ public abstract class RoleBase : IDisposable
     /// <summary>
     /// 透明化チェック時に呼ばれる
     /// 自分自身が透明化したときのみ呼ばれる
+    /// ※透明化キャンセルの場合にキルクールが10秒に強制されてしまうため、
+    /// falseで返す時があれば能力に応じた任意のキルクールを設定しておく。
     /// </summary>
     /// <returns>falseを返すと透明化がキャンセルされる</returns>
-    public virtual bool OnCheckVanish() => true;
+    /// <param name="killCooldown">キルクール</param>
+    /// <param name="canResetAbilityCooldown">使用後アビリティクールをリセットするか</param>
+    public virtual bool OnCheckVanish(ref float killCooldown, ref bool canResetAbilityCooldown) => true;
 
     /// <summary>
     /// タスクターンに常時呼ばれる関数
@@ -283,7 +287,7 @@ public abstract class RoleBase : IDisposable
     /// <param name="enabled">RoleNameを表示するかどうか</param>
     /// <param name="roleColor">RoleNameの色</param>
     /// <param name="roleText">RoleNameのテキスト</param>
-    public virtual void OverrideDisplayRoleNameAsSeen(PlayerControl seer, bool isMeeting, ref bool enabled, ref Color roleColor, ref string roleText)
+    public virtual void OverrideDisplayRoleNameAsSeen(PlayerControl seer, bool isMeeting, ref bool enabled, ref string roleText)
     { }
     /// <summary>
     /// seerによる表示上のRoleNameの書き換え
@@ -292,14 +296,14 @@ public abstract class RoleBase : IDisposable
     /// <param name="enabled">RoleNameを表示するかどうか</param>
     /// <param name="roleColor">RoleNameの色</param>
     /// <param name="roleText">RoleNameのテキスト</param>
-    public virtual void OverrideDisplayRoleNameAsSeer(PlayerControl seen, bool isMeeting, ref bool enabled, ref Color roleColor, ref string roleText)
+    public virtual void OverrideDisplayRoleNameAsSeer(PlayerControl seen, bool isMeeting, ref bool enabled, ref string roleText)
     { }
     /// <summary>
     /// 本来の役職名の書き換え
     /// </summary>
     /// <param name="roleColor">RoleNameの色</param>
     /// <param name="roleText">RoleNameのテキスト</param>
-    public virtual void OverrideTrueRoleName(ref Color roleColor, ref string roleText)
+    public virtual void OverrideShowMainRoleText(ref Color roleColor, ref string roleText)
     { }
     /// <summary>
     /// seerによるProgressTextの書き換え
@@ -365,8 +369,18 @@ public abstract class RoleBase : IDisposable
         return str.HasValue ? GetString(str.Value) : "Invalid";
     }
 
-    protected static AudioClip GetIntroSound(RoleTypes roleType) =>
-        RoleManager.Instance.AllRoles.Where((role) => role.Role == roleType).FirstOrDefault().IntroSound;
+    protected static AudioClip GetIntroSound(RoleTypes roleType)
+    {
+        foreach (var role in RoleManager.Instance.AllRoles)
+        {
+            if (role.Role == roleType)
+            {
+                return role.IntroSound;
+            }
+        }
+        return null; // 見つからなかった場合は null を返す
+    }
+
 
     protected enum GeneralOption
     {

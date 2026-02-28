@@ -16,8 +16,7 @@ public sealed class Charger : RoleBase, IImpostor
             CustomRoles.Charger,
             () => RoleTypes.Phantom,
             CustomRoleTypes.Impostor,
-            (int)Options.offsetId.ImpSpecial + 0,
-            //(int)Options.offsetId.ImpY + 1700,
+            (int)Options.offsetId.ImpY + 1700,
             SetUpOptionItem,
             "チャージャー"
         );
@@ -30,22 +29,26 @@ public sealed class Charger : RoleBase, IImpostor
         killCooldown = OptionkillCooldown.GetFloat();
         chargeKillCooldown = OptionChargeKillCooldown.GetFloat();
         oneGaugeChargeCount = OptionOneGaugeChargeCount.GetInt();
+        oneGaugeAddKillCount = OptionOneGaugeAddKillCount.GetInt();
         killCountAtStartGame = OptionKillCountAtStartGame.GetInt();
     }
     private static OptionItem OptionkillCooldown;
     private static OptionItem OptionChargeKillCooldown;
     private static OptionItem OptionOneGaugeChargeCount;
+    private static OptionItem OptionOneGaugeAddKillCount;
     private static OptionItem OptionKillCountAtStartGame;
     enum OptionName
     {
         ChargerFirstKillCooldown,
         GrudgeChargerChargeKillCooldown,
         GrudgeChargerOneGaugeChargeCount,
+        GrudgeChargerOneGaugeAddKillCount,
         GrudgeChargerKillCountAtStartGame,
     }
     private static float killCooldown;
     private static float chargeKillCooldown;
     private static int oneGaugeChargeCount;
+    private static int oneGaugeAddKillCount;
     private static int killCountAtStartGame;
 
     int killLimit;
@@ -59,7 +62,9 @@ public sealed class Charger : RoleBase, IImpostor
             .SetValueFormat(OptionFormat.Seconds);
         OptionChargeKillCooldown = FloatOptionItem.Create(RoleInfo, 11, OptionName.GrudgeChargerChargeKillCooldown, new(0.5f, 180f, 0.5f), 2f, false)
             .SetValueFormat(OptionFormat.Seconds);
-        OptionOneGaugeChargeCount = IntegerOptionItem.Create(RoleInfo, 12, OptionName.GrudgeChargerOneGaugeChargeCount, new(1, 30, 1), 10, false)
+        OptionOneGaugeChargeCount = IntegerOptionItem.Create(RoleInfo, 12, OptionName.GrudgeChargerOneGaugeChargeCount, new(1, 30, 1), 6, false)
+            .SetValueFormat(OptionFormat.Times);
+        OptionOneGaugeAddKillCount = IntegerOptionItem.Create(RoleInfo, 14, OptionName.GrudgeChargerOneGaugeAddKillCount, new(1, 15, 1), 1, false)
             .SetValueFormat(OptionFormat.Times);
         OptionKillCountAtStartGame = IntegerOptionItem.Create(RoleInfo, 13, OptionName.GrudgeChargerKillCountAtStartGame, new(0, 2, 1), 0, false)
             .SetValueFormat(OptionFormat.Times);
@@ -83,7 +88,7 @@ public sealed class Charger : RoleBase, IImpostor
         chargeCount++;
         if (chargeCount >= oneGaugeChargeCount)
         {
-            killLimit++;
+            killLimit += oneGaugeAddKillCount;
             chargeCount = 0;
         }
         Logger.Info($"{Player.GetNameWithRole()} : チャージ({chargeCount}/{oneGaugeChargeCount})", "Charger");
@@ -99,8 +104,11 @@ public sealed class Charger : RoleBase, IImpostor
         Player.RpcResetAbilityCooldown();
     }
 
-    public override bool OnCheckVanish()
+    public override bool OnCheckVanish(ref float killCooldown, ref bool canResetAbilityCooldown)
     {
+        // キルクール設定
+        killCooldown = chargeKillCooldown;
+
         if (killLimit <= 0) return false;
 
         // 全体内での最短距離のターゲット
@@ -117,14 +125,17 @@ public sealed class Charger : RoleBase, IImpostor
         }
         Logger.Info($"最短距離プレイヤー確定 : {minDistance.target.GetNameWithRole()}・{minDistance.dist}m", "Charger");
 
-        var KillRange = GameOptionsData.KillDistances[Mathf.Clamp(Main.NormalOptions.KillDistance, 0, 2)];
+        var KillRange = Utils.SafeGetKillDistance();
         Logger.Info($"距離 : {minDistance.dist}m <= {KillRange}m", "Charger");
         if (minDistance.dist <= KillRange && Player.CanMove && minDistance.target.CanMove)
         {
-            killLimit--;
-            minDistance.target.SetRealKiller(Player);
-            Player.RpcMurderPlayer(minDistance.target);
-            Logger.Info($"{Player.GetNameWithRole()} : 残り{killLimit}発", "Charger");
+            if (CustomRoleManager.OnCheckMurder(Player, minDistance.target, true))
+            {
+                killLimit--;
+                minDistance.target.SetRealKiller(Player);
+                Logger.Info($"{Player.GetNameWithRole()} : 残り{killLimit}発", "Charger");
+                Utils.NotifyRoles(SpecifySeer: Player);
+            }
 
             killThisTurn = true;
             Player.MarkDirtySettings();

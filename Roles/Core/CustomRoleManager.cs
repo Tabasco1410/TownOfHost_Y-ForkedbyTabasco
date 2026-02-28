@@ -33,8 +33,8 @@ public static class CustomRoleManager
     /// </summary>
     /// <param name="attemptKiller">実際にキルを行ったプレイヤー 不変</param>
     /// <param name="attemptTarget">>Killerが実際にキルを行おうとしたプレイヤー 不変</param>
-    public static bool OnCheckMurder(PlayerControl attemptKiller, PlayerControl attemptTarget)
-        => OnCheckMurder(attemptKiller, attemptTarget, attemptKiller, attemptTarget);
+    public static bool OnCheckMurder(PlayerControl attemptKiller, PlayerControl attemptTarget, bool killerMyselfInvoke = false)
+        => OnCheckMurder(attemptKiller, attemptTarget, attemptKiller, attemptTarget, killerMyselfInvoke);
     /// <summary>
     ///
     /// </summary>
@@ -42,7 +42,11 @@ public static class CustomRoleManager
     /// <param name="attemptTarget">>Killerが実際にキルを行おうとしたプレイヤー 不変</param>
     /// <param name="appearanceKiller">見た目上でキルを行うプレイヤー 可変</param>
     /// <param name="appearanceTarget">見た目上でキルされるプレイヤー 可変</param>
-    public static bool OnCheckMurder(PlayerControl attemptKiller, PlayerControl attemptTarget, PlayerControl appearanceKiller, PlayerControl appearanceTarget)
+    /// <param name="killerMyselfInvoke">自身で呼び出すときはxxいくつかの処理をスキップ</param>
+    public static bool OnCheckMurder(
+        PlayerControl attemptKiller, PlayerControl attemptTarget,
+        PlayerControl appearanceKiller, PlayerControl appearanceTarget,
+        bool killerMyselfInvoke = false)
     {
         Logger.Info($"Attempt  :{attemptKiller.GetNameWithRole()} => {attemptTarget.GetNameWithRole()}", "CheckMurder");
         if (appearanceKiller != attemptKiller || appearanceTarget != attemptTarget)
@@ -53,7 +57,7 @@ public static class CustomRoleManager
         appearanceKiller.ResetKillCooldown();
 
         // 無効なキルをブロックする処理 必ず最初に実行する
-        if (!CheckMurderPatch.CheckForInvalidMurdering(info)) return false;
+        if (!CheckMurderPatch.CheckForInvalidMurdering(info, killerMyselfInvoke)) return false;
 
         // インポスター同士のキル無効
         if (attemptKiller.GetCustomRole().IsImpostor() && attemptTarget.GetCustomRole().IsImpostor() && !attemptKiller.Is(CustomRoles.StrayWolf)) return false;
@@ -85,7 +89,10 @@ public static class CustomRoleManager
                 }
             }
             // キラーのキルチェック処理実行
-            killer.OnCheckMurderAsKiller(info);
+            if (!killerMyselfInvoke)
+            {
+                killer.OnCheckMurderAsKiller(info);
+            }
         }
         // CC
         if (Options.IsCCMode)
@@ -301,6 +308,7 @@ public static class CustomRoleManager
             case CustomRoles.Guarding: Guarding.Add(playerId); break;
             case CustomRoles.AddBait: AddBait.Add(playerId); break;
             case CustomRoles.Refusing: Refusing.Add(playerId); break;
+            case CustomRoles.Revealer: Revealer.Add(playerId); break;
 
             case CustomRoles.Sunglasses: Sunglasses.Add(playerId); break;
             case CustomRoles.Clumsy: Clumsy.Add(playerId); break;
@@ -448,10 +456,12 @@ public enum CustomRoles
     Impostor,
     Shapeshifter,
     Phantom,
+    Viper,
     //Impostor
     NormalImpostor,
     NormalShapeshifter,
     NormalPhantom,
+    NormalViper,
     CustomImpostor,
     EvilWatcher,
     BountyHunter,
@@ -493,6 +503,7 @@ public enum CustomRoles
     CharismaStar,
     EvilHacker,
     Telekinetic,
+    Administer,
 
     Godfather,
     Janitor,
@@ -520,11 +531,13 @@ public enum CustomRoles
     Scientist,
     Tracker,
     Noisemaker,
+    Detective,
     //Crewmate
     NormalEngineer,
     NormalScientist,
     NormalTracker,
     NormalNoisemaker,
+    NormalDetective,
     CustomCrewmate,
     NiceWatcher,
     Bait,
@@ -635,6 +648,7 @@ public enum CustomRoles
     CompleteCrew,
     Lovers,
     Workhorse,
+
     AddWatch,
     AddLight,
     AddSeer,
@@ -649,10 +663,13 @@ public enum CustomRoles
     Guarding,
     AddBait,
     Refusing,
+    Revealer,
+
     Sunglasses,
     Clumsy,
     InfoPoor,
     NonReport,
+
     Archenemy,
     ChainShifterAddon,
 

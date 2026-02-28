@@ -17,8 +17,7 @@ public sealed class CharismaStar : RoleBase, IImpostor
             CustomRoles.CharismaStar,
             () => RoleTypes.Phantom,
             CustomRoleTypes.Impostor,
-            (int)Options.offsetId.ImpSpecial + 200,
-            //(int)Options.offsetId.ImpY + 1900,
+            (int)Options.offsetId.ImpY + 1900,
             SetUpOptionItem,
             "カリスマスター"
         );
@@ -30,6 +29,9 @@ public sealed class CharismaStar : RoleBase, IImpostor
     {
         KillCooldown = OptionKillCooldown.GetFloat();
         GatherCooldown = OptionGatherCooldown.GetFloat();
+        // 集合クールがキルクールより短い時、集合クールはキルクールと同じにする
+        if (GatherCooldown < KillCooldown) GatherCooldown = KillCooldown;
+
         GatherMaxCount = OptionGatherMaxCount.GetInt();
         NotGatherPlayerKill = OptionNotGatherPlayerKill.GetBool();
         CanAllPlayerGather = OptionCanAllPlayerGather.GetBool();
@@ -81,21 +83,41 @@ public sealed class CharismaStar : RoleBase, IImpostor
 
     public void OnCheckMurderAsKiller(MurderInfo info)
     {
-        // 使用回数がない時は通常キル
-        if (!info.CanKill || GatherLimitCount == 0) return;
+        if (!info.CanKill) return;
 
-        var (killer, target) = info.AttemptTuple;
-        info.DoKill = killer.CheckDoubleTrigger(target, () =>
+        // 集合回数がまだあるならダブルクリック有効
+        if (GatherLimitCount > 0)
         {
-            // 集めるターゲット登録
-            GatherChoosePlayer.Add(target.PlayerId);
-            Logger.Info($"{killer.GetNameWithRole()} → {target.GetNameWithRole()}：ターゲット選択", "CharismaStar");
-            // 表示更新
-            Utils.NotifyRoles(SpecifySeer: killer);
-        });
+            var (killer, target) = info.AttemptTuple;
+            info.DoKill = killer.CheckDoubleTrigger(target, () =>
+            {
+                // 集めるターゲット登録
+                GatherChoosePlayer.Add(target.PlayerId);
+                Logger.Info($"{killer.GetNameWithRole()} → {target.GetNameWithRole()}：ターゲット選択", "CharismaStar");
+                // 表示更新
+                Utils.NotifyRoles(SpecifySeer: killer);
+            });
+        }
+        if (info.DoKill) // 指名時はクールリセットしない
+        {
+            // アビリティクールリセット
+            Player.RpcResetAbilityCooldown();
+            // ホストが集合後のキルクールが0.1のままになってしまう為ここでもリセット
+            if (Player == PlayerControl.LocalPlayer)
+            {
+                _ = new LateTask(() =>
+                {
+                    Player.SetKillCooldown(KillCooldown);
+                }, 0.2f, "CharismaStar_HostSetKillCooldown");
+            }
+        }
     }
-    public override bool OnCheckVanish()
+    public override bool OnCheckVanish(ref float killCooldown, ref bool canResetAbilityCooldown)
     {
+        // キルクール設定(使用時は既にキルクールがない想定)
+        killCooldown = 0.1f;
+        canResetAbilityCooldown = true;
+
         // 使用回数がない時は無視
         if (GatherLimitCount == 0) return false;
 
@@ -122,8 +144,9 @@ public sealed class CharismaStar : RoleBase, IImpostor
             if (!target.IsAlive()) continue;
 
             // ターゲットが梯子またはヌーンを使っている
-            if (target.MyPhysics.Animations.IsPlayingAnyLadderAnimation()
+            if ((target.MyPhysics.Animations.IsPlayingAnyLadderAnimation()
                 || ((MapNames)Main.NormalOptions.MapId == MapNames.Airship && Vector2.Distance(target.GetTruePosition(), LiftPosition) <= 1.9f))
+                && !target.Is(CustomRoleTypes.Impostor))
             {
                 // 集まらないプレイヤーをキルするがONの時
                 if (NotGatherPlayerKill)
@@ -145,7 +168,6 @@ public sealed class CharismaStar : RoleBase, IImpostor
         // 能力使用後のリセット
         GatherChoosePlayer.Clear();
         GatherLimitCount--;
-        Player.RpcResetAbilityCooldown();
         Logger.Info($"{Player.GetNameWithRole()} : 残り{GatherLimitCount}回", "CharismaStar");
         // 表示更新
         Utils.NotifyRoles(SpecifySeer: Player);

@@ -12,6 +12,13 @@
 		<Product>TownOfHost_Y</Product>
 		<AssemblyName>TownOfHost_Y</AssemblyName>
 		<RootNamespace>TownOfHost_Y</RootNamespace>
+
+		<AmongUs>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev</AmongUs>
+
+		<SteamTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</SteamTemp>
+		<EpicTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</EpicTemp>
+		<DllTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</DllTemp>
+
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>TRACE</DefineConstants>
@@ -37,6 +44,17 @@
 	</ItemGroup>
 
 	<Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">
-		<Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(AmongUs)/BepInEx/plugins/" Condition="'$(Configuration)' == 'Debug'" />
+		<Copy
+		  SourceFiles="$(OutputPath)$(AssemblyName).dll"
+		  DestinationFolder="$(AmongUs)\BepInEx\plugins\" />
+		<Copy
+		  SourceFiles="$(OutputPath)$(AssemblyName).dll"
+		  DestinationFolder="$(SteamTemp)\BepInEx\plugins\" />
+		<Copy
+		  SourceFiles="$(OutputPath)$(AssemblyName).dll"
+		  DestinationFolder="$(EpicTemp)\BepInEx\plugins\" />
+		<Copy
+		SourceFiles="$(OutputPath)$(AssemblyName).dll"
+		DestinationFolder="$(DllTemp)\" />
 	</Target>
 </Project>

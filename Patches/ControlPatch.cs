@@ -79,6 +79,13 @@ namespace TownOfHostY
 
             //--以下ホスト専用コマンド--//
             if (!AmongUsClient.Instance.AmHost) return;
+            //全員にキルフラッシュ表示する（暗転時修復用）
+            if (GetKeysDown(KeyCode.K, KeyCode.L, KeyCode.LeftControl))
+            {
+                if (GameStates.InGame)
+                    Main.AllPlayerControls.Do(pc => pc.KillFlash());
+
+            }
             //廃村
             if (GetKeysDown(KeyCode.Return, KeyCode.L, KeyCode.LeftShift) && GameStates.IsInGame)
             {
@@ -150,8 +157,7 @@ namespace TownOfHostY
             {
                 Logger.isAlsoInGame = !Logger.isAlsoInGame;
                 Logger.SendInGame($"ログのゲーム内出力: {Logger.isAlsoInGame}");
-            }
-
+            }            
             //--以下フリープレイ用コマンド--//
             //if (!GameStates.IsFreePlay) return;
             //キルクールを0秒に設定
@@ -188,9 +194,21 @@ namespace TownOfHostY
             //現在の座標を取得
             if (Input.GetKeyDown(KeyCode.I))
             {
+                var room = PlayerControl.LocalPlayer.GetPlainShipRoom();
+                var roomName = "";
+
+                if (room == null)
+                {
+                    roomName = Translator.GetString("FailToTrack");
+                }
+                else
+                {
+                    roomName = Translator.GetString(room.RoomId.ToString());
+                }
+
                 var pos = PlayerControl.LocalPlayer.GetTruePosition().ToString();
                 Logger.Info(pos, "GetLocalPlayerPos");
-                Logger.SendInGame($"position: {pos}");
+                Logger.SendInGame($"position: {pos}/ [@{roomName}]");
             }//マスゲーム用コード
             /*if (Input.GetKeyDown(KeyCode.C))
             {

@@ -4,7 +4,6 @@ using HarmonyLib;
 using UnityEngine;
 
 namespace TownOfHostY;
-
 public static class ModGameOptionsMenu
 {
     public static int TabIndex = 0;
@@ -69,9 +68,20 @@ public static class GameOptionsMenuPatch
             {
                 CategoryHeaderMasked categoryHeaderMasked = UnityEngine.Object.Instantiate<CategoryHeaderMasked>(__instance.categoryHeaderOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
                 categoryHeaderMasked.SetHeader(StringNames.RolesCategory, 20);
-                categoryHeaderMasked.Title.text = option.GetName();
-                categoryHeaderMasked.transform.localScale = Vector3.one * 0.63f;
+
+                categoryHeaderMasked.Title.text = option.IsHeaderName == "" ? option.GetName(colorLighter: true) : option.IsHeaderName.Color(option.NameColor.ShadeColor(-0.3f));
                 categoryHeaderMasked.transform.localPosition = new Vector3(-0.903f, num, pos_z);
+                categoryHeaderMasked.transform.localScale = Vector3.one * 0.63f;
+
+                if (option.Tab != TabGroup.ModMainSettings && option is not TextOptionItem)
+                {
+                    categoryHeaderMasked.transform.FindChild("LabelSprite").transform.localPosition -= new Vector3(0f, 0.06f, 0f);
+                    categoryHeaderMasked.transform.FindChild("LabelSprite").transform.localScale = new Vector3(1.5f, 1.25f, 1f);
+
+                    categoryHeaderMasked.transform.FindChild("HeaderText").GetComponent<RectTransform>().sizeDelta = new Vector2(4.4f, 0.38f);
+                    categoryHeaderMasked.transform.FindChild("HeaderText").GetComponent<RectTransform>().localPosition = new Vector3(0.55f, -0.22f, -1f);
+                }
+
                 categoryHeaderMasked.transform.FindChild("HeaderText").GetComponent<TMPro.TextMeshPro>().fontStyle = TMPro.FontStyles.Bold;
                 categoryHeaderMasked.transform.FindChild("HeaderText").GetComponent<TMPro.TextMeshPro>().outlineWidth = 0.17f;
                 categoryHeaderMasked.gameObject.SetActive(enabled);
@@ -112,7 +122,6 @@ public static class GameOptionsMenuPatch
                         optionBehaviour.SetClickMask(__instance.ButtonClickMask);
                         optionBehaviour.SetUpFromData(baseGameSetting, 20);
                         ModGameOptionsMenu.OptionList.TryAdd(optionBehaviour, index);
-                        //Logger.Info($"{option.Name}, {index}", "OptionList.TryAdd");
                         break;
                     }
                 case OptionTypes.Float:
@@ -165,6 +174,7 @@ public static class GameOptionsMenuPatch
         Vector3 scaleOffset = new(0f, 0f, 0f);
         Color color = new(0.7f, 0.7f, 0.7f);
         float sizeDelta_x = 5.7f;
+        float sizeDelta_y = 0.37f;
 
         if (option.Parent?.Parent?.Parent != null)
         {
@@ -187,13 +197,17 @@ public static class GameOptionsMenuPatch
             color = new(0.5f, 0.7f, 0.5f);
             sizeDelta_x = 5.5f;
         }
+        else if (option.Parent == null && option.Tab != TabGroup.ModMainSettings)
+        {
+            sizeDelta_y = 0.43f;
+        }
 
         optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().color = color;
         optionBehaviour.transform.FindChild("LabelBackground").localScale += new Vector3(0.9f, -0.2f, 0f) + scaleOffset;
         optionBehaviour.transform.FindChild("LabelBackground").localPosition += new Vector3(-0.4f, 0f, 0f) + positionOffset;
 
         optionBehaviour.transform.FindChild("Title Text").localPosition += new Vector3(-0.4f, 0f, 0f) + positionOffset; ;
-        optionBehaviour.transform.FindChild("Title Text").GetComponent<RectTransform>().sizeDelta = new Vector2(sizeDelta_x, 0.37f);
+        optionBehaviour.transform.FindChild("Title Text").GetComponent<RectTransform>().sizeDelta = new Vector2(sizeDelta_x, sizeDelta_y);
         optionBehaviour.transform.FindChild("Title Text").GetComponent<TMPro.TextMeshPro>().alignment = TMPro.TextAlignmentOptions.MidlineLeft;
         optionBehaviour.transform.FindChild("Title Text").GetComponent<TMPro.TextMeshPro>().fontStyle = TMPro.FontStyles.Bold;
         optionBehaviour.transform.FindChild("Title Text").GetComponent<TMPro.TextMeshPro>().outlineWidth = 0.17f;
@@ -284,357 +298,354 @@ public static class GameOptionsMenuPatch
             __instance.ControllerSelectable.Add(x);
         __instance.scrollBar.SetYBoundsMax(-num - 1.65f);
     }
+    public class CheckboxGameSetting : BaseGameSetting
+    {
+        public bool Value; // 現在のチェック状態
+        public Action<bool> OnValueChanged; // チェック変更時のコールバック
+    }
 
     private static BaseGameSetting GetSetting(OptionItem item)
     {
+       
         BaseGameSetting baseGameSetting = null;
 
-        if (item is BooleanOptionItem)
+        if (item is BooleanOptionItem boolItem)
         {
-            baseGameSetting = new CheckboxGameSetting
-            {
-                Type = OptionTypes.Checkbox,
-            };
+            var intSetting = ScriptableObject.CreateInstance<IntGameSetting>();
+            
+            intSetting.Type = OptionTypes.Int;
+            intSetting.Value = boolItem.Bool ? 1 : 0;
+            intSetting.Increment = 1;
+            intSetting.ValidRange = new IntRange(0, 1);
+            intSetting.FormatString = "";
+
+            boolItem.SetValue(intSetting.Value);
+            
+            baseGameSetting = intSetting;
         }
-        else if (item is IntegerOptionItem)
+        else if (item is IntegerOptionItem intItem)
         {
-            IntegerOptionItem intItem = item as IntegerOptionItem;
-            baseGameSetting = new IntGameSetting
-            {
-                Type = OptionTypes.Int,
-                Value = intItem.GetInt(),
-                Increment = intItem.Rule.Step,
-                ValidRange = new IntRange(intItem.Rule.MinValue, intItem.Rule.MaxValue),
-                ZeroIsInfinity = false,
-                SuffixType = NumberSuffixes.Multiplier,
-                FormatString = string.Empty,
-            };
+            var intSetting = ScriptableObject.CreateInstance<IntGameSetting>();
+            intSetting.Type = OptionTypes.Int;
+            intSetting.Value = intItem.GetInt();
+            intSetting.Increment = intItem.Rule.Step;
+            intSetting.ValidRange = new IntRange(intItem.Rule.MinValue, intItem.Rule.MaxValue);
+            intSetting.ZeroIsInfinity = false;
+            intSetting.SuffixType = NumberSuffixes.Multiplier;
+            intSetting.FormatString = string.Empty;
+
+            intItem.SetValue(intSetting.Value);
+            
+            baseGameSetting = intSetting;
         }
-        else if (item is FloatOptionItem)
+        else if (item is FloatOptionItem floatItem)
         {
-            FloatOptionItem floatItem = item as FloatOptionItem;
-            baseGameSetting = new FloatGameSetting
-            {
-                Type = OptionTypes.Float,
-                Value = floatItem.GetFloat(),
-                Increment = floatItem.Rule.Step,
-                ValidRange = new FloatRange(floatItem.Rule.MinValue, floatItem.Rule.MaxValue),
-                ZeroIsInfinity = false,
-                SuffixType = NumberSuffixes.Multiplier,
-                FormatString = string.Empty,
-            };
+            var floatSetting = ScriptableObject.CreateInstance<FloatGameSetting>();
+            floatSetting.Type = OptionTypes.Float;
+            floatSetting.Value = floatItem.GetFloat();
+            floatSetting.Increment = floatItem.Rule.Step;
+            floatSetting.ValidRange = new FloatRange(floatItem.Rule.MinValue, floatItem.Rule.MaxValue);
+            floatSetting.ZeroIsInfinity = false;
+            floatSetting.SuffixType = NumberSuffixes.Multiplier;
+            floatSetting.FormatString = string.Empty;
+
+            floatItem.SetValue(floatItem.Rule.GetNearestIndex(floatSetting.Value));
+            
+            baseGameSetting = floatSetting;
         }
-        else if (item is StringOptionItem)
+        else if (item is StringOptionItem stringItem)
         {
-            StringOptionItem stringItem = item as StringOptionItem;
             baseGameSetting = new StringGameSetting
             {
                 Type = OptionTypes.String,
-                Values = new StringNames[stringItem.Selections.Length], //ダミー
+                Values = new StringNames[stringItem.Selections.Length],
                 Index = stringItem.GetInt(),
             };
-        }
-        else if (item is PresetOptionItem)
+              }
+        else if (item is PresetOptionItem presetItem)
         {
-            PresetOptionItem presetItem = item as PresetOptionItem;
             baseGameSetting = new StringGameSetting
             {
                 Type = OptionTypes.String,
-                Values = new StringNames[OptionItem.NumPresets], //ダミー
+                Values = new StringNames[OptionItem.NumPresets],
                 Index = presetItem.GetInt(),
             };
+
         }
 
         if (baseGameSetting != null)
         {
-            baseGameSetting.Title = StringNames.Accept; //ダミー
+            baseGameSetting.Title = StringNames.Accept;
         }
 
+       
         return baseGameSetting;
     }
-}
 
-[HarmonyPatch(typeof(ToggleOption))]
-public static class ToggleOptionPatch
-{
-    [HarmonyPatch(nameof(ToggleOption.Initialize)), HarmonyPrefix]
-    private static bool InitializePrefix(ToggleOption __instance)
+
+
+    [HarmonyPatch(typeof(NumberOption))]
+    public static class NumberOptionPatch
     {
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
+        [HarmonyPatch(nameof(NumberOption.Initialize)), HarmonyPrefix]
+        private static bool InitializePrefix(NumberOption __instance)
         {
-            var item = OptionItem.AllOptions[index];
-            //Logger.Info($"{item.Name}, {index}", "ToggleOption.Initialize.TryGetValue");
-            __instance.TitleText.text = item.GetName();
-            __instance.CheckMark.enabled = item.GetBool();
-            return false;
-        }
-        return true;
-    }
-    [HarmonyPatch(nameof(ToggleOption.UpdateValue)), HarmonyPrefix]
-    private static bool UpdateValuePrefix(ToggleOption __instance)
-    {
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
-        {
-            var item = OptionItem.AllOptions[index];
-            //Logger.Info($"{item.Name}, {index}", "ToggleOption.UpdateValue.TryGetValue");
-            item.SetValue(__instance.GetBool() ? 1 : 0);
-            return false;
-        }
-        return true;
-    }
-}
-[HarmonyPatch(typeof(NumberOption))]
-public static class NumberOptionPatch
-{
-    [HarmonyPatch(nameof(NumberOption.Initialize)), HarmonyPrefix]
-    private static bool InitializePrefix(NumberOption __instance)
-    {
-        // バニラゲーム設定の拡張
-        switch (__instance.Title)
-        {
-            case StringNames.GameShortTasks:
-            case StringNames.GameLongTasks:
-            case StringNames.GameCommonTasks:
-                __instance.ValidRange = new FloatRange(0, 99);
-                break;
-            case StringNames.GameKillCooldown:
-                __instance.ValidRange = new FloatRange(0, 180);
-                break;
-            case StringNames.GameNumImpostors:
-                if (DebugModeManager.IsDebugMode)
+           
+            switch (__instance.Title)
+            {
+                case StringNames.GameShortTasks:
+                case StringNames.GameLongTasks:
+                case StringNames.GameCommonTasks:
+                    __instance.ValidRange = new FloatRange(0, 99);
+                    break;
+                case StringNames.GameKillCooldown:
+                    __instance.ValidRange = new FloatRange(0, 180);
+                    break;
+                case StringNames.GameNumImpostors:
+                    if (DebugModeManager.IsDebugMode)
+                        __instance.ValidRange.min = 0;
+                    break;
+            }
+
+            if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
+            {
+                var item = OptionItem.AllOptions[index];
+                __instance.TitleText.text = item.GetName();
+                
+                // UIのValueがまだ初期状態ならOptionItemの値でセットする
+                if (__instance.Value == default)
                 {
-                    __instance.ValidRange.min = 0;
+                    if (item is BooleanOptionItem boolItem)
+                    {
+                        __instance.ValidRange = new FloatRange(0, 1);
+                        __instance.Value = boolItem.GetValue() != 0 ? 1 : 0;
+                    }
+                    else if (item is IntegerOptionItem intItem)
+                    {
+                        __instance.Value = intItem.Rule.GetNearestIndex(intItem.GetValue());
+                    }
+                    else if (item is FloatOptionItem floatItem)
+                    {
+                        __instance.Value = floatItem.Rule.GetNearestIndex(floatItem.GetFloat());
+                    }
                 }
-                break;
-            default:
-                break;
+
+                __instance.UpdateValue();
+                __instance.OnValueChanged?.Invoke(__instance);
+               return false;
+            }
+
+
+            return true;
         }
 
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
+        [HarmonyPatch(nameof(NumberOption.UpdateValue)), HarmonyPrefix]
+        private static bool UpdateValuePrefix(NumberOption __instance)
         {
+            if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
+            {
+                var item = OptionItem.AllOptions[index];
+                
+                if (item is BooleanOptionItem boolItem)
+                {
+                    boolItem.SetValue(__instance.GetInt() != 0 ? 1 : 0);
+                }
+                else if (item is IntegerOptionItem intItem)
+                {
+                    intItem.SetValue(intItem.Rule.GetNearestIndex(__instance.GetInt()));
+                }
+                else if (item is FloatOptionItem floatItem)
+                {
+                    floatItem.SetValue(floatItem.Rule.GetNearestIndex(__instance.GetFloat()));
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        [HarmonyPatch(nameof(NumberOption.Increase)), HarmonyPrefix]
+        private static bool IncreasePrefix(NumberOption __instance)
+        {
+            if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
             var item = OptionItem.AllOptions[index];
-            //Logger.Info($"{item.Name}, {index}", "NumberOption.Initialize.TryGetValue");
-            __instance.TitleText.text = item.GetName();
-            return false;
-        }
-        return true;
-    }
-    [HarmonyPatch(nameof(NumberOption.UpdateValue)), HarmonyPrefix]
-    private static bool UpdateValuePrefix(NumberOption __instance)
-    {
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
-        {
-            var item = OptionItem.AllOptions[index];
-            //Logger.Info($"{item.Name}, {index}", "NumberOption.UpdateValue.TryGetValue");
 
-            if (item is IntegerOptionItem integerOptionItem)
+           
+            if (item is BooleanOptionItem)
+                __instance.Value = 1 - __instance.Value;
+            else
             {
-                integerOptionItem.SetValue(integerOptionItem.Rule.GetNearestIndex(__instance.GetInt()));
-            }
-            else if (item is FloatOptionItem floatOptionItem)
-            {
-                floatOptionItem.SetValue(floatOptionItem.Rule.GetNearestIndex(__instance.GetFloat()));
+                float increment = __instance.Increment;
+                if (Input.GetKey(KeyCode.LeftShift))
+                    increment *= 5;
+
+                __instance.Value += increment;
+                if (__instance.Value > __instance.ValidRange.max)
+                    __instance.Value = __instance.ValidRange.min;
             }
 
-            return false;
-        }
-        return true;
-    }
-    [HarmonyPatch(nameof(NumberOption.AdjustButtonsActiveState)), HarmonyPrefix]
-    private static bool AdjustButtonsActiveStatePrefix(NumberOption __instance)
-    {
-        return false;
-    }
-    [HarmonyPatch(nameof(NumberOption.FixedUpdate)), HarmonyPrefix]
-    private static bool FixedUpdatePrefix(NumberOption __instance)
-    {
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
-        {
-            var item = OptionItem.AllOptions[index];
-            //Logger.Info($"{item.Name}, {index}", "NumberOption.FixedUpdate.TryGetValue");
-
-            if (__instance.oldValue != __instance.Value)
-            {
-                __instance.oldValue = __instance.Value;
-                __instance.ValueText.text = GetValueString(__instance, __instance.Value, item);
-            }
-            return false;
-        }
-        return true;
-    }
-    public static string GetValueString(NumberOption __instance, float value, OptionItem item)
-    {
-        if (__instance.ZeroIsInfinity && Mathf.Abs(value) < 0.0001f) return "<b>∞</b>";
-        if (item == null) return value.ToString(__instance.FormatString);
-        return item.GetString();
-    }
-    [HarmonyPatch(nameof(NumberOption.Increase)), HarmonyPrefix]
-    public static bool IncreasePrefix(NumberOption __instance)
-    {
-        // Shift押しながらの値更新
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
-            __instance.Value = __instance.Value + (__instance.Increment * 5);
-            // 超えている場合は最大値
-            if (__instance.Value > __instance.ValidRange.max)
-            {
-                __instance.Value = __instance.ValidRange.max;
-            }
             __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            return false;
+            __instance.OnValueChanged?.Invoke(__instance);
+             return false;
         }
 
-        if (__instance.Value == __instance.ValidRange.max)
+        [HarmonyPatch(nameof(NumberOption.Decrease)), HarmonyPrefix]
+        private static bool DecreasePrefix(NumberOption __instance)
         {
-            __instance.Value = __instance.ValidRange.min;
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            return false;
-        }
-        return true;
-    }
-    [HarmonyPatch(nameof(NumberOption.Decrease)), HarmonyPrefix]
-    public static bool DecreasePrefix(NumberOption __instance)
-    {
-        // Shift押しながらの値更新
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
-            __instance.Value = __instance.Value - (__instance.Increment * 5);
-            // 超えている場合は最小値
-            if (__instance.Value < __instance.ValidRange.min)
+            if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
+            var item = OptionItem.AllOptions[index];
+
+            
+            if (item is BooleanOptionItem)
+                __instance.Value = 1 - __instance.Value;
+            else
             {
-                __instance.Value = __instance.ValidRange.min;
+                float increment = __instance.Increment;
+                if (Input.GetKey(KeyCode.LeftShift))
+                    increment *= 5;
+
+                __instance.Value -= increment;
+                if (__instance.Value < __instance.ValidRange.min)
+                    __instance.Value = __instance.ValidRange.max;
             }
+
             __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
+            __instance.OnValueChanged?.Invoke(__instance);
             return false;
         }
 
-        if (__instance.Value == __instance.ValidRange.min)
+        [HarmonyPatch(nameof(NumberOption.FixedUpdate)), HarmonyPrefix]
+        private static bool FixedUpdatePrefix(NumberOption __instance)
         {
-            __instance.Value = __instance.ValidRange.max;
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            return false;
-        }
-        return true;
-    }
-}
-[HarmonyPatch(typeof(StringOption))]
-public static class StringOptionPatch
-{
-    [HarmonyPatch(nameof(StringOption.Initialize)), HarmonyPrefix]
-    private static bool InitializePrefix(StringOption __instance)
-    {
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
-        {
-            var item = OptionItem.AllOptions[index];
-            //Logger.Info($"{item.Name}, {index}", "StringOption.Initialize.TryAdd");
-            __instance.TitleText.text = item.GetName();
-            return false;
-        }
-        return true;
-    }
-    [HarmonyPatch(nameof(StringOption.UpdateValue)), HarmonyPrefix]
-    private static bool UpdateValuePrefix(StringOption __instance)
-    {
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
-        {
-            var item = OptionItem.AllOptions[index];
-            Logger.Info($"{item.Name}, {index}", "StringOption.UpdateValue.TryAdd");
-
-            item.SetValue(__instance.GetInt());
-            if (item is PresetOptionItem || item.Name == "GameMode")
+            if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
             {
-                GameOptionsMenuPatch.UpdateSettings();
-            }
-            return false;
-        }
-        return true;
-    }
-    [HarmonyPatch(nameof(StringOption.AdjustButtonsActiveState)), HarmonyPrefix]
-    private static bool AdjustButtonsActiveStatePrefix(StringOption __instance)
-    {
-        return false;
-    }
-    [HarmonyPatch(nameof(StringOption.FixedUpdate)), HarmonyPrefix]
-    private static bool FixedUpdatePrefix(StringOption __instance)
-    {
-        if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
-        {
-            var item = OptionItem.AllOptions[index];
-
-            if (item is StringOptionItem stringOptionItem)
-            {
+                var item = OptionItem.AllOptions[index];
                 if (__instance.oldValue != __instance.Value)
                 {
                     __instance.oldValue = __instance.Value;
-                    __instance.ValueText.text = stringOptionItem.GetString();
+                    __instance.ValueText.text = item != null ? item.GetString() : __instance.Value.ToString(__instance.FormatString);
+
                 }
+
+                return false;
             }
-            if (item is PresetOptionItem presetOptionItem)
-            {
-                if (__instance.oldValue != __instance.Value)
-                {
-                    __instance.oldValue = __instance.Value;
-                    __instance.ValueText.text = presetOptionItem.GetString();
-                }
-            }
-            return false;
+            return true;
         }
-        return true;
     }
-    [HarmonyPatch(nameof(StringOption.Increase)), HarmonyPrefix]
-    public static bool IncreasePrefix(StringOption __instance)
+
+
+
+    [HarmonyPatch(typeof(StringOption))]
+    public static class StringOptionPatch
     {
-        // Shift押しながらの値更新
-        if (Input.GetKey(KeyCode.LeftShift))
+        [HarmonyPatch(nameof(StringOption.Initialize)), HarmonyPrefix]
+        private static bool InitializePrefix(StringOption __instance)
         {
-            __instance.Value = __instance.Value + 5;
-            // 超えている場合は最大値
-            if (__instance.Value > __instance.Values.Length - 1)
+            if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
             {
-                __instance.Value = __instance.Values.Length - 1;
+                var item = OptionItem.AllOptions[index];
+                __instance.TitleText.text = item.GetName();
+                return false;
             }
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            return false;
+
+            return true;
         }
 
-        if (__instance.Value == __instance.Values.Length - 1)
+        [HarmonyPatch(nameof(StringOption.UpdateValue)), HarmonyPrefix]
+        private static bool UpdateValuePrefix(StringOption __instance)
         {
-            __instance.Value = 0;
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            return false;
+            if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
+            {
+                var item = OptionItem.AllOptions[index];
+                item.SetValue(__instance.GetInt());
+
+                if (item is PresetOptionItem || item.Name == "GameMode")
+                    GameOptionsMenuPatch.UpdateSettings();
+
+                return false;
+            }
+
+            return true;
         }
-        return true;
-    }
-    [HarmonyPatch(nameof(StringOption.Decrease)), HarmonyPrefix]
-    public static bool DecreasePrefix(StringOption __instance)
-    {
-        // Shift押しながらの値更新
-        if (Input.GetKey(KeyCode.LeftShift))
+
+        [HarmonyPatch(nameof(StringOption.AdjustButtonsActiveState)), HarmonyPrefix]
+        private static bool AdjustButtonsActiveStatePrefix(StringOption __instance) => false;
+
+        [HarmonyPatch(nameof(StringOption.FixedUpdate)), HarmonyPrefix]
+        private static bool FixedUpdatePrefix(StringOption __instance)
         {
-            __instance.Value = __instance.Value - 5;
-            // 超えている場合は最小値
-            if (__instance.Value < 0)
+            if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
+            {
+                var item = OptionItem.AllOptions[index];
+
+                if (item is StringOptionItem stringItem && __instance.oldValue != __instance.Value)
+                {
+                    __instance.oldValue = __instance.Value;
+                    __instance.ValueText.text = stringItem.GetString();
+                }
+                else if (item is PresetOptionItem presetItem && __instance.oldValue != __instance.Value)
+                {
+                    __instance.oldValue = __instance.Value;
+                    __instance.ValueText.text = presetItem.GetString();
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        [HarmonyPatch(nameof(StringOption.Increase)), HarmonyPrefix]
+        public static bool IncreasePrefix(StringOption __instance)
+        {
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                __instance.Value += 5;
+                if (__instance.Value > __instance.Values.Length - 1)
+                    __instance.Value = __instance.Values.Length - 1;
+
+                __instance.UpdateValue();
+                __instance.OnValueChanged.Invoke(__instance);
+                return false;
+            }
+
+            if (__instance.Value == __instance.Values.Length - 1)
             {
                 __instance.Value = 0;
+                __instance.UpdateValue();
+                __instance.OnValueChanged.Invoke(__instance);
+                return false;
             }
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            return false;
+
+            return true;
         }
 
-        if (__instance.Value == 0)
+        [HarmonyPatch(nameof(StringOption.Decrease)), HarmonyPrefix]
+        public static bool DecreasePrefix(StringOption __instance)
         {
-            __instance.Value = __instance.Values.Length - 1;
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            return false;
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                __instance.Value -= 5;
+                if (__instance.Value < 0)
+                    __instance.Value = 0;
+
+                __instance.UpdateValue();
+                __instance.OnValueChanged.Invoke(__instance);
+                return false;
+            }
+
+            if (__instance.Value == 0)
+            {
+                __instance.Value = __instance.Values.Length - 1;
+                __instance.UpdateValue();
+                __instance.OnValueChanged.Invoke(__instance);
+                return false;
+            }
+
+            return true;
         }
-        return true;
     }
 }
+
+

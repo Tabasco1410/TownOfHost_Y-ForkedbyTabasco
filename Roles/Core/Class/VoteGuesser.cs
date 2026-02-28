@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using HarmonyLib;
 using UnityEngine;
 
 using static TownOfHostY.Translator;
-using HarmonyLib;
 using TownOfHostY.Roles.Neutral;
 
 namespace TownOfHostY.Roles.Core.Class;
@@ -40,6 +40,8 @@ public abstract class VoteGuesser : RoleBase
     protected bool MultipleInMeeting = false;
     protected bool HideMisfire = false;
     protected bool GuessAfterVote = false;
+    // マッドに使用
+    protected bool AlwaysSuicide = false;
 
     private GuesserInfo guesserInfo;
 
@@ -50,7 +52,7 @@ public abstract class VoteGuesser : RoleBase
     private PlayerControl targetForRole = null;
 
     public override string GetProgressText(bool comms = false) => Utils.ColorString(NumOfGuess > 0 ? Color.yellow : Color.gray, $"({NumOfGuess})");
-    public override void OverrideDisplayRoleNameAsSeer(PlayerControl seen, bool isMeeting, ref bool enabled, ref Color roleColor, ref string roleText)
+    public override void OverrideDisplayRoleNameAsSeer(PlayerControl seen, bool isMeeting, ref bool enabled, ref string roleText)
     {
         if (!isMeeting) return;
         if (Player == null || !Player.IsAlive()) return;
@@ -71,9 +73,14 @@ public abstract class VoteGuesser : RoleBase
     public override bool CheckVoteAsVoter(PlayerControl votedFor)
     {
         if (Player == null) return true;
+        // Ensure meeting context exists to avoid nulls when accessed later
+        if (MeetingHud.Instance == null) return true;
 
         if (NumOfGuess <= 0) return true;
         if (guessed && !MultipleInMeeting) return true;
+
+        // Ensure helper object exists when needed
+        if (guesserInfo == null) guesserInfo = new();
 
         if (selecting)
         {
@@ -93,7 +100,7 @@ public abstract class VoteGuesser : RoleBase
             {
                 if (votedFor.PlayerId == Player.PlayerId)
                 {
-                    //対象選択での自投票は通常投票（自分へ投票）としてゲッサーモード解除 & 投票完了
+                    //対象選択での自投票は通常投票
                     selecting = false;
                     targetGuess = null;
                     targetForRole = null;
@@ -140,7 +147,7 @@ public abstract class VoteGuesser : RoleBase
                 return false;
             }
 
-            if (targetGuess == null || !targetGuess.IsAlive() || targetGuess.Data.Disconnected)
+            if (targetGuess == null || !targetGuess.IsAlive() || targetGuess.Data == null || targetGuess.Data.Disconnected)
             {
                 //ターゲット存在なしは強制スキップ
                 selecting = false;
@@ -167,7 +174,8 @@ public abstract class VoteGuesser : RoleBase
             Logger.Info($"GuesserSelectStart guesser: {Player?.name}", "Guesser.CheckVoteAsVoter");
 
             selecting = true;
-            guesserInfo.ResetList();
+            if (guesserInfo == null) guesserInfo = new();
+            else guesserInfo.ResetList();
             Utils.SendMessage(GetString("Message.GuesserSelectionTarget"), Player.PlayerId);
 
             return false;
@@ -181,7 +189,16 @@ public abstract class VoteGuesser : RoleBase
 
         var vote = !voted;
         voted = true;
-        _ = new LateTask(() => MeetingHud.Instance.RpcClearVote(Player.GetClientId()), 0.5f, "GuesserClearVote");
+        if (MeetingHud.Instance != null)
+        {
+            _ = new LateTask(() =>
+            {
+                if (MeetingHud.Instance != null)
+                {
+                    MeetingHud.Instance.RpcClearVote(Player.GetClientId());
+                }
+            }, 0.5f, "GuesserClearVote");
+        }
 
         return vote;
     }
@@ -191,7 +208,7 @@ public abstract class VoteGuesser : RoleBase
         NumOfGuess--;
 
         PlayerControl target;
-        if (TargetIs(targetGuess, role))
+        if (TargetIs(targetGuess, role) && !AlwaysSuicide)
         {
             target = targetGuess;
             RpcGuesserMurderPlayer(target, CustomDeathReason.Shot);
@@ -322,9 +339,11 @@ public abstract class VoteGuesser : RoleBase
         {
             PlayerNumbers = new();
             var number = 1; //Numberは1始まり
-            foreach (var pc in Main.AllAlivePlayerControls.OrderBy(x => x.PlayerId))
+            var allAlive = Main.AllAlivePlayerControls;
+            if (allAlive == null) return;
+            foreach (var pc in allAlive.OrderBy(x => x.PlayerId))
             {
-                PlayerNumbers.Add(pc.PlayerId, number++);
+                PlayerNumbers[pc.PlayerId] = number++;
             }
         }
         private void SetRoleList()
@@ -332,15 +351,19 @@ public abstract class VoteGuesser : RoleBase
             roleList = new();
             foreach (CustomRoles role in CustomRolesHelper.AllStandardRoles.Where(r => r.IsEnable()))
             {
-                foreach (var targetRole in role.GetRoleAssignInfo()?.AssignUnitRoles)
+                var assign = role.GetRoleAssignInfo()?.AssignUnitRoles;
+                if (assign != null)
                 {
-                    if (targetRole != CustomRoles.Crewmate && targetRole != CustomRoles.Impostor &&
-                        !roleList.Contains(targetRole)) roleList.Add(targetRole);
+                    foreach (var targetRole in assign)
+                    {
+                        if (targetRole != CustomRoles.Crewmate && targetRole != CustomRoles.Impostor && !roleList.Contains(targetRole))
+                            roleList.Add(targetRole);
+                    }
                 }
                 foreach (var targetRole in GetAdditionalRole(role))
                 {
-                    if (targetRole != CustomRoles.Crewmate && targetRole != CustomRoles.Impostor &&
-                        !roleList.Contains(targetRole)) roleList.Add(targetRole);
+                    if (targetRole != CustomRoles.Crewmate && targetRole != CustomRoles.Impostor && !roleList.Contains(targetRole))
+                        roleList.Add(targetRole);
                 }
             }
         }
@@ -353,8 +376,7 @@ public abstract class VoteGuesser : RoleBase
                 case CustomRoles.Executioner: return Executioner.AdditionalRoles;
                 case CustomRoles.Lawyer: return Lawyer.AdditionalRoles;
             }
-
-            return [];
+            return Array.Empty<CustomRoles>();
         }
         private void SetDispList()
         {
@@ -364,7 +386,11 @@ public abstract class VoteGuesser : RoleBase
 
             dispList = new();
 
-            var targetList = Main.AllAlivePlayerControls.Where(x => !x.Data.Disconnected).OrderBy(x => x.PlayerId);
+            var allAlive = Main.AllAlivePlayerControls;
+            if (allAlive == null) return;
+            var targetList = allAlive.Where(x => x != null && x.Data != null && !x.Data.Disconnected).OrderBy(x => x.PlayerId).ToList();
+
+            if (roleList == null) roleList = new();
 
             if (indexDisplayed >= roleList.Count - 1)
             {
@@ -378,7 +404,7 @@ public abstract class VoteGuesser : RoleBase
             {
                 if (!PlayerNumbers.TryGetValue(target.PlayerId, out int number)) continue;
 
-                if (index >= targetList.Count() - 1 && (PageNo > 1 || indexRole < roleList.Count - 1))
+                if (index >= targetList.Count - 1 && (PageNo > 1 || indexRole < roleList.Count - 1))
                 {
                     //次ページ表示
                     role = CustomRoles.DummyNext;
@@ -401,6 +427,7 @@ public abstract class VoteGuesser : RoleBase
         }
         public string GetRoleGuide()
         {
+            if (dispList == null || dispList.Count == 0) return string.Empty;
             string text;
 
             StringBuilder sb = new();
@@ -423,6 +450,7 @@ public abstract class VoteGuesser : RoleBase
         }
         public CustomRoles GetRole(PlayerControl target)
         {
+            if (dispList == null) return CustomRoles.NotAssigned;
             var info = dispList.FirstOrDefault(x => x.target == target);
             if (info.target == null) return CustomRoles.NotAssigned;
             return info.role;

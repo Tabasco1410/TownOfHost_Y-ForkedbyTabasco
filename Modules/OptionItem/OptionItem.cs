@@ -10,28 +10,30 @@ namespace TownOfHostY
     {
         #region static
         public static IReadOnlyList<OptionItem> AllOptions => _allOptions;
-        private static List<OptionItem> _allOptions = new(1024);
+        private static readonly List<OptionItem> _allOptions = new(1024);
         public static IReadOnlyDictionary<int, OptionItem> FastOptions => _fastOptions;
-        private static Dictionary<int, OptionItem> _fastOptions = new(1024);
+        private static readonly Dictionary<int, OptionItem> _fastOptions = new(1024);
         public static int CurrentPreset { get; set; }
         public static bool IdDuplicated { get; private set; } = false;
         #endregion
 
-        // 必須情報 (コンストラクタで必ず設定させる必要がある値)
+        // 必須情報
         public int Id { get; }
         public string Name { get; }
         public int DefaultValue { get; }
         public TabGroup Tab { get; }
         public bool IsSingleValue { get; }
 
-        // 任意情報 (空・nullを許容する または、ほとんど初期値で問題ない値)
+        // 任意情報
         public Color NameColor { get; protected set; }
         public OptionFormat ValueFormat { get; protected set; }
         public CustomGameMode GameMode { get; protected set; }
         public bool IsHeader { get; protected set; }
+        public string IsHeaderName { get; protected set; }
         public bool IsHidden { get; protected set; }
         public bool IsFixValue { get; protected set; }
         public bool IsText { get; protected set; }
+
         public Dictionary<string, string> ReplacementDictionary
         {
             get => _replacementDictionary;
@@ -43,7 +45,7 @@ namespace TownOfHostY
         }
         private Dictionary<string, string> _replacementDictionary;
 
-        // 設定値情報 (オプションの値に関わる情報)
+        // 設定値
         public int[] AllValues { get; private set; } = new int[NumPresets];
         public int CurrentValue
         {
@@ -59,34 +61,30 @@ namespace TownOfHostY
         public OptionBehaviour OptionBehaviour;
 
         // イベント
-        // eventキーワードにより、クラス外からのこのフィールドに対する以下の操作は禁止されます。
-        // - 代入 (+=, -=を除く)
-        // - 直接的な呼び出し
         public event EventHandler<UpdateValueEventArgs> UpdateValueEvent;
 
         // コンストラクタ
         public OptionItem(int id, string name, int defaultValue, TabGroup tab, bool isSingleValue)
         {
-            // 必須情報の設定
             Id = id;
             Name = name;
             DefaultValue = defaultValue;
             Tab = tab;
             IsSingleValue = isSingleValue;
 
-            // 任意情報の初期値設定
+            // 任意情報の初期値
             NameColor = Color.white;
             ValueFormat = OptionFormat.None;
             GameMode = CustomGameMode.Standard;
             IsHeader = false;
+            IsHeaderName = "";
             IsHidden = false;
             IsFixValue = false;
             IsText = false;
 
-            // オブジェクト初期化
             Children = new();
 
-            // デフォルト値に設定
+            // デフォルト値
             if (Id == PresetId)
             {
                 SingleValue = DefaultValue;
@@ -99,11 +97,10 @@ namespace TownOfHostY
             else
             {
                 for (int i = 0; i < NumPresets; i++)
-                {
                     AllValues[i] = DefaultValue;
-                }
             }
 
+            // ID 登録
             if (_fastOptions.TryAdd(id, this))
             {
                 _allOptions.Add(this);
@@ -113,11 +110,17 @@ namespace TownOfHostY
 #if DEBUG
                 IdDuplicated = true;
 #endif
-                Logger.Error($"ID:{id}が重複しています", "OptionItem");
+                var existing = _fastOptions[id];
+                Logger.Error(
+                    $"ID:{id} が重複しています " +
+                    $"(既存: Name={existing.Name}, Tab={existing.Tab}, Default={existing.DefaultValue}; " +
+                    $"新規: Name={Name}, Tab={Tab}, Default={DefaultValue})",
+                    "OptionItem"
+                );
             }
         }
 
-        // Setter
+        // Setter chain
         public OptionItem Do(Action<OptionItem> action)
         {
             action(this);
@@ -127,7 +130,7 @@ namespace TownOfHostY
         public OptionItem SetColor(Color value) => Do(i => i.NameColor = value);
         public OptionItem SetValueFormat(OptionFormat value) => Do(i => i.ValueFormat = value);
         public OptionItem SetGameMode(CustomGameMode value) => Do(i => i.GameMode = value);
-        public OptionItem SetHeader(bool value) => Do(i => i.IsHeader = value);
+        public OptionItem SetHeader(bool value, string str = "") => Do(i => { i.IsHeader = value; if (str != "") i.IsHeaderName = str; });
         public OptionItem SetHidden(bool value) => Do(i => i.IsHidden = value);
         public OptionItem SetFixValue(bool value) => Do(i => i.IsFixValue = value);
         public OptionItem SetText(bool value) => Do(i => i.IsText = value);
@@ -153,22 +156,19 @@ namespace TownOfHostY
             => Do(i => ReplacementDictionary?.Remove(key));
 
         // Getter
-        public virtual string GetName(bool disableColor = false)
+        public virtual string GetName(bool disableColor = false, bool colorLighter = false)
         {
             return disableColor ?
                 Translator.GetString(Name, ReplacementDictionary) :
-                Utils.ColorString(NameColor, Translator.GetString(Name, ReplacementDictionary));
+                Utils.ColorString(colorLighter ? NameColor.ShadeColor(-0.3f) : NameColor, Translator.GetString(Name, ReplacementDictionary));
         }
         public virtual bool GetBool() => CurrentValue != 0 && (Parent == null || Parent.GetBool());
         public virtual int GetInt() => CurrentValue;
         public virtual float GetFloat() => CurrentValue;
-        public virtual string GetString()
-        {
-            return ApplyFormat(CurrentValue.ToString());
-        }
+        public virtual string GetString() => ApplyFormat(CurrentValue.ToString());
         public virtual int GetValue() => IsSingleValue ? SingleValue : AllValues[CurrentPreset];
 
-        // 旧IsHidden関数
+        // Hidden判定
         public virtual bool IsHiddenOn(CustomGameMode mode)
         {
             return IsHidden || (GameMode != CustomGameMode.All && GameMode != mode);
@@ -194,48 +194,33 @@ namespace TownOfHostY
         {
             int beforeValue = CurrentValue;
             if (IsSingleValue)
-            {
                 SingleValue = afterValue;
-            }
             else
-            {
                 AllValues[CurrentPreset] = afterValue;
-            }
 
             CallUpdateValueEvent(beforeValue, afterValue);
             Refresh();
             if (doSync)
-            {
                 SyncAllOptions();
-            }
             if (doSave)
-            {
                 OptionSaver.Save();
-            }
         }
-        public virtual void SetValue(int afterValue, bool doSync = true)
-        {
-            SetValue(afterValue, true, doSync);
-        }
-        public void SetAllValues(int[] values)  // プリセット読み込み専用
-        {
-            AllValues = values;
-        }
+        public virtual void SetValue(int afterValue, bool doSync = true) => SetValue(afterValue, true, doSync);
+
+        public void SetAllValues(int[] values) => AllValues = values; // プリセット読み込み専用
 
         // 演算子オーバーロード
         public static OptionItem operator ++(OptionItem item)
-            => item.Do(item => item.SetValue(item.CurrentValue + 1));
+            => item.Do(i => i.SetValue(i.CurrentValue + 1));
         public static OptionItem operator --(OptionItem item)
-            => item.Do(item => item.SetValue(item.CurrentValue - 1));
+            => item.Do(i => i.SetValue(i.CurrentValue - 1));
 
-        // 全体操作用
+        // 全体操作
         public static void SwitchPreset(int newPreset)
         {
             CurrentPreset = Math.Clamp(newPreset, 0, NumPresets - 1);
-
             foreach (var op in AllOptions)
                 op.Refresh();
-
             SyncAllOptions();
         }
         public static void SyncAllOptions()
@@ -289,6 +274,7 @@ namespace TownOfHostY
         UnitRoles,
         Addons,
     }
+
     public enum OptionFormat
     {
         None,

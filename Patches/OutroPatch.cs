@@ -12,16 +12,17 @@ using TownOfHostY.Templates;
 using static TownOfHostY.Translator;
 using TownOfHostY.Roles.Neutral;
 
-namespace TownOfHostY
+namespace TownOfHostY;
+
+[HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]
+class EndGamePatch
 {
-    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]
-    class EndGamePatch
+    public static Dictionary<byte, string> SummaryText = new();
+    public static string KillLog = "";
+    public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ref EndGameResult endGameResult)
     {
-        public static Dictionary<byte, string> SummaryText = new();
-        public static string KillLog = "";
-        public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ref EndGameResult endGameResult)
+        try
         {
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             GameStates.InGame = false;
 
             Logger.Info("-----------ゲーム終了-----------", "Phase");
@@ -29,6 +30,9 @@ namespace TownOfHostY
             SummaryText = new();
             foreach (var id in PlayerState.AllPlayerStates.Keys)
                 SummaryText[id] = Utils.SummaryTexts(id, false);
+
+            // 役職変更表示のリセット
+            Main.ShowChangeMainRole.Clear();
 
             var sb = new StringBuilder($"<size=100%><align={"center"}>{GetString("KillLog")}</align></size>");
             sb.Append("<size=70%>");
@@ -38,13 +42,14 @@ namespace TownOfHostY
                 if (date == DateTime.MinValue) continue;
                 var killerId = kvp.Value.GetRealKiller();
                 var targetId = kvp.Key;
-                sb.Append($"\n{date:T} {Main.AllPlayerNames[targetId]}({Utils.GetTrueRoleName(targetId, false, true)}) [{Utils.GetVitalText(kvp.Key)}]");
+                sb.Append($"\n{date:T} {Main.AllPlayerNames[targetId]}({RoleText.GetRoleNameText(targetId, showSubRole:false)}) [{Utils.GetVitalText(kvp.Key)}]");
                 if (killerId != byte.MaxValue && killerId != targetId)
-                    sb.Append($"\n\t\t<size=75%>⇐ {Main.AllPlayerNames[killerId]}({Utils.GetTrueRoleName(killerId, false, true)})</size>");
+                    sb.Append($"\n\t\t<size=75%>⇐ {Main.AllPlayerNames[killerId]}({RoleText.GetRoleNameText(killerId, showSubRole: false)})</size>");
             }
             KillLog = sb.ToString();
 
-            Main.NormalOptions.KillCooldown = Options.DefaultKillCooldown;
+            if (Main.NormalOptions != null)
+                Main.NormalOptions.KillCooldown = Options.DefaultKillCooldown;
             //winnerListリセット
             EndGameResult.CachedWinners = new Il2CppSystem.Collections.Generic.List<CachedPlayerData>();
             var winner = new List<PlayerControl>();
@@ -69,7 +74,7 @@ namespace TownOfHostY
                     winner = new();
                     foreach (var pc in Main.AllPlayerControls)
                     {
-                        var role = PlayerState.GetByPlayerId(pc.PlayerId).MainRole;
+                        var role = PlayerState.GetByPlayerId(pc.PlayerId).GetNowMainRole();
                         if (role.GetCustomRoleTypes() == CustomRoleTypes.Impostor)
                         {
                             if (CustomWinnerHolder.WinnerTeam == CustomWinner.Impostor)
@@ -110,10 +115,21 @@ namespace TownOfHostY
             Main.VisibleTasksCount = false;
             if (AmongUsClient.Instance.AmHost)
             {
-                Main.RealOptionsData.Restore(GameOptionsManager.Instance.CurrentGameOptions);
-                GameOptionsSender.AllSenders.Clear();
-                GameOptionsSender.AllSenders.Add(new NormalGameOptionsSender());
-                /* Send SyncSettings RPC */
+                try
+                {
+                    Main.RealOptionsData.Restore(GameOptionsManager.Instance.CurrentGameOptions);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"Failed to restore RealOptionsData: {ex.Message}", "EndGamePatch");
+                }
+
+                try
+                {
+                    GameOptionsSender.AllSenders.Clear();
+                    GameOptionsSender.AllSenders.Add(new NormalGameOptionsSender());
+                }
+                catch { }
             }
             //オブジェクト破棄
             CustomRoleManager.Dispose();
@@ -131,14 +147,23 @@ namespace TownOfHostY
                 Logger.Info($"　 {SummaryText[id].RemoveColorTags()}", "EndGame");
             }
         }
-    }
-    [HarmonyPatch(typeof(EndGameManager), nameof(EndGameManager.SetEverythingUp))]
-    class SetEverythingUpPatch
-    {
-        public static string LastWinsText = "";
-
-        public static void Postfix(EndGameManager __instance)
+        catch (Exception ex)
         {
+            Logger.Error($"EndGamePatch.Postfix で例外: {ex.Message}", "EndGamePatch");
+            Logger.Exception(ex, "EndGamePatch");
+        }
+    }
+}
+[HarmonyPatch(typeof(EndGameManager), nameof(EndGameManager.SetEverythingUp))]
+class SetEverythingUpPatch
+{
+    public static string LastWinsText = "";
+
+    public static void Postfix(EndGameManager __instance)
+    {
+        try
+        {
+            if (__instance == null) return;
             if (!Main.playerVersion.ContainsKey(0)) return;
             //#######################################
             //          ==勝利陣営表示==
@@ -166,7 +191,7 @@ namespace TownOfHostY
                     __instance.BackgroundBar.material.color = Utils.GetRoleColor(winnerRole);
                 }
             }
-            if (AmongUsClient.Instance.AmHost && PlayerState.GetByPlayerId(0).MainRole == CustomRoles.GM)
+            if (AmongUsClient.Instance.AmHost && PlayerState.GetByPlayerId(0).GetNowMainRole() == CustomRoles.GM)
             {
                 __instance.WinText.text = "Game Over";
                 __instance.WinText.color = Utils.GetRoleColor(CustomRoles.GM);
@@ -228,7 +253,7 @@ namespace TownOfHostY
             //           ==最終結果表示==
             //#######################################
 
-            var Pos = Camera.main.ViewportToWorldPoint(new Vector3(0f, 1f, Camera.main.nearClipPlane));
+            var Pos = Camera.main?.ViewportToWorldPoint(new Vector3(0f, 1f, Camera.main.nearClipPlane)) ?? Vector3.zero;
 
             StringBuilder sb = new($"{GetString("RoleSummaryText")}");
             List<byte> cloneRoles = new(PlayerState.AllPlayerStates.Keys);
@@ -248,13 +273,19 @@ namespace TownOfHostY
                 1.25f,
                 TMPro.TextAlignmentOptions.TopLeft,
                 setActive: true);
-            RoleSummary.transform.position = new Vector3(__instance.Navigation.ExitButton.transform.position.x + -0.05f, Pos.y - 0.13f, -15f);
-            RoleSummary.transform.localScale = new Vector3(1f, 1f, 1f);
+            if (RoleSummary != null && __instance.Navigation != null && __instance.Navigation.ExitButton != null)
+                RoleSummary.transform.position = new Vector3(__instance.Navigation.ExitButton.transform.position.x + -0.05f, Pos.y - 0.13f, -15f);
+            if (RoleSummary != null) RoleSummary.transform.localScale = new Vector3(1f, 1f, 1f);
 
             //var RoleSummaryRectTransform = RoleSummary.GetComponent<RectTransform>();
             //RoleSummaryRectTransform.anchoredPosition = new Vector2(Pos.x + 3.5f, Pos.y - 0.1f);
 
             //Utils.ApplySuffix();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"SetEverythingUpPatch.Postfix で例外: {ex.Message}", "SetEverythingUpPatch");
+            Logger.Exception(ex, "SetEverythingUpPatch");
         }
     }
 }

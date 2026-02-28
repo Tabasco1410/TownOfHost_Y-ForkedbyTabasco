@@ -25,6 +25,18 @@ public static class MeetingHudPatch
             return false;
         }
     }
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.VotingComplete))]
+    class VotingCompletePatch
+    {
+        public static void Postfix([HarmonyArgument(1)] NetworkedPlayerInfo exiled, [HarmonyArgument(2)] bool tie)
+        {
+            if (exiled == null) return;
+
+            var exiledPc = exiled.Object;
+            // リヴェラー属性
+            Revealer.ChangeName(exiledPc);
+        }
+    }
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.CastVote))]
     public static class CastVotePatch
     {
@@ -55,7 +67,7 @@ public static class MeetingHudPatch
             Main.AllPlayerControls.Do(x => ReportDeadBodyPatch.WaitReport[x.PlayerId].Clear());
             Sending.OnStartMeeting();
             ChainShifterAddon.OnStartMeeting();
-            foreach (var tm in Main.AllAlivePlayerControls.Where(p=>p.Is(CustomRoles.TaskManager) || p.Is(CustomRoles.Management)))
+            foreach (var tm in Main.AllAlivePlayerControls.Where(p => p.Is(CustomRoles.TaskManager) || p.Is(CustomRoles.Management)))
                 Utils.NotifyRoles(true, tm);
             TargetDeadArrow.OnStartMeeting();
         }
@@ -82,19 +94,33 @@ public static class MeetingHudPatch
                 (roleTextMeeting.enabled, roleTextMeeting.text)
                     = Utils.GetRoleNameAndProgressTextData(true, PlayerControl.LocalPlayer, pc);
 
+                // シンクロカラーモード
+                if (Options.IsSyncColorMode && Options.SCM_NothingMeetingNameColor.GetBool()
+                    && PlayerControl.LocalPlayer.IsAlive())
+                {
+                    roleTextMeeting.enabled = false;
+                    continue;
+                }
+
                 suffixTextMeeting.transform.localPosition = new Vector3(0f, -0.18f, 0f);
                 suffixTextMeeting.fontSize = 1.5f;
                 suffixTextMeeting.gameObject.name = "SuffixTextMeeting";
                 suffixTextMeeting.enableWordWrapping = false;
                 suffixTextMeeting.enabled = false;
                 suffixTextMeeting.text = "";
-                
+
                 var suffixBuilder = new StringBuilder(32);
                 if (myRole != null)
                 {
                     suffixBuilder.Append(myRole.GetSuffix(PlayerControl.LocalPlayer, pc, isForMeeting: true));
                 }
                 suffixBuilder.Append(CustomRoleManager.GetSuffixOthers(PlayerControl.LocalPlayer, pc, isForMeeting: true));
+                // Management
+                if (pc.Is(CustomRoles.Management))
+                {
+                    suffixBuilder.Append(Management.GetSuffix(PlayerControl.LocalPlayer, pc, isForMeeting: true));
+                }
+
                 if (suffixBuilder.Length > 0)
                 {
                     suffixTextMeeting.text = suffixBuilder.ToString();
@@ -202,11 +228,11 @@ public static class MeetingHudPatch
                     //else if (Options.IsONMode && (Main.DefaultRole[pva.TargetPlayerId] == CustomRoles.ONPhantomThief))
                     //    pva.NameText.color = Utils.GetRoleColor(seer.GetCustomRole());
                     //else
-                        pva.NameText.text = pva.NameText.text.ApplyNameColorData(seer, target, true);
+                    pva.NameText.text = pva.NameText.text.ApplyNameColorData(seer, target, true);
 
-                    (Color c,string t) = (pva.NameText.color, "");
+                    (Color c, string t) = (pva.NameText.color, "");
                     //trueRoleNameでColor上書きあればそれになる
-                    target.GetRoleClass()?.OverrideTrueRoleName(ref c, ref t);
+                    target.GetRoleClass()?.OverrideShowMainRoleText(ref c, ref t);//colorのみ
                     pva.NameText.color = c;
                 }
                 else
@@ -218,7 +244,7 @@ public static class MeetingHudPatch
                     //else if (Options.IsONMode && (Main.DefaultRole[target.PlayerId] == CustomRoles.ONPhantomThief))
                     //{ }
                     //else
-                        pva.NameText.text = pva.NameText.text.ApplyNameColorData(seer, target, true);
+                    pva.NameText.text = pva.NameText.text.ApplyNameColorData(seer, target, true);
                 }
 
                 if (seer.KnowDeathReason(target))
@@ -274,7 +300,8 @@ public static class MeetingHudPatch
             Logger.Info("------------会議終了------------", "Phase");
             if (AmongUsClient.Instance.AmHost)
             {
-                AntiBlackout.SetIsDead();
+                // EndMeetingを経由しなかった場合のフォールバック（二重実行を防ぐ）
+                if (!AntiBlackout.IsCached) AntiBlackout.SetIsDead();
 
                 Main.AllPlayerControls.Where(pc => !pc.Is(CustomRoles.GM)).Do(pc => RandomSpawn.CustomNetworkTransformPatch.FirstTP[pc.PlayerId] = true);
             }

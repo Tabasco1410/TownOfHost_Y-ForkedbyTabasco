@@ -22,7 +22,7 @@ public sealed class EvilTracker : RoleBase, IImpostor, IKillFlashSeeable, ISidek
             (int)Options.offsetId.ImpTOH + 1300,
             SetupOptionItem,
             "イビルトラッカー",
-            canMakeMadmate: () => OptionCanCreateMadmate.GetBool()
+            canMakeMadmate: () => OptionCanCreateMadmate.Bool
         );
 
     public EvilTracker(PlayerControl player)
@@ -31,10 +31,10 @@ public sealed class EvilTracker : RoleBase, IImpostor, IKillFlashSeeable, ISidek
         player
     )
     {
-        CanSeeKillFlash = OptionCanSeeKillFlash.GetBool();
+        CanSeeKillFlash = OptionCanSeeKillFlash.Bool;
         CurrentTargetMode = (TargetMode)OptionTargetMode.GetValue();
-        CanSeeLastRoomInMeeting = OptionCanSeeLastRoomInMeeting.GetBool();
-        CanCreateMadmate = OptionCanCreateMadmate.GetBool() && CurrentTargetMode != TargetMode.Never;
+        CanSeeLastRoomInMeeting = OptionCanSeeLastRoomInMeeting.Bool;
+        CanCreateMadmate = OptionCanCreateMadmate.Bool && CurrentTargetMode != TargetMode.Never;
 
         TargetId = byte.MaxValue;
         CanSetTarget = CurrentTargetMode != TargetMode.Never;
@@ -214,22 +214,24 @@ public sealed class EvilTracker : RoleBase, IImpostor, IKillFlashSeeable, ISidek
     }
 
     // 表示系の関数群
-    public override string GetMark(PlayerControl seer, PlayerControl seen = null, bool _ = false)
+    public override string GetMark(PlayerControl seer, PlayerControl seen = null, bool isForMeeting = false)
     {
         seen ??= seer;
-        return TargetId == seen.PlayerId ? Utils.ColorString(Palette.ImpostorRed, "◀") : "";
+        if (TargetId != seen.PlayerId) return string.Empty;
+
+        string mark = "";
+        if (isForMeeting)
+        {
+            mark = "\n<size=80%>" + GetLastRoom(seen) + "</size>";
+        }
+        return Utils.ColorString(Palette.ImpostorRed, "◀") + mark;
     }
     public override string GetSuffix(PlayerControl seer, PlayerControl seen = null, bool isForMeeting = false)
     {
         seen ??= seer;
-        if (isForMeeting)
-        {
-            return GetLastRoom(seen);
-        }
-        else
-        {
-            return GetArrows(seen);
-        }
+        if (isForMeeting) return string.Empty;
+
+        return GetArrows(seen);
     }
     private string GetArrows(PlayerControl seen)
     {

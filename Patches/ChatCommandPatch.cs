@@ -33,6 +33,17 @@ namespace TownOfHostY
             Main.isChatCommand = true;
             Logger.Info(text, "SendChat");
 
+            if (args[0] == "/cmd" && args.Length >= 2)
+            {
+                canceled = true;
+                string cmdArg = args[1].StartsWith("/") ? args[1] : "/" + args[1];
+                string[] newArgs = new string[args.Length - 1];
+                newArgs[0] = cmdArg;
+                for (int i = 2; i < args.Length; i++) newArgs[i - 1] = args[i];
+                args = newArgs;
+                text = string.Join(" ", args);
+            }
+
             var tag = !PlayerControl.LocalPlayer.Data.IsDead ? "SendChatHost" : "SendChatDeadHost";
             if (text.StartsWith("試合結果:") || text.StartsWith("キル履歴:")) tag = "SendSystemChat";
             VoiceReader.ReadHost(text, tag);
@@ -126,7 +137,7 @@ namespace TownOfHostY
                                 {
                                     CustomWinnerHolder.WinnerIds.Add(player.PlayerId);
                                 }
-                                GameEndChecker.StartEndGame(GameOverReason.HumansByTask);
+                                GameEndChecker.StartEndGame(GameOverReason.CrewmatesByTask);
                                 break;
                             case "impostor":
                                 GameManager.Instance.enabled = false;
@@ -135,17 +146,17 @@ namespace TownOfHostY
                                 {
                                     CustomWinnerHolder.WinnerIds.Add(player.PlayerId);
                                 }
-                                GameEndChecker.StartEndGame(GameOverReason.ImpostorByKill);
+                                GameEndChecker.StartEndGame(GameOverReason.ImpostorsByKill);
                                 break;
                             case "none":
                                 GameManager.Instance.enabled = false;
                                 CustomWinnerHolder.WinnerTeam = CustomWinner.None;
-                                GameEndChecker.StartEndGame(GameOverReason.ImpostorByKill);
+                                GameEndChecker.StartEndGame(GameOverReason.ImpostorsByKill);
                                 break;
                             case "jackal":
                                 GameManager.Instance.enabled = false;
                                 CustomWinnerHolder.WinnerTeam = CustomWinner.Jackal;
-                                GameEndChecker.StartEndGame(GameOverReason.ImpostorByKill);
+                                GameEndChecker.StartEndGame(GameOverReason.ImpostorsByKill);
                                 break;
 
                             default:
@@ -163,7 +174,7 @@ namespace TownOfHostY
                         {
                             case "crewmate":
                                 GameManager.Instance.enabled = false;
-                                GameManager.Instance.RpcEndGame(GameOverReason.HumansDisconnect, false);
+                                GameManager.Instance.RpcEndGame(GameOverReason.CrewmateDisconnect, false);
                                 break;
 
                             case "impostor":
@@ -189,53 +200,6 @@ namespace TownOfHostY
                             case "roles":
                                 subArgs = args.Length < 3 ? "" : args[2];
                                 GetRolesInfo(subArgs);
-                                break;
-
-                            case "a":
-                            case "addons":
-                                subArgs = args.Length < 3 ? "" : args[2];
-                                switch (subArgs)
-                                {
-                                    case "lastimpostor":
-                                    case "limp":
-                                        Utils.SendMessage(Utils.GetRoleName(CustomRoles.LastImpostor) + GetString("LastImpostorInfoLong"));
-                                        break;
-
-                                    default:
-                                        Utils.SendMessage($"{GetString("Command.h_args")}:\n lastimpostor(limp)");
-                                        break;
-                                }
-                                break;
-
-                            case "m":
-                            case "modes":
-                                subArgs = args.Length < 3 ? "" : args[2];
-                                switch (subArgs)
-                                {
-                                    case "hideandseek":
-                                    case "has":
-                                        Utils.SendMessage(GetString("HideAndSeekInfo"));
-                                        break;
-
-                                    case "nogameend":
-                                    case "nge":
-                                        Utils.SendMessage(GetString("NoGameEndInfo"));
-                                        break;
-
-                                    case "syncbuttonmode":
-                                    case "sbm":
-                                        Utils.SendMessage(GetString("SyncButtonModeInfo"));
-                                        break;
-
-                                    case "randommapsmode":
-                                    case "rmm":
-                                        Utils.SendMessage(GetString("RandomMapsModeInfo"));
-                                        break;
-
-                                    default:
-                                        Utils.SendMessage($"{GetString("Command.h_args")}:\n hideandseek(has), nogameend(nge), syncbuttonmode(sbm), randommapsmode(rmm)");
-                                        break;
-                                }
                                 break;
 
                             case "n":
@@ -316,38 +280,18 @@ namespace TownOfHostY
                             Utils.SendMessage(VoiceReader.GetVoiceIdxMsg(), 0);
                         break;
 
-                    //case "/modcheck":
-                    //case "/modmsg":
-                    //    canceled = true;
-                    //    if (!Main.CanPublicRoom.Value)
-                    //    {
-                    //        Utils.SendMessage(string.Format(GetString("Message.ModCheckCommandInvalid")), 0);
-                    //        break;
-                    //    }
-                    //    var msgSend = args[0]?.ToLower() == "/modmsg";
-                    //    var allOK = true;
-                    //    var notOKColor = "";
-                    //    foreach (var pc in Main.AllPlayerControls.Where(x => x.PlayerId != PlayerControl.LocalPlayer.PlayerId))
-                    //    {
-                    //        var cl = pc.GetClient();
-                    //        if (cl != null　&& !Main.ConsentModUse.ContainsKey(cl.Id))
-                    //        {
-                    //            allOK = false;
-                    //            if (msgSend)
-                    //                Utils.SendMessageCustom(string.Format(GetString("Message.AnnounceUsingOpenMOD"), Main.PluginVersion), pc.PlayerId);
-                    //            notOKColor = (notOKColor == "" ? "" : ",") + Palette.GetColorName(pc.Data.DefaultOutfit.ColorId);
-                    //        }
-                    //    }
-                    //    if (allOK)
-                    //        Utils.SendMessage(string.Format(GetString("Message.ModCheckAllOK")), 0);
-                    //    else
-                    //    {
-                    //        if (msgSend)
-                    //            Utils.SendMessage(string.Format(GetString("Message.ModCheckMessageSend")), 0);
-                    //        Utils.SendMessage(string.Format(GetString("Message.ModCheckNotOKColor"), notOKColor), 0);
-                    //    }
+                    case "/killFlash":
+                    case "/kf":
+                        canceled = true;
+                        Utils.SetKillFlashAfterDead(PlayerControl.LocalPlayer, true);
+                        break;
 
-                    //    break;
+                    case "/killFlashAll":
+                    case "/kfa":
+                        canceled = true;
+                        if (GameStates.InGame)
+                            Main.AllPlayerControls.Do(pc => pc.KillFlash());
+                        break;
 
                     case "/offhat":
                     case "/offskin":
@@ -407,7 +351,7 @@ namespace TownOfHostY
             sender.SetName(name);
         }
 
-        public static void GetRolesInfo(string role)
+        public static void GetRolesInfo(string role, byte PlayerId = byte.MaxValue)
         {
             // 初回のみ処理
             if (roleCommands == null)
@@ -459,6 +403,7 @@ namespace TownOfHostY
                 roleCommands.Add(CustomRoles.Guarding, "ガーディング");
                 roleCommands.Add(CustomRoles.AddBait, "ベイティング");
                 roleCommands.Add(CustomRoles.Refusing, "リフュージング");
+                roleCommands.Add(CustomRoles.Revealer, "リヴェラー");
 
                 // HAS
                 roleCommands.Add((CustomRoles)(-6), $"== {GetString("HideAndSeek")} ==");  // 区切り用
@@ -474,11 +419,11 @@ namespace TownOfHostY
 
                 if (String.Compare(role, roleName, true) == 0 || String.Compare(role, roleShort, true) == 0)
                 {
-                    Utils.SendMessage(GetString(roleName) + GetString($"{roleName}InfoLong"));
+                    Utils.SendMessage(Utils.GetRoleInfoLong(r.Key), PlayerId);
                     return;
                 }
             }
-            Utils.SendMessage(GetString("Message.HelpRoleNone"));
+            Utils.SendMessage(GetString("Message.HelpRoleNone"), PlayerId);
         }
         private static void ConcatCommands(CustomRoleTypes roleType)
         {
@@ -512,6 +457,16 @@ namespace TownOfHostY
 
             string[] args = text.Split(' ');
             string subArgs = "";
+
+            if (text.StartsWith("/") && !text.Contains("cmd"))
+            {
+                Utils.SendMessage(GetString("Error.CommandFailed"), player.PlayerId);
+                return;
+            }
+            if (args[0] != "/cmd" || args.Length <= 1) return;
+            args = args.Skip(1).ToArray();
+            if (args[0].StartsWith("/") is false) args[0] = $"/{args[0]}";
+
             switch (args[0]?.ToLower())
             {
                 case "/l":
@@ -552,6 +507,12 @@ namespace TownOfHostY
                         case "now":
                             Utils.ShowActiveSettingsHelp(player.PlayerId);
                             break;
+
+                        case "r":
+                        case "roles":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GetRolesInfo(subArgs, player.PlayerId);
+                            break;
                     }
                     break;
 
@@ -591,10 +552,10 @@ namespace TownOfHostY
                         Utils.SendMessage(VoiceReader.GetVoiceIdxMsg(), player.PlayerId);
                     break;
 
-                //case "/modok":
-                //    Main.ConsentModUse[player.GetClient().Id] = player.name;
-                //    Utils.SendMessage(string.Format(GetString("Message.ModCheckAgree"), player.name), player.PlayerId);
-                //    break;
+                case "/killFlash":
+                case "/kf":
+                    Utils.SetKillFlashAfterDead(player);
+                    break;
 
                 default:
                     break;
@@ -697,21 +658,52 @@ namespace TownOfHostY
     {
         public static bool Prefix(PlayerControl __instance, string chatText, ref bool __result)
         {
+            // Validate input
             if (string.IsNullOrWhiteSpace(chatText))
             {
                 __result = false;
                 return false;
             }
-            int return_count = PlayerControl.LocalPlayer.name.Count(x => x == '\n');
+
+            // Adjust for local name line feeds (guard for nulls)
+            var localName = PlayerControl.LocalPlayer != null ? PlayerControl.LocalPlayer.name : string.Empty;
+            int return_count = 0;
+            if (!string.IsNullOrEmpty(localName))
+            {
+                return_count = localName.Count(x => x == '\n');
+            }
             chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
-            if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
+
+            // Local echo (safe guards)
+            if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
+            {
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
-            if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
-                DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
-            messageWriter.Write(chatText);
-            messageWriter.EndMessage();
-            __result = true;
+            }
+
+            // Optional telemetry (guard instance)
+            try
+            {
+                if (chatText.IndexOf("who", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    var ut = DestroyableSingleton<UnityTelemetry>.Instance;
+                    if (ut != null) ut.SendWho();
+                }
+            }
+            catch { /* ignore telemetry issues */ }
+
+            // Send chat RPC using public API
+            try
+            {
+                var writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, -1);
+                writer.Write(chatText);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                __result = true;
+            }
+            catch (System.Exception ex)
+            {
+                Logger.Error($"RpcSendChat failed: {ex.Message}", nameof(RpcSendChatPatch));
+                __result = false;
+            }
             return false;
         }
     }

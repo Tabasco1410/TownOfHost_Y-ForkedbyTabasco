@@ -13,8 +13,7 @@ public sealed class Telekinetic : RoleBase, IImpostor
             CustomRoles.Telekinetic,
             () => RoleTypes.Impostor,
             CustomRoleTypes.Impostor,
-            (int)Options.offsetId.ImpSpecial + 400,
-            //(int)Options.offsetId.ImpY + 2100,
+            (int)Options.offsetId.ImpY + 2100,
             SetupOptionItem,
             "テレキネス"
         );
@@ -51,14 +50,17 @@ public sealed class Telekinetic : RoleBase, IImpostor
         // 通常のキルは起こさない
         info.CanKill = false;
 
-        // 死因変更
-        if (ChangeDeathReason) {
-            PlayerState.GetByPlayerId(target.PlayerId).DeathReason = CustomDeathReason.Telekinesis;
-        }
-        // キラーセット
-        target.SetRealKiller(killer);
         // キルモーションなし（相手の自爆）を起こす
-        target.RpcMurderPlayer(target);
+        if (CustomRoleManager.OnCheckMurder(Player, target, target, target, true))
+        {
+            // 死因変更
+            if (ChangeDeathReason) {
+                PlayerState.GetByPlayerId(target.PlayerId).DeathReason = CustomDeathReason.Telekinesis;
+            }
+            // キラーセット
+            target.SetRealKiller(killer);
+        }
+
         // 自身は全くキルしないことになるのでキルクールセットする
         killer.SetKillCooldown();
     }

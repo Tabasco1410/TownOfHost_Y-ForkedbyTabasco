@@ -86,12 +86,12 @@ public sealed class Workaholic : RoleBase
             CustomWinnerHolder.ResetAndSetWinner(CustomWinner.Workaholic);
             CustomWinnerHolder.WinnerIds.Add(Player.PlayerId);
             if (!AmongUsClient.Instance.AmHost) return true;
-            GameEndChecker.StartEndGame(GameOverReason.ImpostorByKill);
+            GameEndChecker.StartEndGame(GameOverReason.ImpostorsByKill);
         }
         return true;
     }
 
-    public override void OverrideDisplayRoleNameAsSeen(PlayerControl seer, bool isMeeting, ref bool enabled, ref Color roleColor, ref string roleText)
+    public override void OverrideDisplayRoleNameAsSeen(PlayerControl seer, bool isMeeting, ref bool enabled, ref string roleText)
     {
         if (Seen) enabled = true;
     }

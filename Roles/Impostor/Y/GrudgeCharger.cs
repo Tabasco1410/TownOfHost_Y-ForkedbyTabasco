@@ -29,22 +29,26 @@ public sealed class GrudgeCharger : RoleBase, IImpostor
         selectTargetCooldown = OptionSelectTargetCooldown.GetFloat();
         chargeKillCooldown = OptionChargeKillCooldown.GetFloat();
         oneGaugeChargeCount = OptionOneGaugeChargeCount.GetInt();
+        oneGaugeAddKillCount = OptionOneGaugeAddKillCount.GetInt();
         killCountAtStartGame = OptionKillCountAtStartGame.GetInt();
     }
     private static OptionItem OptionSelectTargetCooldown;
     private static OptionItem OptionChargeKillCooldown;
     private static OptionItem OptionOneGaugeChargeCount;
+    private static OptionItem OptionOneGaugeAddKillCount;
     private static OptionItem OptionKillCountAtStartGame;
     enum OptionName
     {
         GrudgeChargerSelectTargetCooldown,
         GrudgeChargerChargeKillCooldown,
         GrudgeChargerOneGaugeChargeCount,
+        GrudgeChargerOneGaugeAddKillCount,
         GrudgeChargerKillCountAtStartGame,
     }
     private static float selectTargetCooldown;
     private static float chargeKillCooldown;
     private static int oneGaugeChargeCount;
+    private static int oneGaugeAddKillCount;
     private static int killCountAtStartGame;
 
     int killLimit;
@@ -60,6 +64,8 @@ public sealed class GrudgeCharger : RoleBase, IImpostor
         OptionChargeKillCooldown = FloatOptionItem.Create(RoleInfo, 11, OptionName.GrudgeChargerChargeKillCooldown, new(0.5f, 180f, 0.5f), 2f, false)
             .SetValueFormat(OptionFormat.Seconds);
         OptionOneGaugeChargeCount = IntegerOptionItem.Create(RoleInfo, 12, OptionName.GrudgeChargerOneGaugeChargeCount, new(1, 30, 1), 10, false)
+            .SetValueFormat(OptionFormat.Times);
+        OptionOneGaugeAddKillCount = IntegerOptionItem.Create(RoleInfo, 14, OptionName.GrudgeChargerOneGaugeAddKillCount, new(1, 15, 1), 1, false)
             .SetValueFormat(OptionFormat.Times);
         OptionKillCountAtStartGame = IntegerOptionItem.Create(RoleInfo, 13, OptionName.GrudgeChargerKillCountAtStartGame, new(0, 2, 1), 0, false)
             .SetValueFormat(OptionFormat.Times);
@@ -84,7 +90,7 @@ public sealed class GrudgeCharger : RoleBase, IImpostor
         chargeCount++;
         if (chargeCount >= oneGaugeChargeCount)
         {
-            killLimit++;
+            killLimit += oneGaugeAddKillCount;
             chargeCount = 0;
         }
         Logger.Info($"{Player.GetNameWithRole()} : チャージ({chargeCount}/{oneGaugeChargeCount})", "GrudgeCharger");
@@ -110,14 +116,17 @@ public sealed class GrudgeCharger : RoleBase, IImpostor
         var target = KillWaitPlayer;
         float targetDistance = Vector2.Distance(GCpos, target.transform.position);
 
-        var KillRange = GameOptionsData.KillDistances[Mathf.Clamp(Main.NormalOptions.KillDistance, 0, 2)];
+        var KillRange = GameManager.Instance.LogicOptions.GetKillDistance();
         if (targetDistance <= KillRange && Player.CanMove && target.CanMove)
         {
             KillWaitPlayer = null;
-            killLimit--;
-            target.SetRealKiller(Player);
-            Player.RpcMurderPlayer(target);
-            Logger.Info($"{Player.GetNameWithRole()} : 残り{killLimit}発", "GrudgeCharger");
+            if (CustomRoleManager.OnCheckMurder(Player, target, true))
+            {
+                killLimit--;
+                target.SetRealKiller(Player);
+                Logger.Info($"{Player.GetNameWithRole()} : 残り{killLimit}発", "GrudgeCharger");
+                Utils.NotifyRoles(SpecifySeer: Player);
+            }
 
             killThisTurn = true;
             Player.MarkDirtySettings();
