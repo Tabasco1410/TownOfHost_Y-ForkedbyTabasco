@@ -3,22 +3,22 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
 		<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-		<Description>Town Of Host_Y_T</Description>
-		<Authors>tukasa0001(EmptyBottle), integral0131, yumenopai,Tabasco</Authors>
+		<Description>Town Of Host_Y</Description>
+		<Authors>tukasa0001(EmptyBottle), integral0131, yumenopai</Authors>
 		<langVersion>preview</langVersion>
 		<NoWarn>MSB3246</NoWarn>
-		<PackageId>TownOfHost_Y_T</PackageId>
-		<Company>tukasa0001(EmptyBottle), integral0131, yumenopai,Tabasco</Company>
-		<Product>TownOfHost_Y_T</Product>
-		<AssemblyName>TownOfHost_Y_T</AssemblyName>
-		<RootNamespace>TownOfHost_Y_T</RootNamespace>
-		
+		<PackageId>TownOfHost_Y</PackageId>
+		<Company>tukasa0001(EmptyBottle), integral0131, yumenopai</Company>
+		<Product>TownOfHost_Y</Product>
+		<AssemblyName>TownOfHost_Y</AssemblyName>
+		<RootNamespace>TownOfHost_Y</RootNamespace>
+
 		<AmongUs>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev</AmongUs>
 
 		<SteamTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</SteamTemp>
 		<EpicTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</EpicTemp>
 		<DllTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</DllTemp>
-		
+
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>TRACE</DefineConstants>
