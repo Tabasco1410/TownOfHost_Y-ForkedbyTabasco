@@ -177,7 +177,7 @@ public static class Utils
             return;
         }
     }
-   
+
     public static void TargetDies(MurderInfo info)
     {
         PlayerControl killer = info.AppearanceKiller, target = info.AttemptTarget;
@@ -201,6 +201,7 @@ public static class Utils
         {
             if (subRole == CustomRoles.VIP) return true;
         }
+        // ターゲット(役職)
         if (target == BestieWolf.EnableKillFlash) return true;
 
         if (seer.Data.IsDead || killer == seer || target == seer) return false;
@@ -427,7 +428,7 @@ public static class Utils
         string text = GetProgressText(seen.PlayerId, comms);
 
         seer.GetRoleClass()?.OverrideProgressTextAsSeer(seen, ref enabled, ref text);
-        if(Options.IsCCMode && seer == seen)
+        if (Options.IsCCMode && seer == seen)
         {
             text += CatchCat.Common.GetMark(seer);
         }
@@ -635,7 +636,7 @@ public static class Utils
 
                 multipleRole = true;
             }
-            if(addonLongTextBuilder.Length != 0)
+            if (addonLongTextBuilder.Length != 0)
                 SendMessage(addonLongTextBuilder.ToString(), PlayerId);
         }
         if (Options.NoGameEnd.GetBool()) { SendMessage(GetString("NoGameEndInfo"), PlayerId); }
@@ -660,7 +661,7 @@ public static class Utils
             sb.Clear().Append(GetString("Settings")).Append(':');
             sb.Append(GetString("HideAndSeek"));
         }
-        else if(Options.IsCCMode)
+        else if (Options.IsCCMode)
         {
             CatchCat.Infomation.ShowSetting(sb);
         }
@@ -926,14 +927,23 @@ public static class Utils
             + $"\n\n視界が暗転した参加者が発生した場合は、\nチャットコマンドを使用するか、左Control,K,Lを同時に押下してください、"
             );
     }
-    public static void SendMessage(string text, byte sendTo = byte.MaxValue, string title = "")
+    /*public static void SendMessage(string text, byte sendTo = byte.MaxValue, string title = "")
     {
         if (!AmongUsClient.Instance.AmHost) return;
         if (title == "") title = "<color=#aaaaff>" + GetString("DefaultSystemMessageTitle") + "</color>";
         else title = title.Color(Color.white);
 
         Logger.Info($"[MessagesToSend.Add] sendTo: {sendTo}", "SendMessage");
-        Main.MessagesToSend.Add(($"<align={"left"}><size=90%>{text}</size></align>", sendTo, $"<align={"left"}>{title}</align>", false));
+        Main.MessagesToSend.Add(($"<align={"left"}><size=90%>{text}</size></align>", sendTo, $"<align={"left"}>{title}</align>", true));
+    }*/
+    public static void SendMessage(string text, byte sendTo = byte.MaxValue, string title = "")
+    {
+        if (!AmongUsClient.Instance.AmHost) return;
+        if (title == "") title = "<color=#aaaaff>" + GetString("DefaultSystemMessageTitle") + "</color>";
+        else title = title.Color(Color.white);
+        Logger.Info($"[MessagesToSend.Add] sendTo: {sendTo}", "SendMessage");
+        string fullText = $"{title}\n<align={"left"}><size=90%>{text}</size></align>";
+        Main.MessagesToSend.Add(($"<align={"left"}>{fullText}</align>", sendTo, "", true));
     }
     public static void SendMessageCustom(string text, byte sendTo = byte.MaxValue)
     {
@@ -964,7 +974,7 @@ public static class Utils
         {
             if (Options.IsCCMode)
                 name = $"<color={Main.ModColor}>{GetString("CatchCat")}</color>\r\n" + name;
-            else if(AmongUsClient.Instance.IsGamePublic)
+            else if (AmongUsClient.Instance.IsGamePublic)
                 name = $"<color={Main.ModColor}>TownOfHost_Y v{Main.PluginVersion}</color>\r\n" + name;
             switch (Options.GetSuffixMode())
             {
@@ -1065,7 +1075,7 @@ public static class Utils
             SelfMark.Append(CustomRoleManager.GetMarkOthers(seer, isForMeeting: isForMeeting));
             SelfMark.Append(Lovers.GetMark(seer));
             if (ReportDeadBodyPatch.DontReportMarkList.Contains(seer.PlayerId))
-                SelfMark.Append(ColorString(Palette.Orange,"◀×"));
+                SelfMark.Append(ColorString(Palette.Orange, "◀×"));
 
             SelfSuffix.Clear();
 
@@ -1103,7 +1113,7 @@ public static class Utils
             Color SelfNameColor = seer.GetRoleColor();
 
             string t = "";
-            seer.GetRoleClass()?.OverrideShowMainRoleText(ref SelfNameColor,ref t);
+            seer.GetRoleClass()?.OverrideShowMainRoleText(ref SelfNameColor, ref t);
 
             bool selfNameOriginal = true;
             if (seer.Is(CustomRoles.SeeingOff) || seer.Is(CustomRoles.Sending) || seer.Is(CustomRoles.MadDilemma))
@@ -1114,6 +1124,13 @@ public static class Utils
                     SelfName.Append(str);
                     selfNameOriginal = false;
                 }
+            }
+            if (Options.IsSyncColorMode && isForMeeting && seer.IsAlive() &&
+                !seer.Is(CustomRoleTypes.Impostor) &&
+                !seer.Is(CustomRoles.Rainbow) &&
+                !seer.Is(CustomRoles.Workaholic))
+            {
+                SelfName.Append($"{ColorString(Color.white, SeerRealName)}{SelfDeathReason}{SelfMark}");
             }
             if (Options.IsSyncColorMode && isForMeeting && seer.IsAlive() &&
                 !seer.Is(CustomRoleTypes.Impostor) &&
@@ -1392,7 +1409,7 @@ public static class Utils
     public static string SummaryTexts(byte id, bool isForChat)
     {
         var longestNameByteCount = Main.AllPlayerNames.Values.Select(name => name.GetByteCount()).OrderByDescending(byteCount => byteCount).FirstOrDefault();
-        var pos = Math.Min(((float)longestNameByteCount / 2) + 1.5f , 11.5f);
+        var pos = Math.Min(((float)longestNameByteCount / 2) + 1.5f, 11.5f);
 
         var builder = new StringBuilder();
         builder.Append(ColorString(Main.PlayerColors[id], Main.AllPlayerNames[id]));
