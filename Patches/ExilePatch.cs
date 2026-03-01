@@ -123,7 +123,7 @@ namespace TownOfHostY
                         exiled != null &&
                         exiled.Object != null)
                     {
-                        exiled.Object.RpcExileV2();
+                        exiled.Object.RpcExileV3();
                     }
                 }, 0.5f, "Restore IsDead Task");
 
@@ -140,7 +140,7 @@ namespace TownOfHostY
                         Logger.Info($"{player.GetNameWithRole()}を{reason}で死亡させました", "AfterMeetingDeath");
                         state.DeathReason = reason;
                         state.SetDead();
-                        player?.RpcExileV2();
+                        player?.RpcExileV3();
                         if (reason == CustomDeathReason.Suicide)
                             player?.SetRealKiller(player, true);
                         if (requireResetCam)

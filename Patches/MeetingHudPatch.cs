@@ -280,7 +280,7 @@ public static class MeetingHudPatch
                 __instance.playerStates.DoIf(x => x.HighlightedFX.enabled, x =>
                 {
                     var player = Utils.GetPlayerById(x.TargetPlayerId);
-                    player.RpcExileV2();
+                    player.RpcExileV3();
                     var state = PlayerState.GetByPlayerId(player.PlayerId);
                     state.DeathReason = CustomDeathReason.Execution;
                     state.SetDead();
