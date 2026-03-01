@@ -371,7 +371,7 @@ namespace TownOfHostY
             [HarmonyArgument(1)] uint targetNetId,
             [HarmonyArgument(3)] int targetClientId = -1)
         {
-            Logger.Info("StartRpcImmediatelyPatch Prefix called", "Debug");
+            //Logger.Info("StartRpcImmediatelyPatch Prefix called", "Debug");
 
             // 危険RPCを安全なRPCに置き換え
             switch ((RpcCalls)callId)
