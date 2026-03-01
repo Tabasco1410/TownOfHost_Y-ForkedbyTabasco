@@ -52,7 +52,7 @@ public class Main : BasePlugin
     // ==========
     //Sorry for many Japanese comments.
     public const string PluginGuid = "com.tabasco.townofhostyforkedbytabasco";
-    public const string PluginVersion = "1.0.1.2";
+    public const string PluginVersion = "1.0.1.3";
     // サポートされている最低のAmongUsバージョン
     public static readonly string LowestSupportedVersion = "2025.3.25";
     // このバージョンのみで公開ルームを無効にする場合
