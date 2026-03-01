@@ -68,17 +68,17 @@ namespace TownOfHostY
                     JArray assets = data["assets"].Cast<JArray>();
                     for (int i = 0; i < assets.Count; i++)
                     {
-                        if (assets[i]["name"].ToString() == "TownOfHost_Y-Steam.dll" && Constants.GetPlatformType() == Platforms.StandaloneSteamPC)
+                        if (assets[i]["name"].ToString() == "TownOfHost_Y-ForkedbyTabasco.dll" && Constants.GetPlatformType() == Platforms.StandaloneSteamPC)
                         {
                             downloadUrl = assets[i]["browser_download_url"].ToString();
                             break;
                         }
-                        if (assets[i]["name"].ToString() == "TownOfHost_Y-Epic.dll" && Constants.GetPlatformType() == Platforms.StandaloneEpicPC)
+                        if (assets[i]["name"].ToString() == "TownOfHost_Y-ForkedbyTabasco.dll" && Constants.GetPlatformType() == Platforms.StandaloneEpicPC)
                         {
                             downloadUrl = assets[i]["browser_download_url"].ToString();
                             break;
                         }
-                        if (assets[i]["name"].ToString() == $"TownOfHost_Y-v{latestVersion}.dll")
+                        if (assets[i]["name"].ToString() == $"TownOfHost_Y-ForkedbyTabasco.dll")
                             downloadUrl = assets[i]["browser_download_url"].ToString();
                     }
                     hasUpdate = latestVersion.CompareTo(Main.version) > 0;
@@ -149,7 +149,7 @@ namespace TownOfHostY
                 {
                     using var content = response.Content;
                     using var stream = content.ReadAsStream();
-                    using var file = new FileStream($"BepInEx/plugins/TownOfHost_Y-v{latestVersion}.dll", FileMode.Create, FileAccess.Write);
+                    using var file = new FileStream($"BepInEx/plugins/TownOfHost_Y-ForkedbyTabasco.dll", FileMode.Create, FileAccess.Write);
                     stream.CopyTo(file);
                     ShowPopup(GetString("updateRestart"), true);
                     return true;
