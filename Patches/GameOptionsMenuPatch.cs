@@ -4,6 +4,7 @@ using HarmonyLib;
 using UnityEngine;
 
 namespace TownOfHostY;
+
 public static class ModGameOptionsMenu
 {
     public static int TabIndex = 0;
@@ -15,6 +16,11 @@ public static class ModGameOptionsMenu
 public static class GameOptionsMenuPatch
 {
     public static GameOptionsMenu Instance;
+    private static Sprite _cachedLabelBgSprite;
+    private static Sprite CachedLabelBgSprite
+        => _cachedLabelBgSprite ??= Utils.LoadSprite(
+            "TownOfHost_Y-ForkedbyTabasco.Resources.SettingMenu_LabelBackground.png", 100f);
+
     [HarmonyPatch(nameof(GameOptionsMenu.Initialize)), HarmonyPrefix]
     private static bool InitializePrefix(GameOptionsMenu __instance)
     {
@@ -168,7 +174,7 @@ public static class GameOptionsMenuPatch
     }
     private static void OptionBehaviourSetSizeAndPosition(OptionBehaviour optionBehaviour, OptionItem option, OptionTypes type)
     {
-        optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().sprite = Utils.LoadSprite($"TownOfHost_Y.Resources.SettingMenu_LabelBackground.png", 100f);
+        optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().sprite = CachedLabelBgSprite;
 
         Vector3 positionOffset = new(0f, 0f, 0f);
         Vector3 scaleOffset = new(0f, 0f, 0f);
@@ -241,15 +247,8 @@ public static class GameOptionsMenuPatch
 
     public static void UpdateSettings()
     {
-        foreach (var optionBehaviour in ModGameOptionsMenu.OptionList.Keys)
-        {
-            try
-            {
-                optionBehaviour.Initialize();
-                Instance?.ValueChanged(optionBehaviour);
-            }
-            catch { }
-        }
+        if (Instance == null) return;
+        ReCreateSettings(Instance);
     }
 
     [HarmonyPatch(nameof(GameOptionsMenu.ValueChanged)), HarmonyPrefix]
@@ -306,13 +305,13 @@ public static class GameOptionsMenuPatch
 
     private static BaseGameSetting GetSetting(OptionItem item)
     {
-       
+
         BaseGameSetting baseGameSetting = null;
 
         if (item is BooleanOptionItem boolItem)
         {
             var intSetting = ScriptableObject.CreateInstance<IntGameSetting>();
-            
+
             intSetting.Type = OptionTypes.Int;
             intSetting.Value = boolItem.Bool ? 1 : 0;
             intSetting.Increment = 1;
@@ -320,7 +319,7 @@ public static class GameOptionsMenuPatch
             intSetting.FormatString = "";
 
             boolItem.SetValue(intSetting.Value);
-            
+
             baseGameSetting = intSetting;
         }
         else if (item is IntegerOptionItem intItem)
@@ -335,7 +334,7 @@ public static class GameOptionsMenuPatch
             intSetting.FormatString = string.Empty;
 
             intItem.SetValue(intSetting.Value);
-            
+
             baseGameSetting = intSetting;
         }
         else if (item is FloatOptionItem floatItem)
@@ -350,7 +349,7 @@ public static class GameOptionsMenuPatch
             floatSetting.FormatString = string.Empty;
 
             floatItem.SetValue(floatItem.Rule.GetNearestIndex(floatSetting.Value));
-            
+
             baseGameSetting = floatSetting;
         }
         else if (item is StringOptionItem stringItem)
@@ -361,7 +360,7 @@ public static class GameOptionsMenuPatch
                 Values = new StringNames[stringItem.Selections.Length],
                 Index = stringItem.GetInt(),
             };
-              }
+        }
         else if (item is PresetOptionItem presetItem)
         {
             baseGameSetting = new StringGameSetting
@@ -378,7 +377,7 @@ public static class GameOptionsMenuPatch
             baseGameSetting.Title = StringNames.Accept;
         }
 
-       
+
         return baseGameSetting;
     }
 
@@ -390,7 +389,7 @@ public static class GameOptionsMenuPatch
         [HarmonyPatch(nameof(NumberOption.Initialize)), HarmonyPrefix]
         private static bool InitializePrefix(NumberOption __instance)
         {
-           
+
             switch (__instance.Title)
             {
                 case StringNames.GameShortTasks:
@@ -411,7 +410,7 @@ public static class GameOptionsMenuPatch
             {
                 var item = OptionItem.AllOptions[index];
                 __instance.TitleText.text = item.GetName();
-                
+
                 // UIのValueがまだ初期状態ならOptionItemの値でセットする
                 if (__instance.Value == default)
                 {
@@ -432,7 +431,7 @@ public static class GameOptionsMenuPatch
 
                 __instance.UpdateValue();
                 __instance.OnValueChanged?.Invoke(__instance);
-               return false;
+                return false;
             }
 
 
@@ -445,7 +444,7 @@ public static class GameOptionsMenuPatch
             if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
             {
                 var item = OptionItem.AllOptions[index];
-                
+
                 if (item is BooleanOptionItem boolItem)
                 {
                     boolItem.SetValue(__instance.GetInt() != 0 ? 1 : 0);
@@ -471,7 +470,7 @@ public static class GameOptionsMenuPatch
             if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
             var item = OptionItem.AllOptions[index];
 
-           
+
             if (item is BooleanOptionItem)
                 __instance.Value = 1 - __instance.Value;
             else
@@ -487,7 +486,7 @@ public static class GameOptionsMenuPatch
 
             __instance.UpdateValue();
             __instance.OnValueChanged?.Invoke(__instance);
-             return false;
+            return false;
         }
 
         [HarmonyPatch(nameof(NumberOption.Decrease)), HarmonyPrefix]
@@ -496,7 +495,7 @@ public static class GameOptionsMenuPatch
             if (!ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index)) return true;
             var item = OptionItem.AllOptions[index];
 
-            
+
             if (item is BooleanOptionItem)
                 __instance.Value = 1 - __instance.Value;
             else
@@ -536,6 +535,13 @@ public static class GameOptionsMenuPatch
 
 
 
+    private static void ShowGameModeChangedNotice()
+    {
+        var hud = DestroyableSingleton<HudManager>.Instance;
+        if (hud == null) return;
+        hud.ShowPopUp(Translator.GetString("Warning.GameModeChangedNotice"));
+    }
+
     [HarmonyPatch(typeof(StringOption))]
     public static class StringOptionPatch
     {
@@ -561,7 +567,11 @@ public static class GameOptionsMenuPatch
                 item.SetValue(__instance.GetInt());
 
                 if (item is PresetOptionItem || item.Name == "GameMode")
+                {
                     GameOptionsMenuPatch.UpdateSettings();
+                    if (item.Name == "GameMode")
+                        ShowGameModeChangedNotice();
+                }
 
                 return false;
             }
@@ -647,5 +657,3 @@ public static class GameOptionsMenuPatch
         }
     }
 }
-
-
