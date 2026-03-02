@@ -1300,6 +1300,7 @@ DSchrodingerCatInfo,You are now on Team Darkhide,ダークハイドの味方に�
 "Message.KillFlashAfterDeadOn","[Kill Flash After Dead] {0} / Set ON","{0} の霊界キルフラッシュをONにしました",
 "Message.KillFlashAfterDeadOff","[Kill Flash After Dead] {0} / Set OFF","{0} の霊界キルフラッシュをOFFにしました",
 
+
 "MDisplay.NimrodTitle","The Nimrod's Choice","ニムロッドの処刑選択"
 "IsNimrodMeetingTitle","【The Nimrod's choice】","【ニムロッドの処刑選択】"
 "IsNimrodMeetingText","The Nimrod should choose who to execute.\nIt's time for others to wait quietly...","ニムロッドは処刑する人を選択してください。\n他の人は静かに待つ時間...",
@@ -1361,6 +1362,7 @@ PanAlive25,\nBread was served by the bakery.\nㅤ,\nパン屋は{0}に向けて�
 "Warning.AutoExitAtMismatchedVersion","The host has no or a different version of {0}\nYou will be kicked in {1}","{0} のバージョンがホストと合致しません。\nあと {1} 秒で切断されます。","{0} 的版本与主机不符。\n 将在 {1} 秒后被踢出。","","Версия {0} не соответствует Хосту лобби. \nВы будете исключены через {1} секунды",""
 "Warning.NotMatchImpostorCount","Max/min number of Impostor roles is greater than the number of Impostors.","インポスター役職の最小/最大割り当て人数がインポスターより多すぎます。","内鬼数量过小或过大","","Макс./Мин. количество Предательских ролей больше, чем общее количество Предателей.",""
 "Warning.NotMatchRoleCount","The role is not cast correctly because the minimum number of roles is greater than the number of players.","ロールの最少人数合計がプレイヤーより多いため正常に配役されません。","职业数量设置大于玩家数量","","Роль подобрана неправильно, так как минимальное количество ролей больше, чем количество игроков.",""
+"Warning.GameModeChangedNotice","To open the settings for the changed game mode, please reopen the game settings menu.","変更したゲームモードの設定を開くには、ゲーム設定編集画面を開きなおしてください。","更改游戏模式后请重新打开游戏设置菜单以打开更改后的游戏模式的设置。","更改遊戲模式後請重新打開遊戲設定選單以打開更改後的遊戲模式的設定。","Чтобы открыть настройки измененного режима игры, пожалуйста, откройте меню настроек игры заново.","Para abrir as configurações do modo de jogo alterado, por favor, reabra o menu de configurações do jogo."
 
 "## エラー"
 "Error.MeetingException","Error: {0}\r\nPlease use SHIFT+M+ENTER to end the meeting","エラー: {0}\r\nSHIFT+M+ENTERで会議を強制終了してください","错误: {0}\r\n使用 SHIFT+M+ENTER 来中止会议","錯誤: {0}\r\n按下SHIFT+M+ENTER來結束會議","Ошибка: {0}\r\nПожалуйста используйте SHIFT+M+ENTER чтобы принудительно завершить собрание","Erro: {0}\r\nPor favor use SHIFT+M+ENTER para encerrar a reunião"
