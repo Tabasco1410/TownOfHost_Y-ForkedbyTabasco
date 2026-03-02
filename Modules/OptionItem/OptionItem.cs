@@ -18,14 +18,14 @@ namespace TownOfHostY
         public static bool IdDuplicated { get; private set; } = false;
         #endregion
 
-        // 必須情報
+        // 必須情報(コンストラクタで必ず設定させる必要がある値)
         public int Id { get; }
         public string Name { get; }
         public int DefaultValue { get; }
         public TabGroup Tab { get; }
         public bool IsSingleValue { get; }
 
-        // 任意情報
+        // 任意情報(空・nullを許容する または、ほとんど初期値で問題ない値)
         public Color NameColor { get; protected set; }
         public OptionFormat ValueFormat { get; protected set; }
         public CustomGameMode GameMode { get; protected set; }
@@ -46,7 +46,7 @@ namespace TownOfHostY
         }
         private Dictionary<string, string> _replacementDictionary;
 
-        // 設定値
+        // 設定値情報 (オプションの値に関わる情報)
         public int[] AllValues { get; private set; } = new int[NumPresets];
         public int CurrentValue
         {
@@ -62,18 +62,22 @@ namespace TownOfHostY
         public OptionBehaviour OptionBehaviour;
 
         // イベント
+        // eventキーワードにより、クラス外からのこのフィールドに対する以下の操作は禁止されます。
+        // - 代入 (+=, -=を除く)
+        // - 直接的な呼び出し
         public event EventHandler<UpdateValueEventArgs> UpdateValueEvent;
 
         // コンストラクタ
         public OptionItem(int id, string name, int defaultValue, TabGroup tab, bool isSingleValue)
         {
+            // 必須情報の設定
             Id = id;
             Name = name;
             DefaultValue = defaultValue;
             Tab = tab;
             IsSingleValue = isSingleValue;
 
-            // 任意情報の初期値
+            // 任意情報の初期値設定
             NameColor = Color.white;
             ValueFormat = OptionFormat.None;
             GameMode = CustomGameMode.Standard;
@@ -82,10 +86,10 @@ namespace TownOfHostY
             IsHidden = false;
             IsFixValue = false;
             IsText = false;
-
+            // オブジェクト初期化
             Children = new();
 
-            // デフォルト値
+            // デフォルト値に設定
             if (Id == PresetId)
             {
                 SingleValue = DefaultValue;
@@ -121,7 +125,7 @@ namespace TownOfHostY
             }
         }
 
-        // Setter chain
+        // Setter
         public OptionItem Do(Action<OptionItem> action)
         {
             action(this);
@@ -216,7 +220,7 @@ namespace TownOfHostY
         public static OptionItem operator --(OptionItem item)
             => item.Do(i => i.SetValue(i.CurrentValue - 1));
 
-        // 全体操作
+        // 全体操作用
         public static void SwitchPreset(int newPreset)
         {
             CurrentPreset = Math.Clamp(newPreset, 0, NumPresets - 1);

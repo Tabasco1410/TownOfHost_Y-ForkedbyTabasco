@@ -68,8 +68,7 @@ public class Main : BasePlugin
     public static bool hasArgumentException = false;
     public static string ExceptionMessage;
     public static bool ExceptionMessageIsShown = false;
-    public static string credentialsText;
-    // V10 用に書き換えたプロパティ
+    public static string credentialsText;    
     public static NormalGameOptionsV10 NormalOptions => GameOptionsManager.Instance.currentNormalGameOptions;
     public static HideNSeekGameOptionsV10 HideNSeekOptions => GameOptionsManager.Instance.currentHideNSeekGameOptions;
 
@@ -117,12 +116,8 @@ public class Main : BasePlugin
     public static Dictionary<byte, byte> ShapeshiftTarget = new();
     public static bool VisibleTasksCount;
     public static string nickName = "";
-    public static bool introDestroyed = false;
-    // ★ TOH-K移植: Standardモードのイントロ処理でSetRoleをクライアントに反映させるかどうか
-    //   true = CoResetRoleY方式（イントロ後に再SetRoleする）→ falseで送信
-    //   false = 従来方式
-    public static bool SetRoleOverride = true;
-    // ★ TOH-K移植: 役職割り当てが完了したかどうか（StandardIntroでのタスク再配布判定に使用）
+    public static bool introDestroyed = false;  
+    public static bool SetRoleOverride = true;   
     public static bool IsroleAssigned
         => !SetRoleOverride || SelectRolesPatch.roleAssigned;
     public static float DefaultCrewmateVision;

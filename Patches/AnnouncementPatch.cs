@@ -1,5 +1,3 @@
-//参考：TownOfHost-K様 https://github.com/KYMario/TownOfHost-K/blob/main/Patches/MainManuNewsPatch.cs
-
 using System;
 using System.Collections;
 using System.Collections.Generic;

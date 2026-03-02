@@ -1,18 +1,16 @@
+//参考：TOH-K
 using HarmonyLib;
 
 namespace TownOfHostY;
 
-// ★ TOH-K移植: NetworkedPlayrInfoPatch.cs より
-// Disconnected偽装中に NetworkedPlayerInfo.Serialize が自動送信するのを防ぐパッチ。
-// ShowIntroForVanilla の処理中に data.Disconnected をローカルで書き換えても
-// このパッチがなければ AmongUs が即座に Serialize/送信してしまい偽装が崩れる。
+
 
 [HarmonyPatch(typeof(NetworkedPlayerInfo), nameof(NetworkedPlayerInfo.Serialize))]
 class GameDataSerializePatch
 {
-    // >0 のとき Serialize を強制通過させる（明示的に送りたい場合）
+   
     public static int SerializeMessageCount;
-    // true のとき Serialize を完全ブロック
+    
     public static bool DontTouch;
 
     public static bool Prefix(NetworkedPlayerInfo __instance, ref bool __result)
@@ -40,6 +38,5 @@ class GameDataSerializePatch
 [HarmonyPatch(typeof(NetworkedPlayerInfo), nameof(NetworkedPlayerInfo.MarkDirty))]
 class NetworkedPlayerInfoMarkDirtyPatch
 {
-    // DontTouch=true の間は MarkDirty もブロック
     public static bool Prefix() => GameDataSerializePatch.DontTouch is false;
 }

@@ -1,4 +1,3 @@
-//変更部分はTOH-Kを参考にさせていただきました
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,19 +89,13 @@ class ChangeRoleSettings
 
             Main.introDestroyed = false;
 
-            // ★ CoShowIntroの自動呼び出しをキャンセル状態にセット
-            //    StandardIntroHelper.ShowIntroForVanilla() が手動で呼び出す
+            
             HudManagerCoShowIntroPatch.Cancel = true;
 
-            // ★ TOH-K移植: イントロフラグとtaskIdsキャッシュをリセット
+           
             SelectRolesPatch.roleAssigned = false;
             RpcSetTasksPatch.taskIds.Clear();
 
-            // ★ TOH-K移植: CoGameIntroWeight
-            // 役職配布「前」に全員のDisconnected=trueを先に送っておく。
-            // バニラ側がイントロ表示条件（全員切断済み）を正しく認識するための準備。
-            // その後 data.Disconnected=false をローカルだけで戻し、
-            // GameDataSerializePatch.DontTouch=true で自動送信をブロックする。
             if (Options.CurrentGameMode == CustomGameMode.Standard)
             {
                 _ = new LateTask(() =>
@@ -114,7 +107,7 @@ class ChangeRoleSettings
                     stream.Write(AmongUsClient.Instance.GameId);
                     foreach (var data in GameData.Instance.AllPlayers)
                     {
-                        if (data.PlayerId == 0) continue; // ホストはスキップ
+                        if (data.PlayerId == 0) continue; 
                         if (IsSend)
                         {
                             stream = MessageWriter.Get(SendOption.Reliable);
@@ -143,8 +136,7 @@ class ChangeRoleSettings
                     }
                     GameDataSerializePatch.SerializeMessageCount--;
                     Logger.Info("CoGameIntroWeight: Disconnected=true 送信完了", "StandardIntro");
-                    // ローカル変数だけ false に戻す（送信しない）
-                    // DontTouch=true でブロックするので自動Serializeされない
+                   
                     GameDataSerializePatch.DontTouch = true;
                     foreach (var data in GameData.Instance.AllPlayers)
                         data.Disconnected = false;
