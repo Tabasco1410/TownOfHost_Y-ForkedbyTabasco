@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -24,7 +23,6 @@ using TownOfHostY.Roles.Crewmate;
 using TownOfHostY.Roles.Impostor;
 using TownOfHostY.Roles.Neutral;
 using UnityEngine;
-using static System.Net.Mime.MediaTypeNames;
 using static TownOfHostY.Translator;
 
 namespace TownOfHostY;
