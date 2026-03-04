@@ -33,6 +33,7 @@ namespace TownOfHostY
             Main.isChatCommand = true;
             Logger.Info(text, "SendChat");
 
+            /* 
             if (args[0] == "/cmd" && args.Length >= 2)
             {
                 canceled = true;
@@ -43,6 +44,7 @@ namespace TownOfHostY
                 args = newArgs;
                 text = string.Join(" ", args);
             }
+            */
 
             var tag = !PlayerControl.LocalPlayer.Data.IsDead ? "SendChatHost" : "SendChatDeadHost";
             if (text.StartsWith("試合結果:") || text.StartsWith("キル履歴:")) tag = "SendSystemChat";
@@ -446,9 +448,9 @@ namespace TownOfHostY
             if (!AmongUsClient.Instance.AmHost) return;
 
             // ニムロッド会議中
-            if(Nimrod.IsExecutionMeeting() || MadNimrod.IsExecutionMeeting())
+            if (Nimrod.IsExecutionMeeting() || MadNimrod.IsExecutionMeeting())
             {
-                if(text.Length > 0)
+                if (text.Length > 0)
                 {
                     Utils.SendMessage(GetString("Message.NowNimrodMeeting"),
                         title: $"<color={Utils.GetRoleColorCode(CustomRoles.Nimrod)}>{GetString("IsNimrodMeetingTitle")}</color>");
@@ -458,6 +460,7 @@ namespace TownOfHostY
             string[] args = text.Split(' ');
             string subArgs = "";
 
+            /* 
             if (text.StartsWith("/") && !text.Contains("cmd"))
             {
                 Utils.SendMessage(GetString("Error.CommandFailed"), player.PlayerId);
@@ -465,6 +468,10 @@ namespace TownOfHostY
             }
             if (args[0] != "/cmd" || args.Length <= 1) return;
             args = args.Skip(1).ToArray();
+            if (args[0].StartsWith("/") is false) args[0] = $"/{args[0]}";
+            */
+            
+            if (text.StartsWith("/") is false) return;
             if (args[0].StartsWith("/") is false) args[0] = $"/{args[0]}";
 
             switch (args[0]?.ToLower())
@@ -559,8 +566,8 @@ namespace TownOfHostY
 
                 default:
                     break;
+            }
         }
-    }
     }
     [HarmonyPatch(typeof(ChatController), nameof(ChatController.Update))]
     class ChatUpdatePatch
