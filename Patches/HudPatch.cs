@@ -275,7 +275,24 @@ class TaskPanelBehaviourPatch
         }
     }
 }
+[HarmonyPatch(typeof(HudManager), nameof(HudManager.CoShowIntro))]
+class HudManagerCoShowIntroPatch
+{
+    public static bool Cancel = true;
+    public static bool Prefix(HudManager __instance)
+    {
+        if (AmongUsClient.Instance.AmHost
+            && Options.CurrentGameMode == CustomGameMode.Standard
+            && Cancel)
+        {
+            Logger.Warn("イントロの表示をキャンセルしました", "CoShowIntro");
+            return false;
+        }
 
+        Cancel = true;
+        return true;
+    }
+}
 class RepairSender
 {
     public static bool enabled = false;
