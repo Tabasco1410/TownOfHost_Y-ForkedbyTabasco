@@ -15,9 +15,9 @@
 
 		<AmongUs>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev</AmongUs>
 
-		<SteamTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</SteamTemp>
-		<EpicTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</EpicTemp>
-		<DllTemp>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev\DLL</DllTemp>
+		<SteamTemp>C:\Users\yutok\Documents\Among Us\TOH_Y\TownOfHost_Y-ForkedbyTabasco_Steam</SteamTemp>
+		<EpicTemp>C:\Users\yutok\Documents\Among Us\TOH_Y\TownOfHost_Y-ForkedbyTabasco_Epic</EpicTemp>
+		<DllTemp>C:\Users\yutok\Documents\Among Us\TOH_Y</DllTemp>
 
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
