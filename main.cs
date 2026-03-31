@@ -58,9 +58,9 @@ public class Main : BasePlugin
     // このバージョンのみで公開ルームを無効にする場合
     public static readonly bool IsPublicAvailableOnThisVersion = false;
     // プレリリースかどうか
-    public static bool IsPrerelease { get; } = false;
+    public static bool IsPrerelease { get; } = true;
     public const string PluginSubVersion = "β";
-    public const string PluginVersionName = "StreamerDebug";
+    public const string PluginVersionName = "Debug";
 
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
     public static Version version = Version.Parse(PluginVersion);
