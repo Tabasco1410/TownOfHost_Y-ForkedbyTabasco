@@ -3,22 +3,15 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
 		<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-		<Description>Town Of Host_Y-ForkedbyTabasco</Description>
+		<Description>Town Of Host_Y</Description>
 		<Authors>tukasa0001(EmptyBottle), integral0131, yumenopai</Authors>
 		<langVersion>preview</langVersion>
 		<NoWarn>MSB3246</NoWarn>
-		<PackageId>TownOfHost_Y-ForkedbyTabasco</PackageId>
+		<PackageId>TownOfHost_Y</PackageId>
 		<Company>tukasa0001(EmptyBottle), integral0131, yumenopai</Company>
-		<Product>TownOfHost_Y-ForkedbyTabasco</Product>
-		<AssemblyName>TownOfHost_Y-ForkedbyTabasco</AssemblyName>
-		<RootNamespace>TownOfHost_Y-ForkedbyTabasco</RootNamespace>
-
-		<AmongUs>C:\Program Files (x86)\Steam\steamapps\common\TownOfHost_Y -Dev</AmongUs>
-
-		<SteamTemp>C:\Users\yutok\Documents\Among Us\TOH_Y\TownOfHost_Y-ForkedbyTabasco_Steam</SteamTemp>
-		<EpicTemp>C:\Users\yutok\Documents\Among Us\TOH_Y\TownOfHost_Y-ForkedbyTabasco_Epic</EpicTemp>
-		<DllTemp>C:\Users\yutok\Documents\Among Us\TOH_Y</DllTemp>
-
+		<Product>TownOfHost_Y</Product>
+		<AssemblyName>TownOfHost_Y</AssemblyName>
+		<RootNamespace>TownOfHost_Y</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>TRACE</DefineConstants>
@@ -44,17 +37,6 @@
 	</ItemGroup>
 
 	<Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">
-		<Copy
-		  SourceFiles="$(OutputPath)$(AssemblyName).dll"
-		  DestinationFolder="$(AmongUs)\BepInEx\plugins\" />
-		<Copy
-		  SourceFiles="$(OutputPath)$(AssemblyName).dll"
-		  DestinationFolder="$(SteamTemp)\BepInEx\plugins\" />
-		<Copy
-		  SourceFiles="$(OutputPath)$(AssemblyName).dll"
-		  DestinationFolder="$(EpicTemp)\BepInEx\plugins\" />
-		<Copy
-		SourceFiles="$(OutputPath)$(AssemblyName).dll"
-		DestinationFolder="$(DllTemp)\" />
+		<Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(AmongUs)/BepInEx/plugins/" Condition="'$(Configuration)' == 'Debug'" />
 	</Target>
 </Project>
