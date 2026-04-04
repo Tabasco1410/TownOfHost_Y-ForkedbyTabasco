@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using AmongUs.GameOptions;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
-using UnityEngine;
-using AmongUs.GameOptions;
-
 using TownOfHostY.Attributes;
 using TownOfHostY.Roles.Core;
+using UnityEngine;
+using static System.Net.Mime.MediaTypeNames;
 
 [assembly: AssemblyFileVersionAttribute(TownOfHostY.Main.PluginVersion)]
 [assembly: AssemblyInformationalVersionAttribute(TownOfHostY.Main.PluginVersion)]
@@ -58,9 +59,9 @@ public class Main : BasePlugin
     // このバージョンのみで公開ルームを無効にする場合
     public static readonly bool IsPublicAvailableOnThisVersion = false;
     // プレリリースかどうか
-    public static bool IsPrerelease { get; } = true;
+    public static bool IsPrerelease { get; } = false;
     public const string PluginSubVersion = "β";
-    public const string PluginVersionName = "Debug";
+    public const string PluginVersionName = "StreamerDebug";
 
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
     public static Version version = Version.Parse(PluginVersion);
