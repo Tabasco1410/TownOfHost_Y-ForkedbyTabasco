@@ -8,6 +8,7 @@ namespace TownOfHostY;
 public static class ModGameOptionsMenu
 {
     public static int TabIndex = 0;
+    public static bool IsPreviewOnly = false;
     public static Dictionary<OptionBehaviour, int> OptionList = new();
     public static Dictionary<int, OptionBehaviour> BehaviourList = new();
     public static Dictionary<int, CategoryHeaderMasked> CategoryHeaderList = new();
@@ -25,7 +26,7 @@ public static class GameOptionsMenuPatch
     private static bool InitializePrefix(GameOptionsMenu __instance)
     {
         Instance ??= __instance;
-        if (ModGameOptionsMenu.TabIndex < 3) return true;
+        if (ModGameOptionsMenu.TabIndex < 3 || ModGameOptionsMenu.IsPreviewOnly) return true;
 
         if (__instance.Children == null || __instance.Children.Count == 0)
         {
@@ -55,7 +56,7 @@ public static class GameOptionsMenuPatch
     private static bool CreateSettingsPrefix(GameOptionsMenu __instance)
     {
         Instance ??= __instance;
-        if (ModGameOptionsMenu.TabIndex < 3) return true;
+        if (ModGameOptionsMenu.TabIndex < 3 || ModGameOptionsMenu.IsPreviewOnly) return true;
         var modTab = (TabGroup)(ModGameOptionsMenu.TabIndex - 3);
 
         //float num = 0.713f;
