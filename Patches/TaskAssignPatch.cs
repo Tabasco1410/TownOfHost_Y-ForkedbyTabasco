@@ -162,6 +162,7 @@ namespace TownOfHostY
 
                 // 共通タスク処理
                 int defaultCommonTasksNum = Main.RealOptionsData.GetInt(Int32OptionNames.NumCommonTasks);
+                bool shouldRepopulateTasksList = false;
                 if (hasCommonTasks)
                 {
                     int removeStart = defaultCommonTasksNum;
@@ -173,6 +174,7 @@ namespace TownOfHostY
                 else
                 {
                     TasksList.Clear();
+                    shouldRepopulateTasksList = true;
                     Logger.Info($"Cleared common tasks for {pc.name}", "RpcSetTasksPatch");
                 }
 
@@ -211,20 +213,30 @@ namespace TownOfHostY
 
                 Logger.Info($"LongTasks={LongTasks.Count}, ShortTasks={ShortTasks.Count}", "RpcSetTasksPatch");
 
-                // If no common tasks are available (TasksList empty), but there are Long/Short tasks
-                // populate TasksList from available tasks so assignment can proceed without nulls.
-                if (TasksList.Count == 0 && (LongTasks.Count > 0 || ShortTasks.Count > 0))
+                if (TasksList.Count == 0 && shouldRepopulateTasksList && (LongTasks.Count > 0 || ShortTasks.Count > 0))
                 {
+                    // NumLongTasks個のロングタスクを追加
+                    int longCount = 0;
                     foreach (var t in LongTasks)
                     {
-                        if (t != null) TasksList.Add((byte)t.TaskType);
-                    }
-                    foreach (var t in ShortTasks)
-                    {
-                        if (t != null) TasksList.Add((byte)t.TaskType);
+                        if (t != null && longCount < NumLongTasks)
+                        {
+                            TasksList.Add((byte)t.TaskType);
+                            longCount++;
+                        }
                     }
 
-                    // Remove duplicates while preserving order
+                    // NumShortTasks個のショートタスクを追加
+                    int shortCount = 0;
+                    foreach (var t in ShortTasks)
+                    {
+                        if (t != null && shortCount < NumShortTasks)
+                        {
+                            TasksList.Add((byte)t.TaskType);
+                            shortCount++;
+                        }
+                    }
+
                     var seen = new HashSet<byte>();
                     var dedup = new Il2CppSystem.Collections.Generic.List<byte>();
                     foreach (var b in TasksList)
@@ -232,7 +244,7 @@ namespace TownOfHostY
                         if (seen.Add(b)) dedup.Add(b);
                     }
                     TasksList = dedup;
-                    Logger.Info($"Repopulated TasksList from available tasks count={TasksList.Count}", "RpcSetTasksPatch");
+                    Logger.Info($"Repopulated TasksList from available tasks count={TasksList.Count} (long:{longCount}, short:{shortCount})", "RpcSetTasksPatch");
                 }
 
                 // VentManager / FoxSpirit 固有処理
