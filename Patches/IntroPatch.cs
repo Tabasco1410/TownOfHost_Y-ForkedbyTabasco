@@ -404,12 +404,21 @@ class BeginImpostorPatch
             __instance.overlayHandle.color = Palette.CrewmateBlue;
             return false;
         }
+        var localRole = PlayerControl.LocalPlayer.GetCustomRole();
+        if (localRole.GetCustomRoleTypes() == CustomRoleTypes.Impostor || localRole == CustomRoles.StrayWolf)
+        {
+            return true;
+        }
         BeginCrewmatePatch.Prefix(__instance, ref yourTeam);
         return true;
     }
     public static void Postfix(IntroCutscene __instance, ref Il2CppSystem.Collections.Generic.List<PlayerControl> yourTeam)
     {
-        BeginCrewmatePatch.Postfix(__instance, ref yourTeam);
+        var role = PlayerControl.LocalPlayer.GetCustomRole();
+        if (role.GetCustomRoleTypes() != CustomRoleTypes.Impostor && role != CustomRoles.StrayWolf)
+        {
+            BeginCrewmatePatch.Postfix(__instance, ref yourTeam);
+        }
     }
 }
 [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.OnDestroy))]
