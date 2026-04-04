@@ -65,11 +65,12 @@ public static class MeetingHudPatch
             ChatUpdatePatch.DoBlockChat = true;
             GameStates.AlreadyDied |= !Utils.IsAllAlive;
             Main.AllPlayerControls.Do(x => ReportDeadBodyPatch.WaitReport[x.PlayerId].Clear());
-            Sending.OnStartMeeting();
             ChainShifterAddon.OnStartMeeting();
             foreach (var tm in Main.AllAlivePlayerControls.Where(p => p.Is(CustomRoles.TaskManager) || p.Is(CustomRoles.Management)))
                 Utils.NotifyRoles(true, tm);
             TargetDeadArrow.OnStartMeeting();
+            
+            Sending.OnStartMeeting();
         }
         public static void Postfix(MeetingHud __instance)
         {
@@ -187,6 +188,18 @@ public static class MeetingHudPatch
                                 seer);
                         }
                     }
+                  
+                    foreach (var pc in Main.AllPlayerControls)
+                    {
+                        if (!Main.ShowRoleInfoAtMeeting.Contains(pc.PlayerId)) continue;
+                        var targetRole = pc.GetCustomRole();
+                        if (targetRole == CustomRoles.Potentialist)
+                            targetRole = CustomRoles.Crewmate;
+                        string RoleInfoTitleString = $"{GetString("RoleInfoTitle")}";
+                        string RoleInfoTitle = $"{Utils.ColorString(Utils.GetRoleColor(targetRole), RoleInfoTitleString)}";
+                        Utils.SendMessage(Utils.GetMyRoleInfo(pc), pc.PlayerId, RoleInfoTitle);
+                        Main.ShowRoleInfoAtMeeting.Remove(pc.PlayerId);
+                    }
                     ChatUpdatePatch.DoBlockChat = false;
                 }, 3f, "SetName To Chat");
             }
@@ -206,14 +219,7 @@ public static class MeetingHudPatch
                 // 役職説明表示
                 if (Main.ShowRoleInfoAtMeeting.Contains(target.PlayerId))
                 {
-                    var targetRole = target.GetCustomRole();
-                    if (targetRole == CustomRoles.Potentialist)
-                        targetRole = CustomRoles.Crewmate;
-
-                    string RoleInfoTitleString = $"{GetString("RoleInfoTitle")}";
-                    string RoleInfoTitle = $"{Utils.ColorString(Utils.GetRoleColor(targetRole), RoleInfoTitleString)}";
-                    Utils.SendMessage(Utils.GetMyRoleInfo(target), pva.TargetPlayerId, RoleInfoTitle);
-                    Main.ShowRoleInfoAtMeeting.Remove(target.PlayerId);
+                    
                 }
 
                 var sb = new StringBuilder();
@@ -280,13 +286,23 @@ public static class MeetingHudPatch
                 __instance.playerStates.DoIf(x => x.HighlightedFX.enabled, x =>
                 {
                     var player = Utils.GetPlayerById(x.TargetPlayerId);
-                    player.RpcExileV2();
+                    // ゲッサーと完全同等の方式でキル（バン・hacking判定回避）
+                    player.Data.IsDead = true;
+                    player.RpcExileV3();
                     var state = PlayerState.GetByPlayerId(player.PlayerId);
                     state.DeathReason = CustomDeathReason.Execution;
-                    state.SetDead();
+                    CustomRoleManager.CheckMurderInfos[player.PlayerId] = new MurderInfo(PlayerControl.LocalPlayer, player, player, player);
+                    CustomRoleManager.OnMurderPlayer(player, player);
+                    Main.AllPlayerControls.Do(pc => pc.KillFlash());
+                    foreach (var va in __instance.playerStates)
+                    {
+                        if (va.VotedFor != player.PlayerId) continue;
+                        var voter = Utils.GetPlayerById(va.TargetPlayerId);
+                        if (voter == null) continue;
+                        __instance.RpcClearVote(voter.GetClientId());
+                    }
                     Utils.SendMessage(string.Format(GetString("Message.Executed"), player.Data.PlayerName));
                     Logger.Info($"{player.GetNameWithRole()}を処刑しました", "Execution");
-                    __instance.CheckForEndVoting();
                 });
             }
         }

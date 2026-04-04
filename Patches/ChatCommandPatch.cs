@@ -470,7 +470,7 @@ namespace TownOfHostY
             args = args.Skip(1).ToArray();
             if (args[0].StartsWith("/") is false) args[0] = $"/{args[0]}";
             */
-            
+
             if (text.StartsWith("/") is false) return;
             if (args[0].StartsWith("/") is false) args[0] = $"/{args[0]}";
 
@@ -577,7 +577,7 @@ namespace TownOfHostY
         {
             if (!AmongUsClient.Instance.AmHost || Main.MessagesToSend.Count < 1 || (Main.MessagesToSend[0].Item2 == byte.MaxValue && Main.MessageWait.Value > __instance.timeSinceLastMessage)) return;
             if (DoBlockChat) return;
-            var player = Main.AllAlivePlayerControls.OrderBy(x => x.PlayerId).FirstOrDefault();
+            var player = PlayerControl.LocalPlayer;
             if (player == null) return;
             (string msg, byte sendTo, string title, bool custom) = Main.MessagesToSend[0];
             Main.MessagesToSend.RemoveAt(0);
@@ -615,12 +615,9 @@ namespace TownOfHostY
         }
         public static void SendCustomChat(string SendName, PlayerControl sender = null, byte sendTo = byte.MaxValue)
         {
-            //Logger.Info($"SendName: {SendName}, sender: {sender?.name}, sendTo: {sendTo}", "SendCustomChat");
             Logger.Info($"sender: {sender?.name}, sendTo: {sendTo}", "SendCustomChat");
             string command = "\n\n";
-            if (sender == null) sender = PlayerControl.LocalPlayer;
-            if (sender.Data.IsDead)
-                sender = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
+            sender = PlayerControl.LocalPlayer;
             string name = sender.Data?.PlayerName;
             int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo).GetClientId();
             if (clientId == -1)
