@@ -235,19 +235,19 @@ class ChangeRoleSettings
 [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.SelectRoles))]
 class SelectRolesPatch
 {
-    
+
     public static List<byte> Disconnected = new();
-   
+
     public static bool roleAssigned = false;
 
-  
+
     public static bool Prefix()
     {
         if (!AmongUsClient.Instance.AmHost) return true;
 
         if (Options.CurrentGameMode != CustomGameMode.Standard) return true;
 
-        
+
         Dictionary<byte, CustomRpcSender> senders = new();
         foreach (var pc in Main.AllPlayerControls)
         {
@@ -258,9 +258,30 @@ class SelectRolesPatch
 
         RoleAssignManager.SelectAssignRoles();
 
+        
+        var assignRoleList = RoleAssignManager.GetAssignRoleList();
+        List<PlayerControl> UnassignedPlayers = new(Main.AllPlayerControls);
+        var rand = IRandom.Instance;
+
+        foreach (var customRole in assignRoleList)
+        {
+            if (UnassignedPlayers.Count == 0) break;
+
+            var selectedPlayer = UnassignedPlayers[rand.Next(UnassignedPlayers.Count)];
+            UnassignedPlayers.Remove(selectedPlayer);
+
+            PlayerState.GetByPlayerId(selectedPlayer.PlayerId).SetMainRole(customRole, true);
+        }
+
         List<PlayerControl> AllPlayers = new();
         foreach (var pc in Main.AllPlayerControls)
+        {
+           
+            var state = PlayerState.GetByPlayerId(pc.PlayerId);
+            if (state != null && state.GetNowMainRole() != CustomRoles.NotAssigned)
+                continue;
             AllPlayers.Add(pc);
+        }
 
         // GM割り当て
         if (Options.EnableGM.GetBool())
@@ -268,7 +289,7 @@ class SelectRolesPatch
             AllPlayers.RemoveAll(x => x == PlayerControl.LocalPlayer);
             PlayerControl.LocalPlayer.RpcSetRole(RoleTypes.Crewmate);
             PlayerState.GetByPlayerId(PlayerControl.LocalPlayer.PlayerId).SetMainRole(CustomRoles.GM);
-            PlayerControl.LocalPlayer.Data.IsDead = true; // バニラアサイン除外
+            PlayerControl.LocalPlayer.Data.IsDead = true; 
         }
 
         //  Desync役職割り当て
@@ -281,19 +302,25 @@ class SelectRolesPatch
             }
         }
 
-        
+
         {
             Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo> playerInfos = new();
             foreach (NetworkedPlayerInfo data in GameData.Instance.AllPlayers)
             {
+                
                 if (data.Object != null && !data.IsDead && !Disconnected.Contains(data.PlayerId))
+                {
+                    var state = PlayerState.GetByPlayerId(data.PlayerId);
+                    if (state != null && state.GetNowMainRole() != CustomRoles.NotAssigned)
+                        continue; 
                     playerInfos.Add(data);
+                }
             }
 
             IGameOptions currentGameOptions = GameOptionsManager.Instance.CurrentGameOptions;
             int adjustedNumImpostors = GameOptionsManager.Instance.CurrentGameOptions.GetAdjustedNumImpostors(playerInfos.Count);
 
-            
+
             if (CustomRoles.jO.IsPresent())
                 adjustedNumImpostors--;
 
@@ -307,26 +334,17 @@ class SelectRolesPatch
                 int.MaxValue, new Il2CppSystem.Nullable<RoleTypes>(RoleTypes.Crewmate));
         }
 
-        
+        AssignCustomRolesPostProcess(senders);
+
         return false;
     }
 
-    public static void Postfix()
+    
+    private static void AssignCustomRolesPostProcess(Dictionary<byte, CustomRpcSender> senders)
     {
         if (!AmongUsClient.Instance.AmHost) return;
 
         
-        RpcSetRoleReplacer.Release();
-        RpcSetRoleReplacer.senders.Do(kvp => kvp.Value.SendMessage());
-
-       
-        RpcSetRoleReplacer.senders = null;
-        RpcSetRoleReplacer.OverriddenSenderList = null;
-        RpcSetRoleReplacer.StoragedData = null;
-        roleAssigned = false; 
-        Disconnected.Clear();
-
-      
         List<PlayerControl> Crewmates = new();
         List<PlayerControl> Impostors = new();
         List<PlayerControl> Scientists = new();
@@ -339,14 +357,25 @@ class SelectRolesPatch
         List<PlayerControl> Phantoms = new();
         List<PlayerControl> Vipers = new();
 
+       
+        var storedRoles = new System.Collections.Generic.Dictionary<byte, RoleTypes>();
+        if (RpcSetRoleReplacer.StoragedData != null)
+        {
+            foreach (var pair in RpcSetRoleReplacer.StoragedData)
+                storedRoles[pair.Item1.PlayerId] = pair.Item2;
+        }
+
         foreach (var pc in Main.AllPlayerControls)
         {
-            pc.Data.IsDead = false; 
+            pc.Data.IsDead = false;
             var state = PlayerState.GetByPlayerId(pc.PlayerId);
-            if (state.GetNowMainRole() != CustomRoles.NotAssigned) continue; 
+            if (state.GetNowMainRole() != CustomRoles.NotAssigned) continue;
+
+           
+            var assignedRoleType = storedRoles.TryGetValue(pc.PlayerId, out var rt) ? rt : pc.Data.Role.Role;
 
             var role = CustomRoles.NotAssigned;
-            switch (pc.Data.Role.Role)
+            switch (assignedRoleType)
             {
                 case RoleTypes.Crewmate: Crewmates.Add(pc); role = CustomRoles.Crewmate; break;
                 case RoleTypes.Impostor: Impostors.Add(pc); role = CustomRoles.Impostor; break;
@@ -368,6 +397,16 @@ class SelectRolesPatch
         }
 
         
+        RpcSetRoleReplacer.Release();
+        senders?.Do(kvp => kvp.Value.SendMessage());
+
+        RpcSetRoleReplacer.senders = null;
+        RpcSetRoleReplacer.OverriddenSenderList = null;
+        RpcSetRoleReplacer.StoragedData = null;
+        roleAssigned = false;
+        Disconnected.Clear();
+
+
         foreach (var role in CustomRolesHelper.AllStandardRoles)
         {
             if (role.IsVanilla()) continue;
@@ -470,12 +509,12 @@ class SelectRolesPatch
         Utils.SyncAllSettings();
         SetColorPatch.IsAntiGlitchDisabled = false;
 
-        
+
         if (Options.CurrentGameMode == CustomGameMode.Standard)
             StandardIntroHelper.ShowIntroForVanilla();
     }
 
-    
+
     private static void AssignDesyncRole(
         CustomRoles role,
         List<PlayerControl> AllPlayers,
@@ -514,7 +553,7 @@ class SelectRolesPatch
         }
     }
 
-    
+
     public static bool AssignDesyncRole(CustomRoles role, List<PlayerControl> AllPlayers, ref int assignedNum, RoleTypes BaseRole, RoleTypes hostBaseRole = RoleTypes.Crewmate)
     {
         assignedNum = 0;
@@ -545,7 +584,7 @@ class SelectRolesPatch
         return assignedNum > 0;
     }
 
-   
+
     public static void AssignRolesNormal(Dictionary<RoleTypes, int> roleTypesList, int assignedNumImpostors)
     {
         Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo> playerInfos = new();
@@ -569,7 +608,7 @@ class SelectRolesPatch
             int.MaxValue, new Il2CppSystem.Nullable<RoleTypes>(RoleTypes.Crewmate));
     }
 
-    
+
     public static Dictionary<RoleTypes, List<PlayerControl>> GetRoleTypePlayers()
     {
         Dictionary<RoleTypes, List<PlayerControl>> roleTypePlayers = new();
@@ -584,7 +623,7 @@ class SelectRolesPatch
 
         foreach (var pc in Main.AllPlayerControls)
         {
-            pc.Data.IsDead = false; 
+            pc.Data.IsDead = false;
             var state = PlayerState.GetByPlayerId(pc.PlayerId);
             if (state.GetNowMainRole() != CustomRoles.NotAssigned) continue;
 
@@ -675,13 +714,13 @@ public class RpcSetRoleReplacer
     public static bool doReplace = false;
     public static Dictionary<byte, CustomRpcSender> senders;
     public static List<(PlayerControl, RoleTypes)> StoragedData = new();
-    
+
     public static List<CustomRpcSender> OverriddenSenderList;
 
-   
+
     public static bool DoReplace() => doReplace;
 
-    
+
     public static void RpcSetRoleDirect(PlayerControl target, RoleTypes role, PlayerControl sendTo)
     {
         if (target == null || sendTo == null) return;
@@ -701,10 +740,10 @@ public class RpcSetRoleReplacer
         else return true;
     }
 
-   
+
     public static void Release()
     {
-      
+
         if (Options.CurrentGameMode == CustomGameMode.Standard)
         {
             foreach (var pair in StoragedData)
@@ -713,7 +752,7 @@ public class RpcSetRoleReplacer
             return;
         }
 
-        
+
         if (senders == null)
         {
             foreach (var pair in StoragedData)
@@ -722,7 +761,7 @@ public class RpcSetRoleReplacer
             return;
         }
 
-        
+
         foreach (var pc in Main.AllPlayerControls)
         {
             var playerInfo = GameData.Instance.GetPlayerById(pc.PlayerId);
@@ -734,14 +773,14 @@ public class RpcSetRoleReplacer
         {
             var sender = kvp.Value;
 
-            
+
             if (OverriddenSenderList.Contains(sender)) continue;
             if (sender.CurrentState != CustomRpcSender.State.InRootMessage)
                 throw new InvalidOperationException("A CustomRpcSender had Invalid State.");
 
             foreach (var pair in StoragedData)
             {
-                
+
                 pair.Item1.StartCoroutine(pair.Item1.CoSetRole(pair.Item2, false));
 
                 var targetPc = Main.AllPlayerControls.FirstOrDefault(x => x.PlayerId == kvp.Key);
@@ -766,7 +805,7 @@ public class RpcSetRoleReplacer
         doReplace = true;
     }
 
-    
+
     public static void StartReplace()
     {
         RpcSetRoleReplacer.senders = null;
@@ -783,13 +822,13 @@ public static class StandardIntroHelper
     {
         if (!AmongUsClient.Instance.AmHost) return;
 
-        
 
-        
+
+
         GameDataSerializePatch.DontTouch = false;
         GameDataSerializePatch.SerializeMessageCount++;
 
-        
+
         var stream = MessageWriter.Get(SendOption.Reliable);
         stream.StartMessage(5);
         stream.Write(AmongUsClient.Instance.GameId);
@@ -813,7 +852,7 @@ public static class StandardIntroHelper
         {
             i++;
             data.Disconnected = false;
-            if (i > 4) continue; 
+            if (i > 4) continue;
             stream.StartMessage(1);
             stream.WritePacked(data.NetId);
             data.Serialize(stream, false);
@@ -822,9 +861,9 @@ public static class StandardIntroHelper
         stream.EndMessage();
         AmongUsClient.Instance.SendOrDisconnect(stream);
         stream.Recycle();
-       
 
-        
+
+
         _ = new LateTask(() =>
         {
             if (!SelectRolesPatch.roleAssigned)
@@ -867,7 +906,7 @@ public static class StandardIntroHelper
                     sender.Recycle();
                 }
 
-                
+
                 _ = new LateTask(() =>
                 {
                     foreach (var pc in Main.AllPlayerControls)
@@ -896,7 +935,7 @@ public static class StandardIntroHelper
 
     private static void Intoro()
     {
-       
+
         foreach (var pc in Main.AllPlayerControls)
         {
             if (pc.PlayerId == PlayerControl.LocalPlayer.PlayerId) continue;
@@ -905,11 +944,11 @@ public static class StandardIntroHelper
             var role = pc.GetCustomRole();
             var roleType = role.GetRoleTypes();
 
-            
+
             if (role.GetRoleInfo()?.IsDesyncImpostor == true || role.IsMadmate()
                 || (role.IsNeutral() && !role.IsImpostor()))
             {
-              
+
                 if (role.IsCrewmate()) roleType = RoleTypes.Crewmate;
                 else if (role.IsMadmate()) roleType = RoleTypes.Crewmate;
                 else if (role.IsNeutral()) roleType = RoleTypes.Impostor;
@@ -917,13 +956,14 @@ public static class StandardIntroHelper
 
             pc.RpcSetRoleDesync(roleType, pc.GetClientId());
 
-           
+
             foreach (var seen in Main.AllPlayerControls)
             {
                 if (role.GetCustomRoleTypes() != CustomRoleTypes.Impostor) continue;
                 if (seen.GetCustomRole().GetCustomRoleTypes() != CustomRoleTypes.Impostor) continue;
                 if (role.GetRoleInfo()?.IsDesyncImpostor == true) continue;
-                if (seen.GetCustomRole().GetRoleInfo()?.IsDesyncImpostor == true) continue;
+                if (seen.GetCustomRole().GetRoleInfo()?.IsDesyncImpostor == true) continue;                
+                if (pc.GetCustomRole().GetRoleTypes() == RoleTypes.Phantom) continue;
                 var capPc = pc;
                 var capSeen = seen;
                 _ = new LateTask(() =>
@@ -932,12 +972,31 @@ public static class StandardIntroHelper
             }
         }
 
-       
+
         new LateTask(() =>
         {
             foreach (var pc in Main.AllPlayerControls)
                 pc.cosmetics.nameText.text = pc.name;
             PlayerControl.LocalPlayer.StopAllCoroutines();
+            
+            var hostCustomRole = PlayerControl.LocalPlayer.GetCustomRole();
+            var hostRoleType = hostCustomRole.GetRoleTypes();
+            if (hostRoleType != RoleTypes.Crewmate)
+            {
+                
+                PlayerControl.LocalPlayer.SetRoleEx(hostRoleType);               
+                PlayerControl.LocalPlayer.RpcSetRoleDesync(hostRoleType, PlayerControl.LocalPlayer.GetClientId());
+            }
+
+           
+            foreach (var pc in Main.AllPlayerControls)
+            {
+                if (pc.PlayerId == PlayerControl.LocalPlayer.PlayerId) continue;
+                if (pc.GetClientId() == -1) continue; 
+                if (pc.GetCustomRole().GetRoleTypes() != RoleTypes.Phantom) continue;
+                pc.RpcSetRoleNormal(RoleTypes.Phantom, true);
+            }
+
             HudManagerCoShowIntroPatch.Cancel = false;
             DestroyableSingleton<HudManager>.Instance.StartCoroutine(
                 DestroyableSingleton<HudManager>.Instance.CoShowIntro());
@@ -946,7 +1005,7 @@ public static class StandardIntroHelper
             Logger.Info("ShowIntroForVanilla: CoShowIntro 呼び出し完了", "StandardIntro");
         }, 0.2f, "StandardIntro_ShowIntro");
 
-       
+
         new LateTask(() =>
         {
             foreach (var pc in Main.AllPlayerControls)
@@ -966,24 +1025,24 @@ public static class StandardIntroHelper
                     else if (role.IsNeutral()) roleType = RoleTypes.Crewmate;
                 }
 
-                
+
                 var baseRole = roleInfo?.BaseRoleType?.Invoke() ?? roleType;
                 pc.RpcSetRoleDesync(baseRole, pc.GetClientId());
             }
         }, 2.2f, "StandardIntro_PostIntroRoleSync");
 
-         _ = new LateTask(() => SetRole(), 5.5f, "StandardIntro_SetRole");
+        _ = new LateTask(() => SetRole(), 5.5f, "StandardIntro_SetRole");
     }
 
-    
+
     public static void SetRole()
     {
         if (!AmongUsClient.Instance.AmHost) return;
-        
+
 
         _ = new LateTask(() =>
         {
-           
+
 
             foreach (var pc in Main.AllPlayerControls)
             {
@@ -992,7 +1051,7 @@ public static class StandardIntroHelper
                 var role = pc.GetCustomRole();
                 var roleInfo = role.GetRoleInfo();
 
-                
+
                 if (pc.PlayerId != PlayerControl.LocalPlayer.PlayerId
                     && (roleInfo?.IsDesyncImpostor ?? false)) continue;
 
