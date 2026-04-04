@@ -1,23 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using AmongUs.GameOptions;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
-using UnityEngine;
-using AmongUs.GameOptions;
-
 using TownOfHostY.Attributes;
 using TownOfHostY.Roles.Core;
+using UnityEngine;
+using static System.Net.Mime.MediaTypeNames;
 
 [assembly: AssemblyFileVersionAttribute(TownOfHostY.Main.PluginVersion)]
 [assembly: AssemblyInformationalVersionAttribute(TownOfHostY.Main.PluginVersion)]
 namespace TownOfHostY;
 
-[BepInPlugin(PluginGuid, "Town Of Host_Y-ForkedbyTabasco", PluginVersion)]
+[BepInPlugin(PluginGuid, "Town Of Host_Y", PluginVersion)]
 [BepInIncompatibility("jp.ykundesu.supernewroles")]
 [BepInIncompatibility("com.emptybottle.townofhost")]
 [BepInIncompatibility("com.AsumuAkaguma.townofhostfore")]
@@ -26,17 +27,17 @@ public class Main : BasePlugin
 {
     // == プログラム設定 / Program Config ==
     // modの名前 / Mod Name (Default: Town Of Host)
-    public static readonly string ModName = "Town Of Host_Y-ForkedbyTabasco";
+    public static readonly string ModName = "Town Of Host_Y";
     // modの色 / Mod Color (Default: #00bfff)
     public static readonly string ModColor = "#ffff00";
     // 公開ルームを許可する / Allow Public Room (Default: true)
     public static readonly bool AllowPublicRoom = true;
     // フォークID / ForkId (Default: OriginalTOH)
-    public static readonly string ForkId = "TOH_Y-T";
+    public static readonly string ForkId = "TOH_Y";
     // Discordボタンを表示するか / Show Discord Button (Default: true)
     public static readonly bool ShowDiscordButton = true;
     // Discordサーバーの招待リンク / Discord Server Invite URL (Default: https://discord.gg/W5ug6hXB9V)
-    public static readonly string DiscordInviteUrl = "https://discord.gg/2Vh5yfr2Ft";
+    public static readonly string DiscordInviteUrl = "https://discord.gg/YCUY8b3jew";
     // ==========
     public const string OriginalForkId = "OriginalTOH"; // Don't Change The Value. / この値を変更しないでください。
     // == 認証設定 / Authentication Config ==
@@ -51,16 +52,16 @@ public class Main : BasePlugin
 
     // ==========
     //Sorry for many Japanese comments.
-    public const string PluginGuid = "com.tabasco.townofhostyforkedbytabasco";
-    public const string PluginVersion = "1.0.1.5";
+    public const string PluginGuid = "com.yumenopai.townofhosty";
+    public const string PluginVersion = "519.27.1";
     // サポートされている最低のAmongUsバージョン
     public static readonly string LowestSupportedVersion = "2025.3.25";
     // このバージョンのみで公開ルームを無効にする場合
     public static readonly bool IsPublicAvailableOnThisVersion = false;
     // プレリリースかどうか
-    public static bool IsPrerelease { get; } = true;
+    public static bool IsPrerelease { get; } = false;
     public const string PluginSubVersion = "β";
-    public const string PluginVersionName = "Debug";
+    public const string PluginVersionName = "StreamerDebug";
 
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
     public static Version version = Version.Parse(PluginVersion);
@@ -69,7 +70,6 @@ public class Main : BasePlugin
     public static string ExceptionMessage;
     public static bool ExceptionMessageIsShown = false;
     public static string credentialsText;
-    // V10 用に書き換えたプロパティ
     public static NormalGameOptionsV10 NormalOptions => GameOptionsManager.Instance.currentNormalGameOptions;
     public static HideNSeekGameOptionsV10 HideNSeekOptions => GameOptionsManager.Instance.currentHideNSeekGameOptions;
 
@@ -118,7 +118,6 @@ public class Main : BasePlugin
     public static bool VisibleTasksCount;
     public static string nickName = "";
     public static bool introDestroyed = false;
-    // TOH-Kより
     public static bool SetRoleOverride = true;
     public static bool IsroleAssigned
         => !SetRoleOverride || SelectRolesPatch.roleAssigned;
