@@ -88,8 +88,8 @@ class ChangeRoleSettings
             Logger.Info($"RealOptionsData.NumShortTasks: {Main.RealOptionsData.GetInt(Int32OptionNames.NumShortTasks)}", "ChangeRoleSettings");
 
             Main.introDestroyed = false;
+            Main.IsSetRoleFinished = false;
 
-            
             HudManagerCoShowIntroPatch.Cancel = true;
 
            
@@ -1058,6 +1058,7 @@ public static class StandardIntroHelper
                 var baseRole = roleInfo?.BaseRoleType?.Invoke() ?? RoleTypes.Crewmate;
                 pc.RpcSetRoleDesync(baseRole, pc.GetClientId());
             }
+            Main.IsSetRoleFinished = true;
         }, 2.0f, "StandardIntro_SetRoleDelay");
     }
 }
