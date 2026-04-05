@@ -1,10 +1,12 @@
 using System;
-using HarmonyLib;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Numerics;
+using HarmonyLib;
 using TMPro;
 using UnityEngine;
-using Object = UnityEngine.Object;
 using static UnityEngine.RemoteConfigSettingsHelper;
+using Object = UnityEngine.Object;
 
 namespace TownOfHostY;
 
@@ -245,51 +247,54 @@ public class GameSettingMenuPatch
 
         ModGameOptionsMenu.TabIndex = tabNum;
 
-        if (previewOnly)
-        {
-            return true;
-        }
-
         GameOptionsMenu settingsTab;
         PassiveButton button;
 
-        foreach (var tab in EnumHelper.GetAllValues<TabGroup>())
+        if ((previewOnly && Controller.currentTouchType == Controller.TouchType.Joystick) || !previewOnly)
         {
-            if (ModSettingsTabs.TryGetValue(tab, out settingsTab) &&
+            foreach (var tab in EnumHelper.GetAllValues<TabGroup>())
+            {
+                if (ModSettingsTabs.TryGetValue(tab, out settingsTab) &&
+                    settingsTab != null)
+                {
+                    settingsTab.gameObject.SetActive(false);
+                }
+            }
+            foreach (var tab in EnumHelper.GetAllValues<TabGroup>())
+            {
+                if (ModSettingsButtons.TryGetValue(tab, out button) &&
+                    button != null)
+                {
+                    button.SelectButton(false);
+                }
+            }
+        }
+
+        if (tabNum < 3) return true;
+
+        if ((previewOnly && Controller.currentTouchType == Controller.TouchType.Joystick) || !previewOnly)
+        {
+            __instance.PresetsTab.gameObject.SetActive(false);
+            __instance.GameSettingsTab.gameObject.SetActive(false);
+            __instance.RoleSettingsTab.gameObject.SetActive(false);
+            __instance.GamePresetsButton.SelectButton(false);
+            __instance.GameSettingsButton.SelectButton(false);
+            __instance.RoleSettingsButton.SelectButton(false);
+
+            if (ModSettingsTabs.TryGetValue((TabGroup)(tabNum - 3), out settingsTab) &&
                 settingsTab != null)
             {
-                settingsTab.gameObject.SetActive(false);
+                settingsTab.gameObject.SetActive(true);
+                __instance.MenuDescriptionText.DestroyTranslator();
+                __instance.MenuDescriptionText.text = Translator.GetString($"MenuDescriptionText.{(TabGroup)(tabNum - 3)}");
             }
         }
-        foreach (var tab in EnumHelper.GetAllValues<TabGroup>())
+        if (previewOnly)
         {
-            if (ModSettingsButtons.TryGetValue(tab, out button) &&
-                button != null)
-            {
-                button.SelectButton(false);
-            }
+            __instance.ToggleLeftSideDarkener(false);
+            __instance.ToggleRightSideDarkener(true);
+            return false;
         }
-
-        if (tabNum < 3)
-        {
-            return true;
-        }
-
-        __instance.PresetsTab.gameObject.SetActive(false);
-        __instance.GameSettingsTab.gameObject.SetActive(false);
-        __instance.RoleSettingsTab.gameObject.SetActive(false);
-        __instance.GamePresetsButton.SelectButton(false);
-        __instance.GameSettingsButton.SelectButton(false);
-        __instance.RoleSettingsButton.SelectButton(false);
-
-        if (ModSettingsTabs.TryGetValue((TabGroup)(tabNum - 3), out settingsTab) &&
-            settingsTab != null)
-        {
-            settingsTab.gameObject.SetActive(true);
-            __instance.MenuDescriptionText.DestroyTranslator();
-            __instance.MenuDescriptionText.text = Translator.GetString($"MenuDescriptionText.{(TabGroup)(tabNum - 3)}");
-        }
-
         __instance.ToggleLeftSideDarkener(true);
         __instance.ToggleRightSideDarkener(false);
         //if (ModSettingsTabs.TryGetValue((TabGroup)(tabNum - 3), out settingsTab) &&
@@ -322,30 +327,13 @@ public class GameSettingMenuPatch
 
         SetDefaultButton(__instance);
 
-        if (ModSettingsButtons.Count == 0)
-        {
-            StartPostfix(__instance);
-        }
-        else
-        {
-            foreach (var tab in EnumHelper.GetAllValues<TabGroup>())
-            {
-                if (ModSettingsButtons.TryGetValue(tab, out var btn))
-                    __instance.ControllerSelectable.Add(btn);
-            }
-        }
-
         ControllerManager.Instance.OpenOverlayMenu(__instance.name, __instance.BackButton, __instance.DefaultButtonSelected, __instance.ControllerSelectable, false);
         DestroyableSingleton<HudManager>.Instance.menuNavigationPrompts.SetActive(false);
-
-        if (Controller.currentTouchType == Controller.TouchType.Joystick)
+        if (Controller.currentTouchType != Controller.TouchType.Joystick)
         {
-            __instance.ChangeTab(1, true);
+            __instance.ChangeTab(1, Controller.currentTouchType == Controller.TouchType.Joystick);
         }
-        else
-        {
-            __instance.ChangeTab(1, false);
-        }
+        __instance.StartCoroutine(__instance.CoSelectDefault());
 
         return false;
     }

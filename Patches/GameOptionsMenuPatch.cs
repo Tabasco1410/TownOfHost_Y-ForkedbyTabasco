@@ -1,14 +1,18 @@
 using System;
-using Il2CppSystem.Collections.Generic;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Numerics;
+using System.Xml.Linq;
 using HarmonyLib;
+using Il2CppSystem.Collections.Generic;
 using UnityEngine;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace TownOfHostY;
 
 public static class ModGameOptionsMenu
 {
     public static int TabIndex = 0;
-    public static bool IsPreviewOnly = false;
     public static Dictionary<OptionBehaviour, int> OptionList = new();
     public static Dictionary<int, OptionBehaviour> BehaviourList = new();
     public static Dictionary<int, CategoryHeaderMasked> CategoryHeaderList = new();
@@ -26,7 +30,7 @@ public static class GameOptionsMenuPatch
     private static bool InitializePrefix(GameOptionsMenu __instance)
     {
         Instance ??= __instance;
-        if (ModGameOptionsMenu.TabIndex < 3 || ModGameOptionsMenu.IsPreviewOnly) return true;
+        if (ModGameOptionsMenu.TabIndex < 3) return true;
 
         if (__instance.Children == null || __instance.Children.Count == 0)
         {
@@ -56,7 +60,7 @@ public static class GameOptionsMenuPatch
     private static bool CreateSettingsPrefix(GameOptionsMenu __instance)
     {
         Instance ??= __instance;
-        if (ModGameOptionsMenu.TabIndex < 3 || ModGameOptionsMenu.IsPreviewOnly) return true;
+        if (ModGameOptionsMenu.TabIndex < 3) return true;
         var modTab = (TabGroup)(ModGameOptionsMenu.TabIndex - 3);
 
         //float num = 0.713f;
@@ -355,19 +359,21 @@ public static class GameOptionsMenuPatch
         }
         else if (item is StringOptionItem stringItem)
         {
-            var strSetting1 = ScriptableObject.CreateInstance<StringGameSetting>();
-            strSetting1.Type = OptionTypes.String;
-            strSetting1.Values = new StringNames[stringItem.Selections.Length];
-            strSetting1.Index = stringItem.GetInt();
-            baseGameSetting = strSetting1;
+            baseGameSetting = new StringGameSetting
+            {
+                Type = OptionTypes.String,
+                Values = new StringNames[stringItem.Selections.Length],
+                Index = stringItem.GetInt(),
+            };
         }
         else if (item is PresetOptionItem presetItem)
         {
-            var strSetting2 = ScriptableObject.CreateInstance<StringGameSetting>();
-            strSetting2.Type = OptionTypes.String;
-            strSetting2.Values = new StringNames[OptionItem.NumPresets];
-            strSetting2.Index = presetItem.GetInt();
-            baseGameSetting = strSetting2;
+            baseGameSetting = new StringGameSetting
+            {
+                Type = OptionTypes.String,
+                Values = new StringNames[OptionItem.NumPresets],
+                Index = presetItem.GetInt(),
+            };
 
         }
 
