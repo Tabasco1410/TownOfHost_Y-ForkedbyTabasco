@@ -127,6 +127,7 @@ public class Main : BasePlugin
     public static HashSet<byte> ShowRoleInfoAtMeeting = new();
     public static HashSet<byte> ShowChangeMainRole = new();
     public static bool isFirstTurn = false;
+    public static bool IsSetRoleFinished = false;//廃村条件用
 
     // 期間限定
     public static bool IsValentine = DateTime.Now.Month == 2 && DateTime.Now.Day is 9 or 10 or 11 or 12 or 13 or 14 or 15;
