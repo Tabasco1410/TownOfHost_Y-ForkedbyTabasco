@@ -132,6 +132,7 @@ namespace TownOfHostY
                 var pc = PlayerControl.LocalPlayer;
                 if (pc.IsAlive()) pc.ReportDeadBody(pc.Data);
                 else pc.NoCheckStartMeeting(pc.Data);
+
             }
             //自分自身を追放
             if (GetKeysDown(KeyCode.Return, KeyCode.E, KeyCode.LeftShift) && GameStates.IsInGame)

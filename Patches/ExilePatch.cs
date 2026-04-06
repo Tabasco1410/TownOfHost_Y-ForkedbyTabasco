@@ -154,11 +154,11 @@ namespace TownOfHostY
                     Main.AfterMeetingDeathPlayers.Clear();
                 }, 0.5f, "AfterMeetingDeathPlayers Task");
 
-                
+               
                 _ = new LateTask(() =>
                 {
-                    Main.AllPlayerControls.Do(pc => AntiBlackout.ResetSetRole(pc));                  
-                }, 0.52f, "AfterMeeting_ResetSetRole");
+                    Main.AllPlayerControls.Do(pc => AntiBlackout.ResetSetRole(pc));
+                }, 0.6f, "AfterMeeting_ResetSetRole");
             }
 
             GameStates.AlreadyDied |= !Utils.IsAllAlive;

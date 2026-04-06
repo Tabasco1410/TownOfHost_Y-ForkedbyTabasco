@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AmongUs.GameOptions;
 using HarmonyLib;
-using UnityEngine;
-
 using TownOfHostY.Modules;
-using TownOfHostY.Roles.Core;
 using TownOfHostY.Roles.AddOns.Common;
-using static TownOfHostY.Translator;
+using TownOfHostY.Roles.Core;
 using TownOfHostY.Roles.Impostor;
 using TownOfHostY.Roles.Neutral;
+using UnityEngine;
+using static TownOfHostY.Translator;
 namespace TownOfHostY;
 
 [HarmonyPatch]
@@ -69,7 +69,7 @@ public static class MeetingHudPatch
             foreach (var tm in Main.AllAlivePlayerControls.Where(p => p.Is(CustomRoles.TaskManager) || p.Is(CustomRoles.Management)))
                 Utils.NotifyRoles(true, tm);
             TargetDeadArrow.OnStartMeeting();
-            
+
             Sending.OnStartMeeting();
         }
         public static void Postfix(MeetingHud __instance)
@@ -176,6 +176,11 @@ public static class MeetingHudPatch
             {
                 _ = new LateTask(() =>
                 {
+                    if (!GameStates.IsMeeting)
+                    {
+                        ChatUpdatePatch.DoBlockChat = false;
+                        return;
+                    }
                     foreach (var seen in Main.AllPlayerControls)
                     {
                         var seenName = seen.GetRealName(isMeeting: true);
@@ -188,7 +193,7 @@ public static class MeetingHudPatch
                                 seer);
                         }
                     }
-                  
+
                     foreach (var pc in Main.AllPlayerControls)
                     {
                         if (!Main.ShowRoleInfoAtMeeting.Contains(pc.PlayerId)) continue;
@@ -202,6 +207,10 @@ public static class MeetingHudPatch
                     }
                     ChatUpdatePatch.DoBlockChat = false;
                 }, 3f, "SetName To Chat");
+                if (ReportDeadBodyPatch.SpecialMeeting)
+                {
+                    Utils.SendMessage("強制会議の場合は一部役職名が表示されず名前が赤く見えることがありますが、会議終了後回復します。");
+                }
             }
 
             // MeetingDisplayText
@@ -219,7 +228,7 @@ public static class MeetingHudPatch
                 // 役職説明表示
                 if (Main.ShowRoleInfoAtMeeting.Contains(target.PlayerId))
                 {
-                    
+
                 }
 
                 var sb = new StringBuilder();
@@ -313,15 +322,41 @@ public static class MeetingHudPatch
         public static void Postfix()
         {
             MeetingStates.FirstMeeting = false;
-            Logger.Info("------------会議終了------------", "Phase");
+            Logger.Info("------------会議終了------------", "Phase");            
+            ChatUpdatePatch.DoBlockChat = false;
             if (AmongUsClient.Instance.AmHost)
             {
-                // EndMeetingを経由しなかった場合のフォールバック（二重実行を防ぐ）
                 if (!AntiBlackout.IsCached) AntiBlackout.SetIsDead();
 
                 Main.AllPlayerControls.Where(pc => !pc.Is(CustomRoles.GM)).Do(pc => RandomSpawn.CustomNetworkTransformPatch.FirstTP[pc.PlayerId] = true);
+
+                _ = new LateTask(() =>
+                {
+                    if (!GameStates.IsInGame) return;
+
+                    
+                    foreach (var pc in Main.AllPlayerControls)
+                    {
+                        if (pc.GetClientId() == -1) continue;
+
+                        var role = pc.GetCustomRole();
+                        var roleInfo = role.GetRoleInfo();
+
+                        
+                        if (pc.PlayerId == PlayerControl.LocalPlayer.PlayerId
+                            && Options.EnableGM.GetBool()) continue;
+
+                        
+                        if (roleInfo?.IsDesyncImpostor == true) continue;
+
+                        var baseRole = roleInfo?.BaseRoleType?.Invoke() ?? RoleTypes.Crewmate;
+                        pc.RpcSetRoleDesync(baseRole, pc.GetClientId());
+                        Logger.Info($"AfterMeeting baseRole: {pc.GetNameWithRole()} -> {baseRole}", "AfterMeeting_RoleSync");
+                    }
+
+                    Utils.NotifyRoles();
+                }, 0.5f, "AfterMeeting_RoleSync");
             }
-            // MeetingVoteManagerを通さずに会議が終了した場合の後処理
             MeetingVoteManager.Instance?.Destroy();
         }
     }
