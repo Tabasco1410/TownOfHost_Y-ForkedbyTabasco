@@ -62,10 +62,23 @@ class HudManagerPatch
         }
         if (GameStates.IsLobby)
         {
-            // MODオプション表示
             optionShowerText.gameObject.SetActive(true);
 
-            optionShowerText.text = OptionShower.GetText();
+            string optionText = OptionShower.GetText();
+            if (AmongUsClient.Instance.AmHost && Main.NormalOptions != null)
+            {
+                bool crewZero = Main.NormalOptions.CrewLightMod <= 0f;
+                bool impZero = Main.NormalOptions.ImpostorLightMod <= 0f;
+                if (crewZero || impZero)
+                {
+                    var warnParts = new System.Collections.Generic.List<string>();
+                    if (crewZero) warnParts.Add("クルービジョン");
+                    if (impZero) warnParts.Add("インポスタービジョン");
+                    string warn = Utils.ColorString(Color.red, $" {string.Join(" / ", warnParts)} が 0 に設定されています");
+                    optionText = warn + "\n" + optionText;
+                }
+            }
+            optionShowerText.text = optionText;
             optionShowerText.fontSizeMin =
             optionShowerText.fontSizeMax = (TranslationController.Instance.currentLanguage.languageID == SupportedLangs.Japanese || Main.ForceJapanese.Value) ? 1.05f : 1.2f;
         }
