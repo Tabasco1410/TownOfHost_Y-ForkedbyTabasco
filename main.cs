@@ -12,7 +12,6 @@ using Il2CppInterop.Runtime.Injection;
 using TownOfHostY.Attributes;
 using TownOfHostY.Roles.Core;
 using UnityEngine;
-using static System.Net.Mime.MediaTypeNames;
 
 [assembly: AssemblyFileVersionAttribute(TownOfHostY.Main.PluginVersion)]
 [assembly: AssemblyInformationalVersionAttribute(TownOfHostY.Main.PluginVersion)]
