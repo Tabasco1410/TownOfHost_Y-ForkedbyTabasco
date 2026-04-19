@@ -895,11 +895,18 @@ public static class StandardIntroHelper
         {
             i++;
             data.Disconnected = false;
-            if (i > 4) continue;
+            if (i > 4) continue;            
+            var pc = Utils.GetPlayerById(data.PlayerId);
+            var isDesync = pc?.GetCustomRole().GetRoleInfo()?.IsDesyncImpostor == true;
+            var originalRole = data.Role?.Role ?? RoleTypes.Crewmate;
+            if (isDesync && data.Role != null)
+                data.Role.Role = RoleTypes.Crewmate;
             stream.StartMessage(1);
             stream.WritePacked(data.NetId);
             data.Serialize(stream, false);
             stream.EndMessage();
+            if (isDesync && data.Role != null)
+                data.Role.Role = originalRole;
         }
         stream.EndMessage();
         AmongUsClient.Instance.SendOrDisconnect(stream);
@@ -929,10 +936,17 @@ public static class StandardIntroHelper
                             issend = false;
                         }
                         data.Disconnected = false;
+                        var pc2 = Utils.GetPlayerById(data.PlayerId);
+                        var isDesync2 = pc2?.GetCustomRole().GetRoleInfo()?.IsDesyncImpostor == true;
+                        var originalRole2 = data.Role?.Role ?? RoleTypes.Crewmate;
+                        if (isDesync2 && data.Role != null)
+                            data.Role.Role = RoleTypes.Crewmate;
                         sender.StartMessage(1);
                         sender.WritePacked(data.NetId);
                         data.Serialize(sender, false);
                         sender.EndMessage();
+                        if (isDesync2 && data.Role != null)
+                            data.Role.Role = originalRole2;
                         if (sender.Length > 800)
                         {
                             issend = true;
