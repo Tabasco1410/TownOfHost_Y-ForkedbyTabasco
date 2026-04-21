@@ -70,7 +70,7 @@ namespace TownOfHostY
                 Sending.OnExileWrapUp(exiled.Object);
 
                 if (CustomWinnerHolder.WinnerTeam != CustomWinner.Terrorist) PlayerState.GetByPlayerId(exiled.PlayerId).SetDead();
-            }            
+            }
             // ランダムスポーン
             switch ((MapNames)Main.NormalOptions.MapId)
             {
@@ -102,7 +102,6 @@ namespace TownOfHostY
             FallFromLadder.Reset();
             Utils.CountAlivePlayers(true);
             Utils.AfterMeetingTasks();
-            Utils.SyncAllSettings();
             Utils.NotifyRoles();
         }
 
@@ -149,7 +148,7 @@ namespace TownOfHostY
                     Main.AfterMeetingDeathPlayers.Clear();
                 }, 0.5f, "AfterMeetingDeathPlayers Task");
 
-               
+
                 _ = new LateTask(() =>
                 {
                     Main.AllPlayerControls.Do(pc => AntiBlackout.ResetSetRole(pc));
@@ -160,9 +159,13 @@ namespace TownOfHostY
                     if (CustomWinnerHolder.WinnerTeam is not CustomWinner.Default) return;
                     foreach (var pc in Main.AllPlayerControls)
                     {
+                        var state = PlayerState.GetByPlayerId(pc.PlayerId);
+                        state.IsBlackOut = false;
                         pc.ResetKillCooldown();
                         pc.SetKillCooldown(ForceProtect: true);
+                        pc.MarkDirtySettings();
                     }
+                    Utils.SyncAllSettings();
                 }, 1.0f, "AfterMeeting_SetKillCooldown");
             }
 
