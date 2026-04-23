@@ -472,7 +472,7 @@ public static class Options
         LastImpostor.SetupCustomOption();
 
         TextOptionItem.Create((int)offsetId.Text + 11, "Head.CrewmateAddOn", TabGroup.Addons).SetColor(Palette.CrewmateBlue);
-        CompreteCrew.SetupCustomOption();
+        CompleteCrew.SetupCustomOption();
         Workhorse.SetupCustomOption();
 
         TextOptionItem.Create((int)offsetId.Text + 12, "Head.NeutralAddOn", TabGroup.Addons).SetColor(Palette.Orange);

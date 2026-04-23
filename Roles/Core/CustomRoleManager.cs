@@ -13,6 +13,8 @@ using TownOfHostY.Roles.Impostor;
 using TownOfHostY.Roles.Neutral;
 using TownOfHostY.Roles.Unit;
 using TownOfHostY.Roles.AddOns.Common;
+using TownOfHostY.Roles.AddOns.Crewmate;
+using TownOfHostY.Roles.AddOns.Impostor;
 
 namespace TownOfHostY.Roles.Core;
 
@@ -314,6 +316,10 @@ public static class CustomRoleManager
             case CustomRoles.Clumsy: Clumsy.Add(playerId); break;
             case CustomRoles.InfoPoor: InfoPoor.Add(playerId); break;
             case CustomRoles.NonReport: NonReport.Add(playerId); break;
+
+            case CustomRoles.CompleteCrew: CompleteCrew.Add(playerId); break;
+            case CustomRoles.Workhorse: Workhorse.Add(playerId); break;
+            case CustomRoles.LastImpostor: LastImpostor.Add(playerId); break;
         }
     }
     /// <summary>

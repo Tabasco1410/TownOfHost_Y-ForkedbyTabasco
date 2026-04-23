@@ -74,7 +74,16 @@ class ChangeRoleSettings
             MeetingHudPatch.RevengeTargetPlayer = new();
             Options.UsedButtonCount = 0;
 
-            Main.RealOptionsData = new OptionBackupData(GameOptionsManager.Instance.CurrentGameOptions);
+            // CurrentGameOptions が IGameOptions として取得できない場合は TryCast でフォールバック
+            var gameOptionsForBackup = GameOptionsManager.Instance.CurrentGameOptions
+                ?? GameOptionsManager.Instance.currentNormalGameOptions?.TryCast<IGameOptions>();
+            if (gameOptionsForBackup == null)
+            {
+                Logger.Error("CRITICAL: IGameOptions の取得に失敗しました", "ChangeRoleSettings");
+                AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame);
+                return;
+            }
+            Main.RealOptionsData = new OptionBackupData(gameOptionsForBackup);
 
             if (Main.RealOptionsData == null)
             {
@@ -92,7 +101,7 @@ class ChangeRoleSettings
 
             HudManagerCoShowIntroPatch.Cancel = true;
 
-           
+
             SelectRolesPatch.roleAssigned = false;
             RpcSetTasksPatch.taskIds.Clear();
 
@@ -107,7 +116,7 @@ class ChangeRoleSettings
                     stream.Write(AmongUsClient.Instance.GameId);
                     foreach (var data in GameData.Instance.AllPlayers)
                     {
-                        if (data.PlayerId == 0) continue; 
+                        if (data.PlayerId == 0) continue;
                         if (IsSend)
                         {
                             stream = MessageWriter.Get(SendOption.Reliable);
@@ -733,25 +742,25 @@ class SelectRolesPatch
         if (chance <= 0) return;
 
         var rand = IRandom.Instance;
-        int assigned = 0;
-        int attempts = 0;
-        int maxAttempts = count * 10;
-        var unassigned = allPlayersbySub.Where(pc => !pc.GetCustomSubRoles().Contains(role)).ToList();
 
-        while (assigned < count && attempts < maxAttempts)
+
+        var candidates = allPlayersbySub
+            .Where(pc => !PlayerState.GetByPlayerId(pc.PlayerId).SubRoles.Contains(role))
+            .ToList();
+
+
+        int maxAssign = Math.Min(count, candidates.Count);
+
+
+        for (int i = 0; i < maxAssign; i++)
         {
-            attempts++;
+            if (candidates.Count == 0) break;
+            var player = candidates[rand.Next(0, candidates.Count)];
+            candidates.Remove(player);
             if (chance < 100 && rand.Next(100) >= chance) continue;
 
-
-            if (unassigned.Count == 0) unassigned = new List<PlayerControl>(allPlayersbySub);
-            if (unassigned.Count == 0) break;
-
-            var player = unassigned[rand.Next(0, unassigned.Count)];
-            unassigned.Remove(player);
             PlayerState.GetByPlayerId(player.PlayerId).SetSubRole(role);
             Logger.Info("属性設定:" + player?.Data?.PlayerName + " = " + player.GetCustomRole().ToString() + " + " + role.ToString(), "AssignSubRoles");
-            assigned++;
         }
     }
 

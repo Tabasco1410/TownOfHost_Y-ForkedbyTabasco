@@ -749,7 +749,7 @@ class PlayerControlCompleteTaskPatch
         }
         //属性クラスの扱いを決定するまで仮置き
         ret &= Workhorse.OnCompleteTask(pc);
-        CompreteCrew.OnCompleteTask(pc);
+        CompleteCrew.OnCompleteTask(pc);
 
         if (Options.IsCCMode) CatchCat.CatPlayer.OnCompleteTask(pc, taskState);
 

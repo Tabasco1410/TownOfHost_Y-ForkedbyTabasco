@@ -95,18 +95,24 @@ namespace TownOfHostY
             if (!AmongUsClient.Instance.AmHost) return;
             if (ban) BanManager.AddBanPlayer(AmongUsClient.Instance.GetRecentClient(clientId));
         }
+    }
+
     
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendAllStreamedObjects))]
+    class InnerNetObjectSerializePatch
+    {
+        public static void Prefix(InnerNetClient __instance)
+        {
+            if (AmongUsClient.Instance.AmHost)
+                GameOptionsSender.SendAllGameOptions();
+        }
+    }
 
-
-    
-
-
-
-
-
-
-        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn)), HarmonyPostfix]
-        public static void SpawnPatch(InnerNetClient __instance, InnerNetObject netObjParent, int ownerId, SpawnFlags flags)
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn))]
+    class InnerNetSpawnPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(InnerNetClient __instance, InnerNetObject netObjParent, int ownerId, SpawnFlags flags)
         {
             if (DebugModeManager.IsDebugMode) Logger.Info($"SpawnPatch", "InnerNetClient");
         }

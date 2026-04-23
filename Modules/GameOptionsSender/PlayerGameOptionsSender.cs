@@ -25,11 +25,7 @@ namespace TownOfHostY.Modules
             .ToList().ForEach(sender => sender.SetDirty());
 
         public override IGameOptions BasedGameOptions =>
-            Main.RealOptionsData.Restore(
-                GameOptionsManager.Instance != null
-                    ? (IGameOptions)(GameOptionsManager.Instance.CurrentGameOptions ?? (object)GameOptionsManager.Instance.currentNormalGameOptions)
-                    : null
-            );
+            Main.RealOptionsData.Restore(new NormalGameOptionsV10(new UnityLogger().Cast<ILogger>()).Cast<IGameOptions>());
         public override bool IsDirty { get; protected set; }
 
         public PlayerControl player;
@@ -40,7 +36,7 @@ namespace TownOfHostY.Modules
         }
         public void SetDirty() => IsDirty = true;
 
-        public override void SendGameOptions()  
+        public override void SendGameOptions()
         {
             if (player.AmOwner)
             {

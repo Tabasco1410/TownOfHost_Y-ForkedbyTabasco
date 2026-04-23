@@ -6,7 +6,7 @@ using TownOfHostY.Roles.Core;
 
 namespace TownOfHostY.Roles.AddOns.Crewmate
 {
-    public static class CompreteCrew
+    public static class CompleteCrew
     {
         private static readonly int Id = (int)Options.offsetId.AddonCrew + 100;
         public static List<byte> playerIdList = new();
@@ -25,7 +25,7 @@ namespace TownOfHostY.Roles.AddOns.Crewmate
         }
         public static bool IsThisRole(byte playerId) => playerIdList.Contains(playerId);
 
-        public static bool CanBeCompreteCrew(PlayerControl pc)
+        public static bool CanBeCompleteCrew(PlayerControl pc)
            => pc.IsAlive()
            && !IsThisRole(pc.PlayerId)
            && pc.GetPlayerTaskState().IsTaskFinished
@@ -34,7 +34,7 @@ namespace TownOfHostY.Roles.AddOns.Crewmate
         public static void OnCompleteTask(PlayerControl pc)
         {
             if (!CustomRoles.CompleteCrew.IsEnable() || playerIdList.Count >= CustomRoles.CompleteCrew.GetCount()) return;
-            if (!CanBeCompreteCrew(pc)) return;
+            if (!CanBeCompleteCrew(pc)) return;
 
             pc.RpcSetCustomRole(CustomRoles.CompleteCrew);
             if (AmongUsClient.Instance.AmHost)

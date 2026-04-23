@@ -102,6 +102,7 @@ namespace TownOfHostY
             FallFromLadder.Reset();
             Utils.CountAlivePlayers(true);
             Utils.AfterMeetingTasks();
+            Utils.SyncAllSettings();
             Utils.NotifyRoles();
         }
 
