@@ -5,6 +5,7 @@ using AmongUs.GameOptions;
 using HarmonyLib;
 
 using TownOfHostY.Attributes;
+using TownOfHostY.Modules;
 using TownOfHostY.Roles.Core;
 
 namespace TownOfHostY;
@@ -94,19 +95,26 @@ public class PlayerState
     }
     public void SetSubRole(CustomRoles role, bool AllReplace = false)
     {
-        if (AllReplace)
+        if (AllReplace && SubRoles.Count > 0)
+        {
             SubRoles.ToArray().Do(role => SubRoles.Remove(role));
+            PlayerGameOptionsSender.SetDirty(PlayerId);
+        }
 
         if (!SubRoles.Contains(role))
         {
             SubRoles.Add(role);
             CustomRoleManager.SubRoleAdd(PlayerId, role);
+            PlayerGameOptionsSender.SetDirty(PlayerId);
         }
     }
     public void RemoveSubRole(CustomRoles role)
     {
         if (SubRoles.Contains(role))
+        {
             SubRoles.Remove(role);
+            PlayerGameOptionsSender.SetDirty(PlayerId);
+        }
     }
 
     public void SetDead()
