@@ -1312,8 +1312,8 @@ public static class Utils
 
                     if (IsActive(SystemTypes.Comms) && Options.CommsCamouflage.GetBool() && !isForMeeting && !Options.IsSyncColorMode)
                         TargetPlayerName = $"<size=0%>{TargetPlayerName}</size>";
-                    if (EvilDyer.IsColorCamouflage && !isForMeeting)
-                        TargetPlayerName = $"<size=0%>{TargetPlayerName}</size>";
+                    //if (EvilDyer.IsColorCamouflage && !isForMeeting)
+                    //    TargetPlayerName = $"<size=0%>{TargetPlayerName}</size>";
 
                     string TargetName = $"{TargetRoleText}{TargetPlayerName}{TargetDeathReason}{TargetMark}{TargetSuffix}";
 
