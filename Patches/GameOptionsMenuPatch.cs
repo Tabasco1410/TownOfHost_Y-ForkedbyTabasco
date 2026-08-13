@@ -105,19 +105,6 @@ public static class GameOptionsMenuPatch
 
             switch (baseGameSetting.Type)
             {
-                case OptionTypes.Checkbox:
-                    {
-                        optionBehaviour = UnityEngine.Object.Instantiate<ToggleOption>(__instance.checkboxOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
-                        optionBehaviour.transform.localPosition = new Vector3(pos_x, num, pos_z);
-
-                        OptionBehaviourSetSizeAndPosition(optionBehaviour, option, baseGameSetting.Type);
-
-                        optionBehaviour.SetClickMask(__instance.ButtonClickMask);
-                        optionBehaviour.SetUpFromData(baseGameSetting, 20);
-                        ModGameOptionsMenu.OptionList.TryAdd(optionBehaviour, index);
-                        //Logger.Info($"{option.Name}, {index}", "OptionList.TryAdd");
-                        break;
-                    }
                 case OptionTypes.String:
                     {
                         optionBehaviour = UnityEngine.Object.Instantiate<StringOption>(__instance.stringOptionOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
@@ -220,10 +207,6 @@ public static class GameOptionsMenuPatch
 
         switch (type)
         {
-            case OptionTypes.Checkbox:
-                optionBehaviour.transform.FindChild("Toggle").localPosition = new Vector3(1.46f, -0.042f);
-                break;
-
             case OptionTypes.String:
                 optionBehaviour.transform.FindChild("PlusButton").localPosition += new Vector3(option.IsFixValue ? 100f : 1.7f, option.IsFixValue ? 100f : 0f, option.IsFixValue ? 100f : 0f);
                 optionBehaviour.transform.FindChild("MinusButton").localPosition += new Vector3(option.IsFixValue ? 100f : 0.9f, option.IsFixValue ? 100f : 0f, option.IsFixValue ? 100f : 0f);
